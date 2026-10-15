@@ -2,27 +2,24 @@ name: CI
 
 on:
   pull_request:
-    branches: [ "main", "develop" ]
+    branches:
+      - main
+      - develop
 
 jobs:
-  build-test:
+  build-and-test:
     runs-on: macos-26
-
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - name: Build
-        run: |
-          xcodebuild build \
-            -project ChallengeFinal.xcodeproj \
-            -scheme ChallengeFinal \
-            -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' \
-            CODE_SIGNING_ALLOWED=NO
-
-      - name: Test
+      - name: Build & Test
         run: |
           xcodebuild test \
             -project ChallengeFinal.xcodeproj \
             -scheme ChallengeFinal \
             -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' \
+            -derivedDataPath ~/Library/Developer/Xcode/DerivedData \
+            -parallel-testing-enabled YES \
+            -maximum-parallel-testing-workers 2 \
+            -jobs $(sysctl -n hw.logicalcpu) \
             CODE_SIGNING_ALLOWED=NO
