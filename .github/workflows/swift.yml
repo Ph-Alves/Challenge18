@@ -20,7 +20,7 @@ jobs:
           xcodebuild test \
             -project ChallengeFinal.xcodeproj \
             -scheme ChallengeFinal \
-            -destination 'platform=iOS Simulator,name=iPhone 16' \
+            -destination 'platform=iOS Simulator,name=Any iOS Simulator Device' \
             -derivedDataPath ~/Library/Developer/Xcode/DerivedData \
             -parallel-testing-enabled YES \
             -maximum-parallel-testing-workers 2 \
