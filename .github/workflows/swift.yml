@@ -13,14 +13,21 @@ jobs:
       - uses: actions/checkout@v5
 
       - name: Install iOS Simulator Runtime
-        run: xcodebuild -downloadPlatform iOS
+        run: |
+          xcodebuild -downloadPlatform iOS
+          RUNTIME=$(xcrun simctl list runtimes -j | python3 -c "
+import sys, json
+rts = [r['identifier'] for r in json.load(sys.stdin)['runtimes'] if 'iOS' in r.get('name','') and r.get('isAvailable', False)]
+print(rts[-1] if rts else '')
+")
+          xcrun simctl create "CI-iPhone" "iPhone 16" "$RUNTIME"
 
       - name: Build & Test
         run: |
           xcodebuild test \
             -project ChallengeFinal.xcodeproj \
             -scheme ChallengeFinal \
-            -destination 'platform=iOS Simulator,name=Any iOS Simulator Device' \
+            -destination 'platform=iOS Simulator,name=CI-iPhone' \
             -derivedDataPath ~/Library/Developer/Xcode/DerivedData \
             -parallel-testing-enabled YES \
             -maximum-parallel-testing-workers 2 \
