@@ -12,6 +12,9 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      - name: Install iOS Simulator Runtime
+        run: xcodebuild -downloadPlatform iOS
+
       - name: Build & Test
         run: |
           xcodebuild test \
