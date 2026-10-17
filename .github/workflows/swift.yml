@@ -24,6 +24,8 @@ jobs:
         run: |
           RUNTIME=$(xcrun simctl list runtimes -j | python3 -c "import sys,json; rts=[r['identifier'] for r in json.load(sys.stdin)['runtimes'] if 'iOS' in r.get('name','')]; print(rts[-1] if rts else '')")
           xcrun simctl create "CI-iPhone" "iPhone 16" "$RUNTIME"
+          xcrun simctl boot "CI-iPhone"
+          xcrun simctl bootstatus "CI-iPhone" -b
 
       - name: Build & Test
         run: |
