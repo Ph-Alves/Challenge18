@@ -12,6 +12,14 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      - name: Cache DerivedData
+        uses: actions/cache@v4
+        with:
+          path: ~/Library/Developer/Xcode/DerivedData
+          key: ${{ runner.os }}-deriveddata-${{ hashFiles('**/*.xcodeproj/project.pbxproj') }}
+          restore-keys: |
+            ${{ runner.os }}-deriveddata-
+
       - name: Create iOS Simulator
         run: |
           RUNTIME=$(xcrun simctl list runtimes -j | python3 -c "import sys,json; rts=[r['identifier'] for r in json.load(sys.stdin)['runtimes'] if 'iOS' in r.get('name','')]; print(rts[-1] if rts else '')")
