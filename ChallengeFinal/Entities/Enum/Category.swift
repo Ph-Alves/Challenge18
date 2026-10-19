@@ -6,7 +6,7 @@
 //
 
 // MARK: - Tipo de grupo
-enum GroupType: String, Codable {
+enum Category: String, Codable {
     case physical
     case cognitive
     case sensorial

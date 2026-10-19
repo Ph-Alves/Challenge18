@@ -13,7 +13,7 @@ import Foundation
 final class Activity {
     var activityID: UUID = UUID()
     
-    var group: ActivityGroup? 
+    var category: Category = Category.physical
     
     @Relationship(deleteRule: .cascade, inverse: \ActivityResult.activity)
     var result: ActivityResult?
@@ -24,8 +24,8 @@ final class Activity {
     
     var archived: Bool = false
     
-    init(group: ActivityGroup, result: ActivityResult, name: String, description: String, archived: Bool) {
-        self.group = group
+    init(category: Category, result: ActivityResult, name: String, description: String, archived: Bool) {
+        self.category = category
         self.result = result
         self.name = name
         self.activityDescription = description
