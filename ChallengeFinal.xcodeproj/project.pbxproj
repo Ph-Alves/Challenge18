@@ -18,13 +18,6 @@
 			remoteGlobalIDString = 000000000000000100000000;
 			remoteInfo = ChallengeFinal;
 		};
-		CE4B9AF3308293F40098516A /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 000000000000000000000000 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 000000000000000100000000;
-			remoteInfo = ChallengeFinal;
-		};
 		CE4B9CEF30829EB70098516A /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 000000000000000000000000 /* Project object */;
@@ -49,7 +42,6 @@
 /* Begin PBXFileReference section */
 		000000000000000000000120 /* ChallengeFinal.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ChallengeFinal.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		CE4B99F13082939E0098516A /* ChallengeFinalTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ChallengeFinalTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		CE4B9AEF308293F40098516A /* ChallengeFinalUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ChallengeFinalUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		CE4B9CD330829EB50098516A /* ChallengeFinalWatchApp Watch App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "ChallengeFinalWatchApp Watch App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -62,11 +54,6 @@
 		CE4B99F23082939E0098516A /* ChallengeFinalTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = ChallengeFinalTests;
-			sourceTree = "<group>";
-		};
-		CE4B9AF0308293F40098516A /* ChallengeFinalUITests */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = ChallengeFinalUITests;
 			sourceTree = "<group>";
 		};
 		CE4B9CD430829EB50098516A /* ChallengeFinalWatchApp Watch App */ = {
@@ -87,11 +74,6 @@
 			files = (
 			);
 		};
-		CE4B9AEC308293F40098516A /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			files = (
-			);
-		};
 		CE4B9CD030829EB50098516A /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			files = (
@@ -105,7 +87,6 @@
 			children = (
 				000000000000000000000010 /* ChallengeFinal */,
 				CE4B99F23082939E0098516A /* ChallengeFinalTests */,
-				CE4B9AF0308293F40098516A /* ChallengeFinalUITests */,
 				CE4B9CD430829EB50098516A /* ChallengeFinalWatchApp Watch App */,
 				000000000000000000000020 /* Products */,
 			);
@@ -116,7 +97,6 @@
 			children = (
 				000000000000000000000120 /* ChallengeFinal.app */,
 				CE4B99F13082939E0098516A /* ChallengeFinalTests.xctest */,
-				CE4B9AEF308293F40098516A /* ChallengeFinalUITests.xctest */,
 				CE4B9CD330829EB50098516A /* ChallengeFinalWatchApp Watch App.app */,
 			);
 			name = Products;
@@ -168,27 +148,6 @@
 			productReference = CE4B99F13082939E0098516A /* ChallengeFinalTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
-		CE4B9AEE308293F40098516A /* ChallengeFinalUITests */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = CE4B9AF5308293F40098516A /* Build configuration list for PBXNativeTarget "ChallengeFinalUITests" */;
-			buildPhases = (
-				CE4B9AEB308293F40098516A /* Sources */,
-				CE4B9AEC308293F40098516A /* Frameworks */,
-				CE4B9AED308293F40098516A /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				CE4B9AF4308293F40098516A /* PBXTargetDependency */,
-			);
-			fileSystemSynchronizedGroups = (
-				CE4B9AF0308293F40098516A /* ChallengeFinalUITests */,
-			);
-			name = ChallengeFinalUITests;
-			productName = ChallengeFinalUITests;
-			productReference = CE4B9AEF308293F40098516A /* ChallengeFinalUITests.xctest */;
-			productType = "com.apple.product-type.bundle.ui-testing";
-		};
 		CE4B9CD230829EB50098516A /* ChallengeFinalWatchApp Watch App */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = CE4B9CF230829EB70098516A /* Build configuration list for PBXNativeTarget "ChallengeFinalWatchApp Watch App" */;
@@ -224,10 +183,6 @@
 						CreatedOnToolsVersion = 27.0;
 						TestTargetID = 000000000000000100000000;
 					};
-					CE4B9AEE308293F40098516A = {
-						CreatedOnToolsVersion = 27.0;
-						TestTargetID = 000000000000000100000000;
-					};
 					CE4B9CD230829EB50098516A = {
 						CreatedOnToolsVersion = 27.0;
 					};
@@ -249,7 +204,6 @@
 			targets = (
 				000000000000000100000000 /* ChallengeFinal */,
 				CE4B99F03082939E0098516A /* ChallengeFinalTests */,
-				CE4B9AEE308293F40098516A /* ChallengeFinalUITests */,
 				CE4B9CD230829EB50098516A /* ChallengeFinalWatchApp Watch App */,
 			);
 		};
@@ -262,11 +216,6 @@
 			);
 		};
 		CE4B99EF3082939E0098516A /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			files = (
-			);
-		};
-		CE4B9AED308293F40098516A /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			files = (
 			);
@@ -289,11 +238,6 @@
 			files = (
 			);
 		};
-		CE4B9AEB308293F40098516A /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			files = (
-			);
-		};
 		CE4B9CCF30829EB50098516A /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			files = (
@@ -306,11 +250,6 @@
 			isa = PBXTargetDependency;
 			target = 000000000000000100000000 /* ChallengeFinal */;
 			targetProxy = CE4B99F53082939E0098516A /* PBXContainerItemProxy */;
-		};
-		CE4B9AF4308293F40098516A /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 000000000000000100000000 /* ChallengeFinal */;
-			targetProxy = CE4B9AF3308293F40098516A /* PBXContainerItemProxy */;
 		};
 		CE4B9CF030829EB70098516A /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -589,59 +528,6 @@
 			};
 			name = Release;
 		};
-		CE4B9AF6308293F40098516A /* Debug configuration for PBXNativeTarget "ChallengeFinalUITests" */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 29HC4SA3R9;
-				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = br.com.raquel.ChallengeFinalUITests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = iphoneos;
-				STRING_CATALOG_GENERATE_SYMBOLS = NO;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
-				SUPPORTS_MACCATALYST = NO;
-				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
-				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = ChallengeFinal;
-			};
-			name = Debug;
-		};
-		CE4B9AF7308293F40098516A /* Release configuration for PBXNativeTarget "ChallengeFinalUITests" */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 29HC4SA3R9;
-				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = br.com.raquel.ChallengeFinalUITests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = iphoneos;
-				STRING_CATALOG_GENERATE_SYMBOLS = NO;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
-				SUPPORTS_MACCATALYST = NO;
-				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
-				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = ChallengeFinal;
-				VALIDATE_PRODUCT = YES;
-			};
-			name = Release;
-		};
 		CE4B9CF330829EB70098516A /* Debug configuration for PBXNativeTarget "ChallengeFinalWatchApp Watch App" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -733,14 +619,6 @@
 			buildConfigurations = (
 				CE4B99F73082939E0098516A /* Debug configuration for PBXNativeTarget "ChallengeFinalTests" */,
 				CE4B99F83082939E0098516A /* Release configuration for PBXNativeTarget "ChallengeFinalTests" */,
-			);
-			defaultConfigurationName = Release;
-		};
-		CE4B9AF5308293F40098516A /* Build configuration list for PBXNativeTarget "ChallengeFinalUITests" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				CE4B9AF6308293F40098516A /* Debug configuration for PBXNativeTarget "ChallengeFinalUITests" */,
-				CE4B9AF7308293F40098516A /* Release configuration for PBXNativeTarget "ChallengeFinalUITests" */,
 			);
 			defaultConfigurationName = Release;
 		};
