@@ -17,7 +17,7 @@ jobs:
           xcodebuild test \
             -project ChallengeFinal.xcodeproj \
             -scheme ChallengeFinal \
-            -destination 'platform=iOS Simulator,name=iPhone 16' \
+            -destination 'platform=iOS Simulator,name=iPhone 17,OS=26.5' \
             -skip-testing:ChallengeFinalUITests \
             CODE_SIGNING_ALLOWED=NO \
             SDKROOT=iphonesimulator
