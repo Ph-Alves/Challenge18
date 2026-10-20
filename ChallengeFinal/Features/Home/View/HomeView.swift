@@ -17,7 +17,7 @@ struct HomeView: View {
 //            HomeBuilder.build(routing: coordinator) ////->descomentar linha abaixo após a implementação do builder da Home
         }
         .fullScreenCover(item: $coordinator.activeChallengeFlow) { flow in
-                ChallengesBuilder.build(coordinator: flow)
+            ActivityBuilder.build(coordinator: flow)
         }
     }
 }

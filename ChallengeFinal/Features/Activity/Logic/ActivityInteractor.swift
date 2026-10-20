@@ -9,12 +9,12 @@ import Foundation
 
 
 @MainActor
-final class ChallengeInteractor {
-    private let presenter: ChallengePresenter
-    private weak var routing: ChallengesRouting?
+final class ActivityInteractor {
+    private let presenter: ActivityPresenter
+    private weak var routing: ActivityRouting?
     // depois: os Workers chegam aqui pelo init
 
-    init(presenter: ChallengePresenter, routing: ChallengesRouting) {
+    init(presenter: ActivityPresenter, routing: ActivityRouting) {
         self.presenter = presenter
         self.routing = routing
     }

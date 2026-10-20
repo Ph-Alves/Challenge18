@@ -9,12 +9,12 @@ import SwiftUI
 
 
 //CHANGE: substituir isso daqui pela implementação real, isso é só um placeholder.
-struct ChallengeView: View {
+struct ActivityView: View {
     
-    let coordinator: ChallengesCoordinator
-    @State private var interactor: ChallengeInteractor
+    let coordinator: ActivityCoordinator
+    @State private var interactor: ActivityInteractor
 
-    init(coordinator: ChallengesCoordinator, interactor: ChallengeInteractor) {
+    init(coordinator: ActivityCoordinator, interactor: ActivityInteractor) {
         self.coordinator = coordinator
         _interactor = State(initialValue: interactor)
     }

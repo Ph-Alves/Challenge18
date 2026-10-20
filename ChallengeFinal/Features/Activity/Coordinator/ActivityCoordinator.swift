@@ -8,15 +8,15 @@
 import Foundation
 import SwiftUI
 
-enum ChallengeStep {
+enum ActivityStep {
     case draw, challenge, inProgress, mood, photo, summary
 }
 
 
 @MainActor
 @Observable
-final class ChallengesCoordinator: Identifiable {
-    private(set) var step: ChallengeStep = .draw
+final class ActivityCoordinator: Identifiable {
+    private(set) var step: ActivityStep = .draw
     private let onFinish: () -> Void
 
     init(onFinish: @escaping () -> Void) {
@@ -48,7 +48,7 @@ final class ChallengesCoordinator: Identifiable {
     
 }
 
-extension ChallengesCoordinator: ChallengesRouting {
+extension ActivityCoordinator: ActivityRouting {
     func didDraw()              { step = .challenge }
     func didAcceptChallenge()   { step = .inProgress }
     func didCompleteChallenge() { step = .mood }

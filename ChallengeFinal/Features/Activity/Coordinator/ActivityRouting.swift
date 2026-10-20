@@ -7,7 +7,7 @@
 
 import Foundation
 
-protocol ChallengesRouting: AnyObject {
+protocol ActivityRouting: AnyObject {
     func didDraw()
     func didAcceptChallenge()
     func didCompleteChallenge()

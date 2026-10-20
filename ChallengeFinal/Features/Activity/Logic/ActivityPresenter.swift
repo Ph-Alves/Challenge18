@@ -8,7 +8,7 @@
 import Foundation
 
 @MainActor
-final class ChallengePresenter {
+final class ActivityPresenter {
     // vazio por enquanto: depois formata o desafio sorteado,
     // o resumo etc. para a View exibir
 }
