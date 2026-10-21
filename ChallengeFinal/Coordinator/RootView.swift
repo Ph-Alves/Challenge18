@@ -13,7 +13,7 @@ struct RootView: View {
     var body: some View {
         TabView(selection: $coordinator.selectedTab) {
             Tab("Home", systemImage: "diamond.fill", value: AppTab.home) {
-                HomeView(coordinator: coordinator.homeCoordinator) //aqui eu uso coordinator.homeCoordinator pois vou usar o mesmo objeto criado apenas uma vez no my app (que é a var que estamos "bindlando"
+                HomeView() 
             }
             Tab("Challenges", systemImage: "circle.fill", value: AppTab.challenges) {
                 // feature ainda não existe
