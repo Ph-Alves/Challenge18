@@ -7,17 +7,39 @@
 
 import SwiftUI
 
-//CHANGE: substituir isso daqui pela implementação real, isso é só um placeholder.
 struct HomeView: View {
-    @Bindable var coordinator: HomeCoordinator
 
+    let interactor: HomeInteractorProtocol
+    @Bindable var store: HomeStore
+    
     var body: some View {
-        Button("Sortear desafio") {
-            coordinator.startChallengeFlow() //CHANGE: Placeholder apenas para verificar como a navegação deve acontecer, deve ser substituida pela linha abaixo.
-//            HomeBuilder.build(routing: coordinator) ////->descomentar linha abaixo após a implementação do builder da Home
-        }
-        .fullScreenCover(item: $coordinator.activeChallengeFlow) { flow in
-            ActivityBuilder.build(coordinator: flow)
+        HStack {
+            VStack {
+                Text("Hello!")
+                Text("sorteie um novo desafio!")
+            }
+            
+            Text("<3")
+                .overlay {
+                    Circle().strokeBorder(.black, lineWidth: 4)
+                }
         }
     }
+}
+
+// MARK: - Stub pro preview
+
+private final class HomeInteractorStub: HomeInteractorProtocol {
+    func getCategory() -> [Category] { return [] }
+}
+
+extension HomeStore {
+    static var preview: HomeStore {
+        let state = HomeStore()
+        return state
+    }
+}
+
+#Preview {
+    HomeView(interactor: HomeInteractorStub(), store: .preview)
 }
