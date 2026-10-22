@@ -13,10 +13,10 @@ import SwiftData
 enum HomeBuilder {
     @MainActor
     static func build(routing: HomeRouting, context: ModelContext) -> some View {
-        let store = HomeStore()
+        let store = HomeStore(coordinator: routing)
         let presenter = HomePresenter(store: store)
         let interactor = HomeInteractor(repository: GenericRepository<Activity>(context: context), presenter: presenter)
         
-        return HomeView()
-    } ////-> descomentar após implementação
+        return HomeView(interactor: interactor, store: store)
+    }
 }
