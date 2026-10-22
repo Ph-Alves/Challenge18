@@ -67,5 +67,5 @@ struct CustomButtonComponent: View {
 }
 
 #Preview {
-    CustomButtonComponent(title: "arquivar desafio da lista", icon: "calendar", type: .primary)
+    CustomButtonComponent(title: "arquivar", icon: "calendar", type: .primary)
 }
