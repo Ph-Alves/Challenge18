@@ -6,14 +6,16 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct RootView: View {
+    @Environment(\.modelContext) private var context
     @Bindable var coordinator: AppCoordinator //bindlabe porque alem de ler o dado, ela também escreve.
 
     var body: some View {
         TabView(selection: $coordinator.selectedTab) {
             Tab("Home", systemImage: "diamond.fill", value: AppTab.home) {
-                HomeView() 
+                HomeBuilder.build(routing: coordinator.homeCoordinator, context: context)
             }
             Tab("Challenges", systemImage: "circle.fill", value: AppTab.challenges) {
                 // feature ainda não existe
