@@ -27,8 +27,12 @@ struct HomeView: View {
                     DragGesture(minimumDistance: 20)
                         .onEnded { value in
                             let isHorizontalSwipe = abs(value.translation.width) > abs(value.translation.height)
-                            if isHorizontalSwipe {
+                            guard isHorizontalSwipe else { return }
+
+                            if value.translation.width < 0 {
                                 interactor.previousCategory(current: store.currentCategory)
+                            } else {
+                                interactor.nextCategory(current: store.currentCategory)
                             }
                         }
                 )
