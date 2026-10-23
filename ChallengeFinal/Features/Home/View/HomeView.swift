@@ -11,7 +11,7 @@ struct HomeView: View {
 
     // MARK: - Variables
     let interactor: HomeInteractorProtocol
-    @Bindable var store: HomeStore
+    var store: HomeStore
     
     // MARK: - View
     var body: some View {
@@ -30,9 +30,9 @@ struct HomeView: View {
                             guard isHorizontalSwipe else { return }
 
                             if value.translation.width < 0 {
-                                interactor.previousCategory(current: store.currentCategory)
-                            } else {
                                 interactor.nextCategory(current: store.currentCategory)
+                            } else {
+                                interactor.previousCategory(current: store.currentCategory)
                             }
                         }
                 )
