@@ -78,6 +78,17 @@
             ReferencedContainer = "container:ChallengeFinal.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
+<<<<<<< HEAD
+=======
+      <MacroExpansion>
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "CE4B9CD230829EB50098516A"
+            BuildableName = "ChallengeFinalWatchApp Watch App.app"
+            ReferencedContainer = "container:ChallengeFinal.xcodeproj">
+         </BuildableReference>
+      </MacroExpansion>
+>>>>>>> 4ece5a01cfe3a81ef836b0efc50a996697f4c3a5
    </ProfileAction>
    <AnalyzeAction
       buildConfiguration = "Debug">
