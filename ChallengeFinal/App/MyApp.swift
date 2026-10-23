@@ -1,6 +1,5 @@
 import SwiftUI
-
-//é aqui que o coordinator raiz é criado e onde a TabView vai viver.
+import SwiftData
 
 @main struct MyApp: App {
     
@@ -10,9 +9,8 @@ import SwiftUI
     
     var body: some Scene {
         WindowGroup {
-            CameraTestView()
-//            RootView(coordinator: appCoordinator)
-            //ContentView() // no lugar do contentView eu vou colocar uma view raiz que lê o estado do Coordinator.
+            RootView(coordinator: appCoordinator)
+                .modelContainer(for: [Activity.self, ActivityResult.self, Profile.self])
         }
     }
 }

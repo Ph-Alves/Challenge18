@@ -9,7 +9,6 @@ import Foundation
 import Observation
 
 enum AppTab: Hashable {
-    
     case home, challenges, feelings, profile 
 }
 

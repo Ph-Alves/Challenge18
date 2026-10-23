@@ -7,10 +7,19 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		CE4B9CF130829EB70098516A /* ChallengeFinalWatchApp Watch App.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = CE4B9CD330829EB50098516A /* ChallengeFinalWatchApp Watch App.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		4BC1A00E308BDD4B009D777C /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4BC1A00D308BDD4B009D777C /* WidgetKit.framework */; };
+		4BC1A010308BDD4B009D777C /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4BC1A00F308BDD4B009D777C /* SwiftUI.framework */; };
+		4BC1A021308BDD4B009D777C /* ChallengeFinalWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 4BC1A00B308BDD4B009D777C /* ChallengeFinalWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		4BC1A01F308BDD4B009D777C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 000000000000000000000000 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 4BC1A00A308BDD4B009D777C;
+			remoteInfo = ChallengeFinalWidgetExtension;
+		};
 		CE4B99F53082939E0098516A /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 000000000000000000000000 /* Project object */;
@@ -18,22 +27,23 @@
 			remoteGlobalIDString = 000000000000000100000000;
 			remoteInfo = ChallengeFinal;
 		};
-		CE4B9CEF30829EB70098516A /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 000000000000000000000000 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = CE4B9CD230829EB50098516A;
-			remoteInfo = "ChallengeFinalWatchApp Watch App";
-		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		4BC1A026308BDD4B009D777C /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			dstPath = "";
+			dstSubfolder = PlugIns;
+			files = (
+				4BC1A021308BDD4B009D777C /* ChallengeFinalWidgetExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+		};
 		CE4B9CF530829EB70098516A /* Embed Watch Content */ = {
 			isa = PBXCopyFilesBuildPhase;
 			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
 			dstSubfolder = Product;
 			files = (
-				CE4B9CF130829EB70098516A /* ChallengeFinalWatchApp Watch App.app in Embed Watch Content */,
 			);
 			name = "Embed Watch Content";
 		};
@@ -41,9 +51,22 @@
 
 /* Begin PBXFileReference section */
 		000000000000000000000120 /* ChallengeFinal.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ChallengeFinal.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		4BC1A00B308BDD4B009D777C /* ChallengeFinalWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = ChallengeFinalWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		4BC1A00D308BDD4B009D777C /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		4BC1A00F308BDD4B009D777C /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		4BC1A027308BDE8D009D777C /* ChallengeFinalWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ChallengeFinalWidgetExtension.entitlements; sourceTree = "<group>"; };
 		CE4B99F13082939E0098516A /* ChallengeFinalTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ChallengeFinalTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		CE4B9CD330829EB50098516A /* ChallengeFinalWatchApp Watch App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "ChallengeFinalWatchApp Watch App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		4BC1A022308BDD4B009D777C /* Exceptions for "ChallengeFinalWidget" folder in "ChallengeFinalWidgetExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 4BC1A00A308BDD4B009D777C /* ChallengeFinalWidgetExtension */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		000000000000000000000010 /* ChallengeFinal */ = {
@@ -51,14 +74,17 @@
 			path = ChallengeFinal;
 			sourceTree = "<group>";
 		};
+		4BC1A011308BDD4B009D777C /* ChallengeFinalWidget */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				4BC1A022308BDD4B009D777C /* Exceptions for "ChallengeFinalWidget" folder in "ChallengeFinalWidgetExtension" target */,
+			);
+			path = ChallengeFinalWidget;
+			sourceTree = "<group>";
+		};
 		CE4B99F23082939E0098516A /* ChallengeFinalTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = ChallengeFinalTests;
-			sourceTree = "<group>";
-		};
-		CE4B9CD430829EB50098516A /* ChallengeFinalWatchApp Watch App */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = "ChallengeFinalWatchApp Watch App";
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -69,12 +95,14 @@
 			files = (
 			);
 		};
-		CE4B99EE3082939E0098516A /* Frameworks */ = {
+		4BC1A008308BDD4B009D777C /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			files = (
+				4BC1A010308BDD4B009D777C /* SwiftUI.framework in Frameworks */,
+				4BC1A00E308BDD4B009D777C /* WidgetKit.framework in Frameworks */,
 			);
 		};
-		CE4B9CD030829EB50098516A /* Frameworks */ = {
+		CE4B99EE3082939E0098516A /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			files = (
 			);
@@ -85,9 +113,11 @@
 		000000000000000000000001 = {
 			isa = PBXGroup;
 			children = (
+				4BC1A027308BDE8D009D777C /* ChallengeFinalWidgetExtension.entitlements */,
 				000000000000000000000010 /* ChallengeFinal */,
 				CE4B99F23082939E0098516A /* ChallengeFinalTests */,
-				CE4B9CD430829EB50098516A /* ChallengeFinalWatchApp Watch App */,
+				4BC1A011308BDD4B009D777C /* ChallengeFinalWidget */,
+				4BC1A00C308BDD4B009D777C /* Frameworks */,
 				000000000000000000000020 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -97,9 +127,18 @@
 			children = (
 				000000000000000000000120 /* ChallengeFinal.app */,
 				CE4B99F13082939E0098516A /* ChallengeFinalTests.xctest */,
-				CE4B9CD330829EB50098516A /* ChallengeFinalWatchApp Watch App.app */,
+				4BC1A00B308BDD4B009D777C /* ChallengeFinalWidgetExtension.appex */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		4BC1A00C308BDD4B009D777C /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				4BC1A00D308BDD4B009D777C /* WidgetKit.framework */,
+				4BC1A00F308BDD4B009D777C /* SwiftUI.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -113,11 +152,12 @@
 				000000000000000130000000 /* Frameworks */,
 				000000000000000140000000 /* Resources */,
 				CE4B9CF530829EB70098516A /* Embed Watch Content */,
+				4BC1A026308BDD4B009D777C /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				CE4B9CF030829EB70098516A /* PBXTargetDependency */,
+				4BC1A020308BDD4B009D777C /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				000000000000000000000010 /* ChallengeFinal */,
@@ -126,6 +166,24 @@
 			productName = MyApp;
 			productReference = 000000000000000000000120 /* ChallengeFinal.app */;
 			productType = "com.apple.product-type.application";
+		};
+		4BC1A00A308BDD4B009D777C /* ChallengeFinalWidgetExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 4BC1A023308BDD4B009D777C /* Build configuration list for PBXNativeTarget "ChallengeFinalWidgetExtension" */;
+			buildPhases = (
+				4BC1A007308BDD4B009D777C /* Sources */,
+				4BC1A008308BDD4B009D777C /* Frameworks */,
+				4BC1A009308BDD4B009D777C /* Resources */,
+			);
+			buildRules = (
+			);
+			fileSystemSynchronizedGroups = (
+				4BC1A011308BDD4B009D777C /* ChallengeFinalWidget */,
+			);
+			name = ChallengeFinalWidgetExtension;
+			productName = ChallengeFinalWidgetExtension;
+			productReference = 4BC1A00B308BDD4B009D777C /* ChallengeFinalWidgetExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 		CE4B99F03082939E0098516A /* ChallengeFinalTests */ = {
 			isa = PBXNativeTarget;
@@ -148,24 +206,6 @@
 			productReference = CE4B99F13082939E0098516A /* ChallengeFinalTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
-		CE4B9CD230829EB50098516A /* ChallengeFinalWatchApp Watch App */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = CE4B9CF230829EB70098516A /* Build configuration list for PBXNativeTarget "ChallengeFinalWatchApp Watch App" */;
-			buildPhases = (
-				CE4B9CCF30829EB50098516A /* Sources */,
-				CE4B9CD030829EB50098516A /* Frameworks */,
-				CE4B9CD130829EB50098516A /* Resources */,
-			);
-			buildRules = (
-			);
-			fileSystemSynchronizedGroups = (
-				CE4B9CD430829EB50098516A /* ChallengeFinalWatchApp Watch App */,
-			);
-			name = "ChallengeFinalWatchApp Watch App";
-			productName = "ChallengeFinalWatchApp Watch App";
-			productReference = CE4B9CD330829EB50098516A /* ChallengeFinalWatchApp Watch App.app */;
-			productType = "com.apple.product-type.application";
-		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -179,12 +219,12 @@
 					000000000000000100000000 = {
 						CreatedOnToolsVersion = 26.3;
 					};
+					4BC1A00A308BDD4B009D777C = {
+						CreatedOnToolsVersion = 27.0;
+					};
 					CE4B99F03082939E0098516A = {
 						CreatedOnToolsVersion = 27.0;
 						TestTargetID = 000000000000000100000000;
-					};
-					CE4B9CD230829EB50098516A = {
-						CreatedOnToolsVersion = 27.0;
 					};
 				};
 			};
@@ -204,7 +244,7 @@
 			targets = (
 				000000000000000100000000 /* ChallengeFinal */,
 				CE4B99F03082939E0098516A /* ChallengeFinalTests */,
-				CE4B9CD230829EB50098516A /* ChallengeFinalWatchApp Watch App */,
+				4BC1A00A308BDD4B009D777C /* ChallengeFinalWidgetExtension */,
 			);
 		};
 /* End PBXProject section */
@@ -215,12 +255,12 @@
 			files = (
 			);
 		};
-		CE4B99EF3082939E0098516A /* Resources */ = {
+		4BC1A009308BDD4B009D777C /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			files = (
 			);
 		};
-		CE4B9CD130829EB50098516A /* Resources */ = {
+		CE4B99EF3082939E0098516A /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			files = (
 			);
@@ -233,12 +273,12 @@
 			files = (
 			);
 		};
-		CE4B99ED3082939E0098516A /* Sources */ = {
+		4BC1A007308BDD4B009D777C /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			files = (
 			);
 		};
-		CE4B9CCF30829EB50098516A /* Sources */ = {
+		CE4B99ED3082939E0098516A /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			files = (
 			);
@@ -246,15 +286,15 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		4BC1A020308BDD4B009D777C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 4BC1A00A308BDD4B009D777C /* ChallengeFinalWidgetExtension */;
+			targetProxy = 4BC1A01F308BDD4B009D777C /* PBXContainerItemProxy */;
+		};
 		CE4B99F63082939E0098516A /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 000000000000000100000000 /* ChallengeFinal */;
 			targetProxy = CE4B99F53082939E0098516A /* PBXContainerItemProxy */;
-		};
-		CE4B9CF030829EB70098516A /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = CE4B9CD230829EB50098516A /* ChallengeFinalWatchApp Watch App */;
-			targetProxy = CE4B9CEF30829EB70098516A /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -394,9 +434,11 @@
 		000000000000000111000000 /* Debug configuration for PBXNativeTarget "ChallengeFinal" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_ENTITLEMENTS = ChallengeFinal/ChallengeFinal.entitlements;
+				CODE_SIGN_STYLE = Manual;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 547VUZ3B6X;
+				DEVELOPMENT_TEAM = "";
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = MB73MN45Q2;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
@@ -417,8 +459,10 @@
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 26.6;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "devplaceholder.$(PROJECT_UNIQUE_VALUE:identifier).$(PRODUCT_NAME:rfc1034identifier)";
+				PRODUCT_BUNDLE_IDENTIFIER = com.dreamteam.challengefinal;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = ChallengeFinal_App_Dev;
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = auto;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -436,9 +480,11 @@
 		000000000000000112000000 /* Release configuration for PBXNativeTarget "ChallengeFinal" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_ENTITLEMENTS = ChallengeFinal/ChallengeFinal.entitlements;
+				CODE_SIGN_STYLE = Manual;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 547VUZ3B6X;
+				DEVELOPMENT_TEAM = "";
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = MB73MN45Q2;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
@@ -459,8 +505,10 @@
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 26.6;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "devplaceholder.$(PROJECT_UNIQUE_VALUE:identifier).$(PRODUCT_NAME:rfc1034identifier)";
+				PRODUCT_BUNDLE_IDENTIFIER = com.dreamteam.challengefinal;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = ChallengeFinal_App_Dev;
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = auto;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -475,18 +523,97 @@
 			};
 			name = Release;
 		};
+		4BC1A024308BDD4B009D777C /* Debug configuration for PBXNativeTarget "ChallengeFinalWidgetExtension" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = ChallengeFinalWidgetExtension.entitlements;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				CODE_SIGN_STYLE = Manual;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = MB73MN45Q2;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = ChallengeFinalWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = ChallengeFinalWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.dreamteam.challengefinal.widget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = ChallengeFinal_Widget_Dev;
+				REGISTER_APP_GROUPS = YES;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		4BC1A025308BDD4B009D777C /* Release configuration for PBXNativeTarget "ChallengeFinalWidgetExtension" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = ChallengeFinalWidgetExtension.entitlements;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				CODE_SIGN_STYLE = Manual;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = MB73MN45Q2;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = ChallengeFinalWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = ChallengeFinalWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.dreamteam.challengefinal.widget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = ChallengeFinal_Widget_Dev;
+				REGISTER_APP_GROUPS = YES;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
 		CE4B99F73082939E0098516A /* Debug configuration for PBXNativeTarget "ChallengeFinalTests" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
-				CODE_SIGN_STYLE = Automatic;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				CODE_SIGN_STYLE = Manual;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 547VUZ3B6X;
+				DEVELOPMENT_TEAM = "";
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = MB73MN45Q2;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 26;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = br.com.raquel.ChallengeFinalTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.dreamteam.challengefinal;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = ChallengeFinal_App_Dev;
 				SDKROOT = iphoneos;
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -506,14 +633,18 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
-				CODE_SIGN_STYLE = Automatic;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				CODE_SIGN_STYLE = Manual;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 547VUZ3B6X;
+				DEVELOPMENT_TEAM = "";
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = MB73MN45Q2;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 26;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = br.com.raquel.ChallengeFinalTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.dreamteam.challengefinal;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = ChallengeFinal_App_Dev;
 				SDKROOT = iphoneos;
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -527,73 +658,6 @@
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/ChallengeFinal.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/ChallengeFinal";
 				VALIDATE_PRODUCT = YES;
-			};
-			name = Release;
-		};
-		CE4B9CF330829EB70098516A /* Debug configuration for PBXNativeTarget "ChallengeFinalWatchApp Watch App" */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 547VUZ3B6X;
-				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = ChallengeFinalWatchApp;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
-				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = devplaceholder.GRCA4YED.ChallengeFinal;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = devplaceholder.GRCA4YED.ChallengeFinal.watchkitapp;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = watchos;
-				SKIP_INSTALL = YES;
-				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = 4;
-				WATCHOS_DEPLOYMENT_TARGET = 26;
-			};
-			name = Debug;
-		};
-		CE4B9CF430829EB70098516A /* Release configuration for PBXNativeTarget "ChallengeFinalWatchApp Watch App" */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 547VUZ3B6X;
-				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = ChallengeFinalWatchApp;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
-				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = devplaceholder.GRCA4YED.ChallengeFinal;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = devplaceholder.GRCA4YED.ChallengeFinal.watchkitapp;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = watchos;
-				SKIP_INSTALL = YES;
-				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = 4;
-				VALIDATE_PRODUCT = YES;
-				WATCHOS_DEPLOYMENT_TARGET = 26;
 			};
 			name = Release;
 		};
@@ -616,19 +680,19 @@
 			);
 			defaultConfigurationName = Release;
 		};
+		4BC1A023308BDD4B009D777C /* Build configuration list for PBXNativeTarget "ChallengeFinalWidgetExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4BC1A024308BDD4B009D777C /* Debug configuration for PBXNativeTarget "ChallengeFinalWidgetExtension" */,
+				4BC1A025308BDD4B009D777C /* Release configuration for PBXNativeTarget "ChallengeFinalWidgetExtension" */,
+			);
+			defaultConfigurationName = Release;
+		};
 		CE4B99F93082939E0098516A /* Build configuration list for PBXNativeTarget "ChallengeFinalTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				CE4B99F73082939E0098516A /* Debug configuration for PBXNativeTarget "ChallengeFinalTests" */,
 				CE4B99F83082939E0098516A /* Release configuration for PBXNativeTarget "ChallengeFinalTests" */,
-			);
-			defaultConfigurationName = Release;
-		};
-		CE4B9CF230829EB70098516A /* Build configuration list for PBXNativeTarget "ChallengeFinalWatchApp Watch App" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				CE4B9CF330829EB70098516A /* Debug configuration for PBXNativeTarget "ChallengeFinalWatchApp Watch App" */,
-				CE4B9CF430829EB70098516A /* Release configuration for PBXNativeTarget "ChallengeFinalWatchApp Watch App" */,
 			);
 			defaultConfigurationName = Release;
 		};

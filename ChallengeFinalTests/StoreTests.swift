@@ -1,35 +1,58 @@
-////
-////  StoreTests.swift
-////  ChallengeFinalTests
-////
-////  Created by Paulo Henrique Costa Alves on 19/10/26.
-////
 //
-//import Foundation
-//import Testing
-//@testable import ChallengeFinal
+//  StoreTests.swift
+//  ChallengeFinalTests
 //
-//@Suite("Tests for all stores in the project")
-//@MainActor
-//struct StoreTests {
+//  Created by Paulo Henrique Costa Alves on 19/10/26.
 //
-//    // MARK: - HomeStore
-//
-//    @Test func testingHomeStoreStartsEmpty() async throws {
-//        let store = HomeStore()
-//
-//        #expect(store.groups.isEmpty)
-//    }
-//
-//    @Test func testingHomeStoreHoldsAssignedGroups() async throws {
-//        let store = HomeStore()
-//        let group = Group(groupID: UUID(), type: .physical, context: "home")
-//
-//        store.groups = [group]
-//
-//        #expect(store.groups.count == 1)
-//        #expect(store.groups.first?.groupID == group.groupID)
-//    }
+
+import Foundation
+import Testing
+@testable import ChallengeFinal
+
+@Suite("Tests for all stores in the project")
+@MainActor
+struct StoreTests {
+    // MARK: - Auxiliadores
+    
+    private func createHomeStore() -> HomeStore {
+        HomeStore(coordinator: HomeCoordinator())
+    }
+    
+    // MARK: - HomeStore
+
+    @Test func testingHomeStoreStartsWithDefaultState() {
+        let store = createHomeStore()
+
+        #expect(store.currentCategory == .physical)
+        #expect(store.daysOfWeek.isEmpty)
+    }
+
+    @Test(arguments: ActivityCategory.allCases)
+    func testingDisplayCategoryUpdatesCurrentCategory(category: ActivityCategory) {
+        let store = createHomeStore()
+
+        store.displayCategory(category)
+
+        #expect(store.currentCategory == category)
+    }
+    
+    @Test func testingDisplayWeekUpdatesDaysOfWeek() {
+        let store = createHomeStore()
+        let week = ["D", "S", "T", "Q", "Q", "S", "S"]
+
+        store.displayWeek(days: week)
+
+        #expect(store.daysOfWeek == week)
+    }
+    
+    @Test func testingDisplayWeekReplacesPreviousDays() {
+        let store = createHomeStore()
+        store.displayWeek(days: ["D", "S", "T", "Q", "Q", "S", "S"])
+
+        store.displayWeek(days: [])
+
+        #expect(store.daysOfWeek.isEmpty)
+    }
 //
 //    // MARK: - ActivitiesStore
 //
@@ -69,4 +92,4 @@
 //        #expect(store.currentProfile.profileID == profile.profileID)
 //        #expect(store.currentProfile.streak == 12)
 //    }
-//}
+}
