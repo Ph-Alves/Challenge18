@@ -8,27 +8,24 @@
 import SwiftUI
 
 struct ChallengeCircle: View {
-
+    // MARK: - Variables
     let text: String
 
-    @State private var textSize: CGSize = .zero
-
-    private let lineWidth: CGFloat = 45
-    private let maxTextWidth: CGFloat = 190
-
+    // MARK: - View
     var body: some View {
         ZStack {
             Circle()
-                .stroke(LinearGradient(colors: [.black, .gray], startPoint: UnitPoint(x: 1, y: 1), endPoint: UnitPoint(x: 0, y: 1)), lineWidth: lineWidth)
+                .stroke(LinearGradient(colors: [.black, .gray], startPoint: UnitPoint(x: 1, y: 1), endPoint: UnitPoint(x: 0, y: 1)), lineWidth: 45)
                 .frame(width: 300, height: 300)
 
             Text(text)
                 .multilineTextAlignment(.center)
-                .frame(maxWidth: maxTextWidth)
+                .frame(maxWidth: 190)
         }
     }
 }
 
+// MARK: - Preview
 #Preview {
     VStack(spacing: 40) {
         ChallengeCircle(text: "Escolha as escadas: Na próxima oportunidade, use as escadas em vez do elevador, se for seguro e viável.")

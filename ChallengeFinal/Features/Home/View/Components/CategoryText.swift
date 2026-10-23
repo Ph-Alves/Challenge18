@@ -9,8 +9,10 @@ import SwiftUI
 
 struct CategoryText: View {
     
+    // MARK: - Variables
     let category: ActivityCategory
     
+    // MARK: - View
     var body: some View {
         HStack {
             Image(systemName: category.icon)
@@ -19,6 +21,7 @@ struct CategoryText: View {
     }
 }
 
+// MARK: - Preview
 #Preview {
     CategoryText(category: .physical)
 }

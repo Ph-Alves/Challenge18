@@ -7,10 +7,14 @@
 
 import SwiftUI
 
+// Pega um array da semana e mostra os circulos com base
 struct WeeklyHumor: View {
     
+    // MARK: - Variables
     var week: [String]
     
+    
+    // MARK: - View
     var body: some View {
         HStack(spacing: 17) {
             ForEach(week, id: \.self) { day in
@@ -24,6 +28,7 @@ struct WeeklyHumor: View {
     }
 }
 
+// MARK: - Preview
 #Preview {
     let week = ["D", "S", "T", "Q", "Q", "S", "S"]
     WeeklyHumor(week: week)

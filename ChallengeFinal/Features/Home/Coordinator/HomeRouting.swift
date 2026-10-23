@@ -8,6 +8,8 @@
 import Foundation
 import SwiftData
 
+// MARK: - Protocol
+// Protocolo do Coordinator
 @MainActor
 protocol HomeRouting: AnyObject {
     func startChallengeFlow()

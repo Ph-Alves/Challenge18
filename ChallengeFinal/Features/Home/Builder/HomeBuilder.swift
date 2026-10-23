@@ -11,6 +11,7 @@ import SwiftUI
 import SwiftData
 
 
+// Prepara a view e retorna a mesma.
 enum HomeBuilder {
     @MainActor
     static func build(routing: HomeRouting, context: ModelContext) -> HomeView {

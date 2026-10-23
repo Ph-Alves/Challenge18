@@ -7,6 +7,7 @@
 
 import Foundation
 
+// MARK: - Protocol
 @MainActor
 protocol HomeInteractorProtocol: AnyObject {
     func nextCategory(current: ActivityCategory)
@@ -14,17 +15,21 @@ protocol HomeInteractorProtocol: AnyObject {
     func getCurrentWeek()
 }
 
+// MARK: - Class
 @MainActor
 final class HomeInteractor: HomeInteractorProtocol {
     
+    // MARK: - Variables
     private let repository: GenericRepository<Activity>
     private let presenter: HomePresenterProtocol
     
+    // MARK: - Init
     init(repository: GenericRepository<Activity>, presenter: HomePresenterProtocol) {
         self.repository = repository
         self.presenter = presenter
     }
     
+    // MARK: - Functions
     func getCurrentWeek() {
         // Pegamos o calendário para operações
         var calendar = Calendar.current
@@ -52,6 +57,7 @@ final class HomeInteractor: HomeInteractorProtocol {
         presenter.presentWeek(days: days)
     }
     
+    // Muda a categoria para a proxima (conforme prototipo)
     func nextCategory(current: ActivityCategory) {
         switch current {
         case .physical:
@@ -65,6 +71,7 @@ final class HomeInteractor: HomeInteractorProtocol {
         }
     }
     
+    // Muda a categoria conforme a anterior (conforme prototipo)
     func previousCategory(current: ActivityCategory) {
         switch current {
         case .physical:
