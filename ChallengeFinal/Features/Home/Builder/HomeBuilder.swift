@@ -10,9 +10,10 @@
 import SwiftUI
 import SwiftData
 
+
 enum HomeBuilder {
     @MainActor
-    static func build(routing: HomeRouting, context: ModelContext) -> some View {
+    static func build(routing: HomeRouting, context: ModelContext) -> HomeView {
         let store = HomeStore(coordinator: routing)
         let presenter = HomePresenter(store: store)
         let interactor = HomeInteractor(repository: GenericRepository<Activity>(context: context), presenter: presenter)

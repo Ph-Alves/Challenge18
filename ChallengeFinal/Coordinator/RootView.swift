@@ -1,5 +1,5 @@
 //
-//  Untitled.swift
+//  RootView.swift
 //  ChallengeFinal
 //
 //  Created by Raquel Souza on 19/10/26.
@@ -15,7 +15,7 @@ struct RootView: View {
     var body: some View {
         TabView(selection: $coordinator.selectedTab) {
             Tab("Home", systemImage: "diamond.fill", value: AppTab.home) {
-                HomeBuilder.build(routing: coordinator.homeCoordinator, context: context)
+                coordinator.homeCoordinator.startHome(context: context)
             }
             Tab("Challenges", systemImage: "circle.fill", value: AppTab.challenges) {
                 // feature ainda não existe

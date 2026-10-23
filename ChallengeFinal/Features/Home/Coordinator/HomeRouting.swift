@@ -6,7 +6,10 @@
 //
 
 import Foundation
+import SwiftData
 
+@MainActor
 protocol HomeRouting: AnyObject {
     func startChallengeFlow()
+    func startHome(context: ModelContext) -> HomeView
 }
