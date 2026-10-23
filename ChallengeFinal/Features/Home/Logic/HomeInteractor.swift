@@ -7,12 +7,14 @@
 
 import Foundation
 
+@MainActor
 protocol HomeInteractorProtocol: AnyObject {
     func nextCategory(current: ActivityCategory)
     func previousCategory(current: ActivityCategory)
     func getCurrentWeek()
 }
 
+@MainActor
 final class HomeInteractor: HomeInteractorProtocol {
     
     private let repository: GenericRepository<Activity>

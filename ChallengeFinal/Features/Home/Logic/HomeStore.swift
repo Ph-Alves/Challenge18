@@ -8,6 +8,7 @@
 import Foundation
 import SwiftUI
 
+@MainActor
 protocol HomeStoreProtocol: AnyObject {
     func displayCategory(_ current: ActivityCategory)
     func displayWeek(days: [String])

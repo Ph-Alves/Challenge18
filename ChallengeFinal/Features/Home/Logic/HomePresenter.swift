@@ -7,6 +7,7 @@
 
 import Foundation
 
+@MainActor
 protocol HomePresenterProtocol: AnyObject {
     func presentCategory(_ category: ActivityCategory)
     func presentWeek(days: [Date])
