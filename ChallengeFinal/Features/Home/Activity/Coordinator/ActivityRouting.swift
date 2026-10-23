@@ -8,6 +8,9 @@
 import Foundation
 
 protocol ActivityRouting: AnyObject {
+    var cached: ActivityView? { get set }
+    var step: ActivityStep { get }
+    
     func didDraw()
     func didAcceptChallenge()
     func didCompleteChallenge()

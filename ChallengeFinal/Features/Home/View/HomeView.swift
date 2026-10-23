@@ -49,6 +49,9 @@ struct HomeView: View {
                         }
                 )
                 .padding(.horizontal)
+                .onTapGesture {
+                    
+                }
 
             
             // Texto da respectiva categoria

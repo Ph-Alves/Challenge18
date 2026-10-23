@@ -15,7 +15,12 @@ struct RootView: View {
     var body: some View {
         TabView(selection: $coordinator.selectedTab) {
             Tab("Home", systemImage: "diamond.fill", value: AppTab.home) {
-                coordinator.homeCoordinator.startHome(context: context)
+                switch coordinator.homeCoordinator.step {
+                case .home:
+                    coordinator.homeCoordinator.startHomeFlow(context: context)
+                case .activity(let flow):
+                    flow.startActivityView()
+                }
             }
             Tab("Challenges", systemImage: "circle.fill", value: AppTab.challenges) {
                 // feature ainda não existe

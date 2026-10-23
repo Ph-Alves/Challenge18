@@ -12,40 +12,27 @@ enum ActivityStep {
     case draw, challenge, inProgress, mood, photo, summary
 }
 
-
 @MainActor
 @Observable
-final class ActivityCoordinator: Identifiable {
+final class ActivityCoordinator {
     private(set) var step: ActivityStep = .draw
     private let onFinish: () -> Void
+    
+    var cached: ActivityView?
 
     init(onFinish: @escaping () -> Void) {
         self.onFinish = onFinish
     }
-
-    deinit {
-        print("ChallengeCoordinator liberado")
-    }
     
-    //MARK: EXCLUIR ESSA FUNÇÃO APÓS IMPLEMENTAÇÃO DO INTERACTOR. Deixei ela aqui só pro app rodar.
-    func debugNext() {
-        switch step {
-        case .draw:
-            step = .challenge
-        case .challenge:
-            step = .inProgress
-        case .inProgress:
-            step = .mood
-        case .mood:
-            step = .photo
-        case .photo:
-            step = .summary
-        case .summary:
-            onFinish()
+    func startActivityView() -> ActivityView {
+        if let cached = cached {
+            return cached
         }
+        
+        let view = ActivityBuilder.build(coordinator: self)
+        cached = view
+        return view
     }
-    
-    
 }
 
 extension ActivityCoordinator: ActivityRouting {

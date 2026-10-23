@@ -12,6 +12,9 @@ import SwiftData
 // Protocolo do Coordinator
 @MainActor
 protocol HomeRouting: AnyObject {
-    func startChallengeFlow()
-    func startHome(context: ModelContext) -> HomeView
+    var cached: HomeView? { get set }
+    var step: HomeStep { get }
+    
+    func startHomeFlow(context: ModelContext) -> HomeView
+    func startActivityFlow()
 }
