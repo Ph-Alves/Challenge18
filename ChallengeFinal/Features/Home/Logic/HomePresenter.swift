@@ -12,6 +12,7 @@ import Foundation
 protocol HomePresenterProtocol: AnyObject {
     func presentCategory(_ category: ActivityCategory)
     func presentWeek(days: [Date])
+    func presentActivityFlow()
 }
 
 // MARK: - Class
@@ -48,5 +49,9 @@ final class HomePresenter: HomePresenterProtocol {
         }
         
         store?.displayWeek(days: weekLabels)
+    }
+    
+    func presentActivityFlow() {
+        store?.displayActivityFlow()
     }
 }

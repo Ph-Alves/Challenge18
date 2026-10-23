@@ -9,7 +9,7 @@ import Foundation
 
 
 protocol ActivityInteractorProtocol: AnyObject {
-    
+    func finishActivity()
 }
 
 
@@ -19,5 +19,9 @@ final class ActivityInteractor: ActivityInteractorProtocol {
 
     init(presenter: ActivityPresenter, routing: ActivityRouting) {
         self.presenter = presenter
+    }
+    
+    func finishActivity() {
+        presenter.presentActivityFinished()
     }
 }

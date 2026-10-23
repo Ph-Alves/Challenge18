@@ -8,7 +8,7 @@
 import Foundation
 
 protocol ActivityPresenterProtocol: AnyObject {
-    
+    func presentActivityFinished()
 }
 
 @MainActor
@@ -17,5 +17,9 @@ final class ActivityPresenter: ActivityPresenterProtocol {
     
     init(store: ActivityStoreProtocol) {
         self.store = store
+    }
+    
+    func presentActivityFinished() {
+        store?.displayActivityFinished()
     }
 }

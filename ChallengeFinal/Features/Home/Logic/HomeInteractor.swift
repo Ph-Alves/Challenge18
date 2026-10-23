@@ -13,6 +13,7 @@ protocol HomeInteractorProtocol: AnyObject {
     func nextCategory(current: ActivityCategory)
     func previousCategory(current: ActivityCategory)
     func getCurrentWeek()
+    func startActivity()
 }
 
 // MARK: - Class
@@ -83,5 +84,9 @@ final class HomeInteractor: HomeInteractorProtocol {
         case .social:
             presenter.presentCategory(.sensorial)
         }
+    }
+    
+    func startActivity() {
+        presenter.presentActivityFlow()
     }
 }

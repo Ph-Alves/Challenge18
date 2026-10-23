@@ -50,7 +50,7 @@ struct HomeView: View {
                 )
                 .padding(.horizontal)
                 .onTapGesture {
-                    
+                    interactor.startActivity()
                 }
 
             
@@ -73,6 +73,8 @@ struct HomeView: View {
 // Usamos o stub por que controlamos melhor o que o preview vai mostrar e como vai mostrar
 // No caso eu testo so a tela, sem interações.
 private final class HomeInteractorStub: HomeInteractorProtocol {
+    func startActivity() {}
+    
     func getCurrentWeek() {}
     
     func nextCategory(current: ActivityCategory) {}

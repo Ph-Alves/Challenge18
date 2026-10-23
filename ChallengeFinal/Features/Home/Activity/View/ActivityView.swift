@@ -16,8 +16,12 @@ struct ActivityView: View {
 
     var body: some View {
         VStack(spacing: 24) {
-            switch store.getCurrentStep() {
-            case .draw:       Text("Sortear")
+            switch store.displayCurrentStep() {
+            case .draw:
+                BackButton(action: {
+                    interactor.finishActivity()
+                })
+                Text("Sortear")
             case .challenge:  Text("Desafio")
             case .inProgress: Text("Em andamento")
             case .mood:       Text("Humor")
@@ -25,6 +29,6 @@ struct ActivityView: View {
             case .summary:    Text("Resumo")
             }
         }
-        .animation(.default, value: store.getCurrentStep())
+        .animation(.default, value: store.displayCurrentStep())
     }
 }

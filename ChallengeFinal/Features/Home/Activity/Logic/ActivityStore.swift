@@ -9,7 +9,8 @@ import Foundation
 import SwiftData
 
 protocol ActivityStoreProtocol: AnyObject {
-    func getCurrentStep() -> ActivityStep
+    func displayCurrentStep() -> ActivityStep
+    func displayActivityFinished()
 }
 
 @MainActor
@@ -21,7 +22,11 @@ final class ActivityStore: ActivityStoreProtocol {
         self.coordinator = coordinator
     }
     
-    func getCurrentStep() -> ActivityStep {
-        return coordinator.step
+    func displayCurrentStep() -> ActivityStep {
+        return self.coordinator.step
+    }
+    
+    func displayActivityFinished() {
+        self.coordinator.didFinishChallenge()
     }
 }
