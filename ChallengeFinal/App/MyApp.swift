@@ -10,7 +10,8 @@ import SwiftUI
     
     var body: some Scene {
         WindowGroup {
-            RootView(coordinator: appCoordinator)
+            CameraTestView()
+//            RootView(coordinator: appCoordinator)
             //ContentView() // no lugar do contentView eu vou colocar uma view raiz que lê o estado do Coordinator.
         }
     }
