@@ -1,24 +1,30 @@
-////
-////  InteractorTests.swift
-////  ChallengeFinalTests
-////
-////  Created by Paulo Henrique Costa Alves on 19/10/26.
-////
 //
-//import Foundation
-//import Testing
-//import SwiftData
-//@testable import ChallengeFinal
+//  InteractorTests.swift
+//  ChallengeFinalTests
 //
-//// MARK: - Spies (test doubles for the Presenter protocols the Interactors talk to)
+//  Created by Paulo Henrique Costa Alves on 19/10/26.
 //
-//final class HomePresenterSpy: HomePresenterProtocol {
-//    private(set) var presentedGroups: [Group]?
-//    func presentGroups(_ groups: [Group]) {
-//        presentedGroups = groups
-//    }
-//}
-//
+
+import Testing
+import SwiftData
+import Foundation
+@testable import ChallengeFinal
+
+// MARK: - Spies (test doubles for the Presenter protocols the Interactors talk to)
+
+final class HomePresenterSpy: HomePresenterProtocol {
+    private(set) var presentedCategory: ActivityCategory?
+    private(set) var week: [Date]?
+    
+    func presentCategory(_ category: ChallengeFinal.ActivityCategory) {
+        presentedCategory = category
+    }
+    
+    func presentWeek(days: [Date]) {
+        week = days
+    }
+}
+
 //final class ActivitiesPresenterSpy: ActivitiesPresenterProtocol {
 //    private(set) var presentedActivity: Activity?
 //    private(set) var presentedHistory: (accepted: [Activity], recused: [Activity])?
@@ -36,49 +42,83 @@
 //        presentedProfile = profile
 //    }
 //}
-//
-//@Suite("Tests for all interactors in the project")
-//@MainActor
-//struct InteractorTests {
-//
-//    // MARK: - Auxiliadores
-//    let modelContainer: ModelContainer = {
-//        let schema = Schema([Group.self, Activity.self, Results.self, Profile.self])
-//        let config = ModelConfiguration(isStoredInMemoryOnly: true)
-//        return try! ModelContainer(for: schema, configurations: config)
-//    }()
-//
-//    private func makeGroupRepository() -> GenericRepository<Group> {
-//        GenericRepository(context: modelContainer.mainContext)
-//    }
-//
-//    private func makeActivityRepository() -> GenericRepository<Activity> {
-//        GenericRepository(context: modelContainer.mainContext)
-//    }
-//
-//    private func makeProfileRepository() -> GenericRepository<Profile> {
-//        GenericRepository(context: modelContainer.mainContext)
-//    }
-//
-//    // MARK: - HomeInteractor (RF01 - visualizar grupos de atividade)
-//
-//    @Test func testingFetchGroupsPresentsEveryGroupSavedInRepository() async throws {
-//        let repository = makeGroupRepository()
-//        let physical = Group(groupID: UUID(), type: .physical, context: "home")
-//        let cognitive = Group(groupID: UUID(), type: .cognitive, context: "home")
-//        repository.insert(physical)
-//        repository.insert(cognitive)
-//        repository.save()
-//
-//        let presenterSpy = HomePresenterSpy()
-//        let interactor = HomeInteractor(repository: repository, presenter: presenterSpy)
-//
-//        interactor.fetchGroups()
-//
-//        #expect(presenterSpy.presentedGroups?.count == 2)
-//        #expect(presenterSpy.presentedGroups?.contains { $0.groupID == physical.groupID } == true)
-//        #expect(presenterSpy.presentedGroups?.contains { $0.groupID == cognitive.groupID } == true)
-//    }
+
+@Suite("Tests for all interactors in the project")
+@MainActor
+struct InteractorTests {
+
+    // MARK: - Auxiliadores
+    
+    let modelContainer: ModelContainer = {
+        let schema = Schema([Activity.self, ActivityResult.self, Profile.self])
+        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        return try! ModelContainer(for: schema, configurations: config)
+    }()
+
+    private func makeActivityRepository() -> GenericRepository<Activity> {
+        GenericRepository(context: modelContainer.mainContext)
+    }
+
+    private func makeProfileRepository() -> GenericRepository<Profile> {
+        GenericRepository(context: modelContainer.mainContext)
+    }
+
+    // MARK: - HomeInteractor (RF01 - visualizar grupos de atividade)
+
+    // Cada par é (categoria atual, categoria esperada). O último caso testa a volta ao início.
+    @Test(arguments: [
+        (ActivityCategory.physical, ActivityCategory.cognitive),
+        (.cognitive, .sensorial),
+        (.sensorial, .social),
+        (.social, .physical)
+    ])
+    func testingNextCategory(current: ActivityCategory, expected: ActivityCategory) {
+        let presenterSpy = HomePresenterSpy()
+        let interactor = HomeInteractor(repository: makeActivityRepository(), presenter: presenterSpy)
+
+        interactor.nextCategory(current: current)
+        
+        #expect(presenterSpy.presentedCategory == expected)
+    }
+    
+    // Mesmo esquema na direção contrária. O primeiro caso testa a volta ao final.
+    @Test(arguments: [
+        (ActivityCategory.physical, ActivityCategory.social),
+        (.cognitive, .physical),
+        (.sensorial, .cognitive),
+        (.social, .sensorial)
+    ])
+    func testingPreviousCategory(current: ActivityCategory, expected: ActivityCategory) {
+        let presenterSpy = HomePresenterSpy()
+        let interactor = HomeInteractor(repository: makeActivityRepository(), presenter: presenterSpy)
+
+        interactor.previousCategory(current: current)
+        
+        #expect(presenterSpy.presentedCategory == expected)
+    }
+    
+    @Test func testingIfInteractorCatchesWeekCorrectly() throws {
+        let presenterSpy = HomePresenterSpy()
+        let interactor = HomeInteractor(repository: makeActivityRepository(), presenter: presenterSpy)
+        
+        interactor.getCurrentWeek()
+        
+        // #require falha o teste (sem crashar) se a semana não foi apresentada.
+        let week = try #require(presenterSpy.week)
+        #expect(week.count == 7)
+        
+        var calendar = Calendar.current
+        calendar.firstWeekday = 1
+        
+        // A semana começa no domingo (weekday == 1).
+        #expect(calendar.component(.weekday, from: week[0]) == 1)
+        
+        // Os dias são consecutivos.
+        for index in 1..<week.count {
+            let expected = calendar.date(byAdding: .day, value: 1, to: week[index - 1])
+            #expect(week[index] == expected)
+        }
+    }
 //
 //    // MARK: - ActivitiesInteractor (RF03/RF06 - gerar e trocar atividade)
 //
@@ -199,4 +239,4 @@
 //        #expect(presenterSpy.presentedProfile?.localizable == true)
 //        #expect(presenterSpy.presentedProfile?.notifications == true)
 //    }
-//}
+}
