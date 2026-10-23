@@ -1,22 +1,16 @@
-////
-////  PresenterTests.swift
-////  ChallengeFinalTests
-////
-////  Created by Paulo Henrique Costa Alves on 19/10/26.
-////
 //
-//import Foundation
-//import Testing
-//@testable import ChallengeFinal
+//  PresenterTests.swift
+//  ChallengeFinalTests
+//
+//  Created by Paulo Henrique Costa Alves on 19/10/26.
+//
+
+import Foundation
+import Testing
+@testable import ChallengeFinal
 //
 //// MARK: - Spies (test doubles for the Interactor protocols the Presenters talk to)
 //
-//final class HomeInteractorSpy: HomeInteractorProtocol {
-//    private(set) var fetchGroupsCallCount = 0
-//    func fetchGroups() {
-//        fetchGroupsCallCount += 1
-//    }
-//}
 //
 //final class ActivitiesInteractorSpy: ActivitiesInteractorProtocol {
 //    private(set) var fetchHistoryCallCount = 0
@@ -47,34 +41,45 @@
 //    func updateBackgroundActivity(_ enabled: Bool) {}
 //}
 //
-//@Suite("Tests for all presenters in the project")
-//@MainActor
-//struct PresenterTests {
-//
-//    // MARK: - HomePresenter
-//
-//    @Test func testingFetchDataAsksInteractorOnlyOnce() async throws {
-//        let interactorSpy = HomeInteractorSpy()
-//        let store = HomeStore()
-//        let presenter = HomePresenter(interactor: interactorSpy, store: store)
-//
-//        presenter.fetchData()
-//        presenter.fetchData()
-//
-//        #expect(interactorSpy.fetchGroupsCallCount == 1)
-//    }
-//
-//    @Test func testingPresentGroupsUpdatesStoreAndPresenter() async throws {
-//        let interactorSpy = HomeInteractorSpy()
-//        let store = HomeStore()
-//        let presenter = HomePresenter(interactor: interactorSpy, store: store)
-//        let group = Group(groupID: UUID(), type: .physical, context: "home")
-//
-//        presenter.presentGroups([group])
-//
-//        #expect(store.groups.count == 1)
-//        #expect(presenter.groups.first?.groupID == group.groupID)
-//    }
+@Suite("Tests for all presenters in the project")
+@MainActor
+struct PresenterTests {
+    
+    // MARK: - Auxiliadores
+    
+    // O presenter guarda o store como weak, então o teste precisa segurar o store (por isso devolvemos os dois).
+    private func createPresenterAndStore() -> (presenter: HomePresenter, store: HomeStore) {
+        let store = HomeStore(coordinator: HomeCoordinator())
+        let presenter = HomePresenter(store: store)
+        return (presenter, store)
+    }
+
+    // MARK: - HomePresenter
+
+    @Test func testingPresentCategoryUpdatesStore() {
+        let (presenter, store) = createPresenterAndStore()
+        
+        presenter.presentCategory(.cognitive)
+        
+        #expect(store.currentCategory == .cognitive)
+        
+        presenter.presentCategory(.physical)
+        
+        #expect(store.currentCategory == .physical)
+    }
+    
+    @Test func testingPresentWeekUpdatesStore() {
+        let (presenter, store) = createPresenterAndStore()
+        
+        // 18/10/2026 é domingo, então a semana vai de domingo a sábado.
+        let calendar = Calendar.current
+        let sunday = calendar.date(from: DateComponents(year: 2026, month: 10, day: 18))!
+        let days = (0..<7).compactMap { calendar.date(byAdding: .day, value: $0, to: sunday) }
+        
+        presenter.presentWeek(days: days)
+        
+        #expect(store.daysOfWeek == ["D", "S", "T", "Q", "Q", "S", "S"])
+    }
 //
 //    // MARK: - ActivitiesPresenter
 //
@@ -127,4 +132,4 @@
 //        #expect(store.currentProfile.profileID == profile.profileID)
 //        #expect(presenter.currentProfile.streak == 5)
 //    }
-//}
+}

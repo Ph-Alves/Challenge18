@@ -48,6 +48,7 @@ final class HomePresenterSpy: HomePresenterProtocol {
 struct InteractorTests {
 
     // MARK: - Auxiliadores
+    
     let modelContainer: ModelContainer = {
         let schema = Schema([Activity.self, ActivityResult.self, Profile.self])
         let config = ModelConfiguration(isStoredInMemoryOnly: true)
@@ -64,18 +65,59 @@ struct InteractorTests {
 
     // MARK: - HomeInteractor (RF01 - visualizar grupos de atividade)
 
-    @Test func testingIfInteractorSwitchesCorrectly() async throws {
-
+    // Cada par é (categoria atual, categoria esperada). O último caso testa a volta ao início.
+    @Test(arguments: [
+        (ActivityCategory.physical, ActivityCategory.cognitive),
+        (.cognitive, .sensorial),
+        (.sensorial, .social),
+        (.social, .physical)
+    ])
+    func testingNextCategory(current: ActivityCategory, expected: ActivityCategory) {
         let presenterSpy = HomePresenterSpy()
         let interactor = HomeInteractor(repository: makeActivityRepository(), presenter: presenterSpy)
 
-        interactor.nextCategory(current: .cognitive)
+        interactor.nextCategory(current: current)
         
-        #expect(presenterSpy.presentedCategory == .sensorial)
+        #expect(presenterSpy.presentedCategory == expected)
+    }
+    
+    // Mesmo esquema na direção contrária. O primeiro caso testa a volta ao final.
+    @Test(arguments: [
+        (ActivityCategory.physical, ActivityCategory.social),
+        (.cognitive, .physical),
+        (.sensorial, .cognitive),
+        (.social, .sensorial)
+    ])
+    func testingPreviousCategory(current: ActivityCategory, expected: ActivityCategory) {
+        let presenterSpy = HomePresenterSpy()
+        let interactor = HomeInteractor(repository: makeActivityRepository(), presenter: presenterSpy)
+
+        interactor.previousCategory(current: current)
         
-        interactor.previousCategory(current: .cognitive)
+        #expect(presenterSpy.presentedCategory == expected)
+    }
+    
+    @Test func testingIfInteractorCatchesWeekCorrectly() throws {
+        let presenterSpy = HomePresenterSpy()
+        let interactor = HomeInteractor(repository: makeActivityRepository(), presenter: presenterSpy)
         
-        #expect(presenterSpy.presentedCategory == .physical)
+        interactor.getCurrentWeek()
+        
+        // #require falha o teste (sem crashar) se a semana não foi apresentada.
+        let week = try #require(presenterSpy.week)
+        #expect(week.count == 7)
+        
+        var calendar = Calendar.current
+        calendar.firstWeekday = 1
+        
+        // A semana começa no domingo (weekday == 1).
+        #expect(calendar.component(.weekday, from: week[0]) == 1)
+        
+        // Os dias são consecutivos.
+        for index in 1..<week.count {
+            let expected = calendar.date(byAdding: .day, value: 1, to: week[index - 1])
+            #expect(week[index] == expected)
+        }
     }
 //
 //    // MARK: - ActivitiesInteractor (RF03/RF06 - gerar e trocar atividade)
