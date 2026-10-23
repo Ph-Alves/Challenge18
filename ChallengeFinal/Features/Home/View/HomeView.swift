@@ -28,7 +28,7 @@ struct HomeView: View {
                 .font(.title.bold())
 
             // Circulo de desafio
-            ChallengeCircle(text: "Eu te ajudo no que fazer <3")
+            ChallengeCircle(text: "Eu te ajudo no que fazer <3", size: .big)
             // Gesture para o swipe (esquerda/direita)
                 .gesture(
                     DragGesture(minimumDistance: 20)

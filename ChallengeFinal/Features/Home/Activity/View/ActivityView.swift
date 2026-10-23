@@ -8,20 +8,20 @@
 import SwiftUI
 
 
-//CHANGE: substituir isso daqui pela implementação real, isso é só um placeholder.
 struct ActivityView: View {
     
+    // MARK: - Variables
     let interactor: ActivityInteractorProtocol
-    var store: ActivityStoreProtocol
+    var store: ActivityStore
 
+    // MARK: - View
     var body: some View {
         VStack(spacing: 24) {
             switch store.displayCurrentStep() {
             case .draw:
-                BackButton(action: {
+                DrawChallengeView(returnAction: {
                     interactor.finishActivity()
                 })
-                Text("Sortear")
             case .challenge:  Text("Desafio")
             case .inProgress: Text("Em andamento")
             case .mood:       Text("Humor")
@@ -31,4 +31,21 @@ struct ActivityView: View {
         }
         .animation(.default, value: store.displayCurrentStep())
     }
+}
+
+// MARK: - Stubs pro preview
+
+final class ActivityInteractorStub: ActivityInteractorProtocol {
+    func finishActivity() {}
+}
+
+extension ActivityStore {
+    static var preview: ActivityStore {
+        return ActivityStore(coordinator: ActivityCoordinator(onFinish: {}))
+    }
+}
+
+// MARK: - Preview
+#Preview {
+    ActivityView(interactor: ActivityInteractorStub(), store: .preview)
 }
