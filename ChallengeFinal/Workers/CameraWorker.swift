@@ -251,6 +251,13 @@ final class CameraWorker: NSObject, CameraWorking {
             if flash && self.photoOutput.supportedFlashModes.contains(.on) {
                 settings.flashMode = .on
             }
+            
+            // Espelha a foto da câmera frontal para ela sair igual ao preview.
+            if let connection = self.photoOutput.connection(with: .video),
+               connection.isVideoMirroringSupported {
+                connection.automaticallyAdjustsVideoMirroring = false
+                connection.isVideoMirrored = (self.position == .front)
+            }
 
             // Guarda quem está esperando e manda tirar a foto.
             // O resultado chega no delegate, lá embaixo.
