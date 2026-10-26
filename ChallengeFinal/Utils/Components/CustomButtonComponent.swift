@@ -56,7 +56,7 @@ struct CustomButtonComponent: View {
             .font(.body)
             .padding(.horizontal, 20)
             .padding(.vertical, 5)
-            .frame(minWidth: 140)
+            .frame(maxWidth: .infinity)
             .background(backgroundColor)
             .foregroundStyle(foregroundColor)
             .clipShape(.capsule)

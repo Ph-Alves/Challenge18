@@ -78,6 +78,8 @@
             ReferencedContainer = "container:ChallengeFinal.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
+<<<<<<< HEAD
+=======
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
@@ -86,6 +88,7 @@
             ReferencedContainer = "container:ChallengeFinal.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
+>>>>>>> origin/develop
    </ProfileAction>
    <AnalyzeAction
       buildConfiguration = "Debug">

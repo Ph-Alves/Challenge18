@@ -39,13 +39,12 @@ final class ActivityCoordinator: Identifiable {
         case .mood:
             step = .photo
         case .photo:
+            
             step = .summary
         case .summary:
             onFinish()
         }
     }
-    
-    
 }
 
 extension ActivityCoordinator: ActivityRouting {
