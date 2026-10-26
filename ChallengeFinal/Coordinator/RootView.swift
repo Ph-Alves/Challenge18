@@ -19,7 +19,7 @@ struct RootView: View {
                 case .home:
                     coordinator.homeCoordinator.startHomeFlow(context: context)
                 case .activity(let flow):
-                    flow.startActivityView()
+                    flow.startActivityView(context: context)
                 }
             }
             Tab("Challenges", systemImage: "circle.fill", value: AppTab.challenges) {
