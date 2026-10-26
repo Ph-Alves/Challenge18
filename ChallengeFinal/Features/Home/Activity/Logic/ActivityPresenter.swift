@@ -9,13 +9,9 @@ import Foundation
 
 protocol ActivityPresenterProtocol: AnyObject {
     func presentActivityFinished()
-    func presentChallenge(_ challenge: FrictionChallenge)
-    func presentAcceptedActivity()
     func presentStartedChallenge()
     func presentActivityDetail()
     func presentStartAgain()
-    func presentSearching()
-    func presentSearchFailed()
 }
 
 @MainActor
@@ -30,10 +26,6 @@ final class ActivityPresenter: ActivityPresenterProtocol {
         store?.finishFlow()
     }
     
-    func presentAcceptedActivity() {
-        store?.displayAcceptedChallenge()
-    }
-    
     func presentStartedChallenge() {
         store?.transitionToAcceptedChallenge()
     }
@@ -44,17 +36,5 @@ final class ActivityPresenter: ActivityPresenterProtocol {
     
     func presentStartAgain() {
         store?.transitionToStart()
-    }
-    
-    func presentChallenge(_ challenge: FrictionChallenge) {
-        store?.displayChallenge(challenge)
-    }
-
-    func presentSearching() {
-        store?.displaySearching()
-    }
-
-    func presentSearchFailed() {
-        store?.displaySearchFailed()
     }
 }

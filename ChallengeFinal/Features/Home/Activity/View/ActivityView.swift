@@ -19,41 +19,8 @@ struct ActivityView: View {
     var body: some View {
         VStack(spacing: 24) {
             switch store.currentStep {
-            case .draw:
-                DrawChallengeView(
-                    isSearching: store.isSearching,
-                    isChallengeReady: store.isChallengeReady,
-                    startDetection: {
-                        interactor.detectMotion(for: currentCategory)
-                    }, finishDetection: {
-                        interactor.finishDetection()
-                    }, returnAction: {
-                        interactor.finishActivity()
-                    }, growFinished: {
-                        interactor.goToActivityDetail()
-                    })
-                .transition(.opacity)
-
-            case .challenge:
-                if let title = store.activityTitle, let subtitle = store.activitySubtitle, let description = store.activityDescription {
-                    if !store.isChallengeAccepted {
-                        ChallengeDisplayView(challengeTitle: title, archiveAction: {
-                            interactor.archiveChallenge(title: title, description: subtitle, in: currentCategory)
-                            interactor.returnToStart()
-                        }, acceptAction: {
-                            interactor.acceptChallenge()
-                        }, refuseAction: {
-                            interactor.returnToStart()
-                        })
-                        .transition(.opacity)
-                    } else {
-                        ChallengeAcceptedView(challengeTitle: title, challengeSubTitle: subtitle, challengeDescription: description, startAction: {
-                            interactor.startChallenge()
-                        }, cancelAction: {
-                            interactor.returnToStart()
-                        })
-                    }
-                }
+            case .draw:       Text("desenho")
+            case .challenge:  Text("Desafio")
             case .inProgress: Text("Em andamento")
             case .mood:       Text("Humor")
             case .photo:      Text("Foto")
@@ -61,9 +28,6 @@ struct ActivityView: View {
             }
         }
         .animation(.easeInOut(duration: 0.4), value: store.currentStep)
-        .onAppear() {
-            interactor.prepare(for: currentCategory)
-        }
     }
 }
 
