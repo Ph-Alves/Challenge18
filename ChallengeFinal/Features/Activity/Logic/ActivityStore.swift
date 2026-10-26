@@ -13,37 +13,37 @@ import SwiftUI
 protocol ActivityStoreProtocol: AnyObject {
     
     // MARK: Step .photo
-    func displayPhotoStep(_ viewModel: PhotoStepViewModel)
+    func displayPhoto(_ photo: Image?)
     func displayCamera(isPresented: Bool)
     func displayFlashIcon(_ icon: String)
     func displayPermissionAlert(_ message: String?)
     func displayError(_ message: String?)
 }
 
-// MARK: - ViewModels
-
-/// Tudo que a tela de foto precisa mostrar, já pronto para exibir.
-/// Quem monta é o Presenter; a Store guarda; a View só lê.
-struct PhotoStepViewModel {
-    /// A foto escolhida. `nil` = card vazio (tela inicial).
-    var photo: Image?
-    /// "tire uma foto!" ou "tirar outra foto".
-    var captureButtonTitle: String
-    /// SF Symbol do botão: "camera.fill" ou "arrow.clockwise".
-    var captureButtonIcon: String
-    /// "continuar sem foto" ou "continuar".
-    var continueButtonTitle: String
-}
-
-extension PhotoStepViewModel {
-    /// Estado inicial, antes de qualquer foto.
-    static let empty = PhotoStepViewModel(
-        photo: nil,
-        captureButtonTitle: "tire uma foto!",
-        captureButtonIcon: "camera.fill",
-        continueButtonTitle: "continuar sem foto"
-    )
-}
+//// MARK: - ViewModels
+//
+///// Tudo que a tela de foto precisa mostrar, já pronto para exibir.
+///// Quem monta é o Presenter; a Store guarda; a View só lê.
+//struct PhotoStepViewModel {
+//    /// A foto escolhida. `nil` = card vazio (tela inicial).
+//    var photo: Image?
+//    /// "tire uma foto!" ou "tirar outra foto".
+//    var captureButtonTitle: String
+//    /// SF Symbol do botão: "camera.fill" ou "arrow.clockwise".
+//    var captureButtonIcon: String
+//    /// "continuar sem foto" ou "continuar".
+//    var continueButtonTitle: String
+//}
+//
+//extension PhotoStepViewModel {
+//    /// Estado inicial, antes de qualquer foto.
+//    static let empty = PhotoStepViewModel(
+//        photo: nil,
+//        captureButtonTitle: "tire uma foto!",
+//        captureButtonIcon: "camera.fill",
+//        continueButtonTitle: "continuar sem foto"
+//    )
+//}
 
 
 //MARK: - Store
@@ -54,10 +54,8 @@ final class ActivityStore: ActivityStoreProtocol {
  
     // MARK: - Variables
  
-    // MARK: Step .photo (telas "sorria! você será fotografado")
- 
-    /// Conteúdo do card e textos dos botões. Começa vazio ("tire uma foto!").
-    private(set) var photoStep: PhotoStepViewModel = .empty
+    /// A foto escolhida. `nil` = card vazio (tela inicial).
+    private(set) var photo: Image?
  
     /// Controla a `fullScreenCover` da câmera (tela preta).
     private(set) var isCameraPresented: Bool = false
@@ -84,8 +82,8 @@ final class ActivityStore: ActivityStoreProtocol {
  
     // MARK: Step .photo
  
-    func displayPhotoStep(_ viewModel: PhotoStepViewModel) {
-        photoStep = viewModel
+    func displayPhoto(_ photo: Image?) {
+        self.photo = photo
     }
  
     func displayCamera(isPresented: Bool) {

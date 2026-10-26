@@ -41,8 +41,7 @@ enum ActivityBuilder {
         //    Presenter guarda a Store como `weak`: se a View não segurasse,
         //    a Store seria liberada aqui mesmo, ao fim desta função.
         //
-        //    A `session` vem do worker concreto (fora do protocolo),
-        //    só para a `CameraPreviewView` mostrar o vídeo.
+
         return ActivityView (
             coordinator: coordinator,
             interactor: interactor,

@@ -75,7 +75,7 @@ struct ActivityView: View {
         switch coordinator.step {
         case .photo:
             PhotoStepView(
-                viewModel: store.photoStep,
+                photo: store.photo,
                 onTakePhoto: { interactor.openCamera() },
                 onGalleryItemSelected: { item in interactor.didSelectFromGallery(item) },
                 onContinue: { interactor.continueFromPhoto() }

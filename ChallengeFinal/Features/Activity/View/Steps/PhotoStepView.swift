@@ -8,11 +8,6 @@
 import SwiftUI
 import PhotosUI
 
-// MARK: - View
-//
-// O `PhotoStepViewModel` (o que esta tela mostra) fica no `ActivityStore.swift`,
-// junto da Store, que é quem guarda esse estado.
-//
 // O card da foto (`PhotoCard`) e os botões (`CustomButtonComponent`)
 // ficam em `Components/`, para o resto do app reaproveitar.
 
@@ -22,41 +17,61 @@ import PhotosUI
 /// (`viewModel`) e avisa os toques por closures. Quem liga as closures ao
 /// Interactor é a `ActivityView` (o container dos steps).
 ///
-/// Vantagem: dá para ver no `#Preview` e mexer no layout sem ter
-/// Interactor, Presenter ou câmera prontos.
+/// Os textos dos botões dependem só de ter foto ou não, por isso são calculados aqui mesmo.
+///
 struct PhotoStepView: View {
 
-    let viewModel: PhotoStepViewModel
+    // MARK: - Dados
+    /// A foto escolhida (da câmera ou da galeria).
+    let photo: Image?
+    
+    // MARK: - Textos (dependem só de ter foto ou não)
+    
+    private var hasPhoto: Bool {
+        photo != nil
+    }
 
+    private var captureButtonTitle: String {
+        hasPhoto ? "tirar outra foto" : "tire uma foto!"
+    }
+
+    private var captureButtonIcon: String {
+        hasPhoto ? "arrow.clockwise" : "camera.fill"
+    }
+
+    private var continueButtonTitle: String {
+        hasPhoto ? "continuar" : "continuar sem foto"
+    }
+
+    // MARK: - Ações (closures)
+    
     /// Toque em "tire uma foto!" / "tirar outra foto".
     let onTakePhoto: () -> Void
+    
     /// O usuário escolheu uma foto na galeria.
     let onGalleryItemSelected: (PhotosPickerItem) -> Void
+    
     /// Toque em "continuar" / "continuar sem foto".
     let onContinue: () -> Void
+    
+    // MARK: - Estado interno
 
-    /// Item escolhido no PhotosPicker. É estado só de UI: assim que chega,
-    /// repassamos pela closure e limpamos.
+    /// Item escolhido no PhotosPicker. É estado só de UI: assim que chega, repassamos pela closure e limpamos.
     @State private var galleryItem: PhotosPickerItem?
-
     /// Abre/fecha a galeria. 
     @State private var isShowingGallery = false
 
+    // MARK: - View
     var body: some View {
         VStack(spacing: 0) {
             header
                 .padding(.top, 72)
 
-            PhotoCard(photo: viewModel.photo)
+            PhotoCard(photo: photo)
                 // O botão de câmera fica "encaixado" na borda de baixo do card.
                 .overlay(alignment: .bottom) {
-                    CustomButtonComponent(
-                        title: viewModel.captureButtonTitle,
-                        icon: viewModel.captureButtonIcon,
-                        type: .secondary,
-                        action: onTakePhoto
-                    )
-                    .offset(y: 1)
+                    takePictureButton
+                        .offset(y: 1)
                 }
                 .padding(.top, 28)
 
@@ -66,7 +81,7 @@ struct PhotoStepView: View {
             Spacer()
 
             continueButton
-                .padding(.horizontal, 100) //gambiarra para deixar a width menor, CHANGE esse botao para sumir esses magic numbers.
+                .padding(.horizontal, 80) //gambiarra para deixar a width menor, CHANGE esse botao para sumir esses magic numbers.
                 .padding(.bottom, 60)
         }
         .padding(.horizontal, 48)
@@ -83,7 +98,7 @@ struct PhotoStepView: View {
         }
     }
 
-    // MARK: Título
+    // MARK: - Título
 
     private var header: some View {
         VStack(spacing: 16) {
@@ -97,7 +112,16 @@ struct PhotoStepView: View {
         .foregroundStyle(.black)
     }
 
-    // MARK: Botões
+    // MARK: - Botões
+    
+    private var takePictureButton: some View {
+        CustomButtonComponent(
+            title: captureButtonTitle,
+            icon: captureButtonIcon,
+            type: .secondary,
+            action: onTakePhoto
+        )
+    }
 
     private var galleryButton: some View {
         CustomButtonComponent(
@@ -109,9 +133,8 @@ struct PhotoStepView: View {
     }
 
     private var continueButton: some View {
-        
         CustomButtonComponent(
-            title: viewModel.continueButtonTitle,
+            title: continueButtonTitle,
             icon: nil,
             type: .secondary,
             action: onContinue)
@@ -122,7 +145,7 @@ struct PhotoStepView: View {
 
 #Preview("Sem foto") {
     PhotoStepView(
-        viewModel: .empty,
+        photo: nil,
         onTakePhoto: { print("tirar foto") },
         onGalleryItemSelected: { _ in print("galeria") },
         onContinue: { print("continuar") }
@@ -131,12 +154,7 @@ struct PhotoStepView: View {
 
 #Preview("Com foto") {
     PhotoStepView(
-        viewModel: PhotoStepViewModel(
-            photo: Image(systemName: "person.crop.square.fill"), // só para visualizar
-            captureButtonTitle: "tirar outra foto",
-            captureButtonIcon: "arrow.clockwise",
-            continueButtonTitle: "continuar"
-        ),
+        photo: Image(systemName: "person.crop.square.fill"),
         onTakePhoto: { print("tirar outra") },
         onGalleryItemSelected: { _ in print("galeria") },
         onContinue: { print("continuar") }

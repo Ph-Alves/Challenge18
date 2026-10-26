@@ -90,15 +90,7 @@ final class ActivityPresenter: ActivityPresenterProtocol {
             store?.displayError("Não foi possível carregar a foto. Tente novamente.")
             return
         }
-
-        let viewModel = PhotoStepViewModel(
-            photo: Image(uiImage: uiImage),
-            captureButtonTitle: "tirar outra foto",
-            captureButtonIcon: "arrow.clockwise",
-            continueButtonTitle: "continuar"
-        )
-
-        store?.displayPhotoStep(viewModel)
+        store?.displayPhoto(Image(uiImage: uiImage))
         store?.displayError(nil)
         store?.displayCamera(isPresented: false)
     }

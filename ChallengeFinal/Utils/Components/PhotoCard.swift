@@ -11,7 +11,7 @@ import SwiftUI
 ///
 /// - Sem foto: mostra o fundo pontilhado com borda preta.
 /// - Com foto: mostra a imagem preenchendo o card, sem borda.
-/// - Botão (opcional): fica "encaixado" na borda de baixo do card.
+
 ///
 /// Uso simples (só exibir uma foto, ex.: no resumo ou no histórico):
 /// ```swift
