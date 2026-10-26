@@ -43,11 +43,11 @@ enum ActivityBuilder {
         //
         //    A `session` vem do worker concreto (fora do protocolo),
         //    só para a `CameraPreviewView` mostrar o vídeo.
-        return ActivityView(
+        return ActivityView (
             coordinator: coordinator,
             interactor: interactor,
             store: store,
-            session: camera.session
+            cameraPreview: CameraPreviewView(session: camera.session)
         )
     }
 }

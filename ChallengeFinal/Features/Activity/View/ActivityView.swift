@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-import AVFoundation
 
 /// Container do fluxo de Activity: mostra a view do step atual
 /// e liga os toques de cada step ao Interactor.
@@ -26,19 +25,16 @@ struct ActivityView: View {
     // mesmo worker que o Interactor usa.
     @State private var interactor: any ActivityInteractorProtocol
     @State private var store: ActivityStore
-    @State private var session: AVCaptureSession
+    @State private var cameraPreview: CameraPreviewView
 
     /// Para abrir os Ajustes do iPhone no alerta de permissão.
     @Environment(\.openURL) private var openURL
 
-    init(coordinator: ActivityCoordinator,
-         interactor: any ActivityInteractorProtocol,
-         store: ActivityStore,
-         session: AVCaptureSession) {
+    init(coordinator: ActivityCoordinator, interactor: any ActivityInteractorProtocol, store: ActivityStore, cameraPreview: CameraPreviewView) {
         self.coordinator = coordinator
         _interactor = State(initialValue: interactor)
         _store = State(initialValue: store)
-        _session = State(initialValue: session)
+        _cameraPreview = State(initialValue: cameraPreview)
     }
 
     var body: some View {
@@ -68,7 +64,7 @@ struct ActivityView: View {
             }
             // Tela da câmera: abre e fecha conforme `store.isCameraPresented`.
             .fullScreenCover(isPresented: isCameraPresented) {
-                CameraView(interactor: interactor, store: store, session: session)
+                CameraView(interactor: interactor, store: store, preview: cameraPreview)
             }
     }
 
@@ -85,7 +81,7 @@ struct ActivityView: View {
                 onContinue: { interactor.continueFromPhoto() }
             )
 
-        // Os outros steps continuam como placeholder até serem implementados.
+        // Os outros steps continuam como placeholder até serem implementados
         case .draw:       placeholder("Sortear")
         case .challenge:  placeholder("Desafio")
         case .inProgress: placeholder("Em andamento")

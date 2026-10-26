@@ -7,7 +7,6 @@
 
 import SwiftUI
 import PhotosUI
-import AVFoundation
 
 /// Tela da câmera em tela cheia (a tela preta do protótipo).
 ///
@@ -21,7 +20,7 @@ struct CameraView: View {
 
     let interactor: any ActivityInteractorProtocol
     let store: ActivityStore
-    let session: AVCaptureSession
+    let preview: CameraPreviewView
 
     /// Item escolhido no "da biblioteca". Estado só de UI:
     /// assim que chega, repassamos ao Interactor e limpamos.
@@ -34,7 +33,7 @@ struct CameraView: View {
                 .ignoresSafeArea()
 
             // O vídeo ao vivo ocupando a tela toda.
-            CameraPreviewView(session: session)
+            preview
                 .ignoresSafeArea()
 
             VStack(spacing: 0) {
