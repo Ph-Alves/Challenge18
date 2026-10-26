@@ -50,11 +50,6 @@ struct CameraPreviewView: UIViewRepresentable {
 
 /// Uma `UIView` cuja camada principal JÁ É a camada de vídeo da câmera.
 ///
-/// Diferença para o repositório do GitHub: lá, a camada de vídeo era adicionada
-/// como "subcamada", e o tamanho dela precisava ser atualizado na mão no
-/// `updateUIView` (com um `DispatchQueue.main.async`). Aqui, trocando a
-/// `layerClass`, a camada de vídeo acompanha o tamanho da view automaticamente,
-/// inclusive ao girar a tela.
 final class PreviewUIView: UIView {
 
     /// Diz ao UIKit: "quando criar esta view, use uma AVCaptureVideoPreviewLayer
