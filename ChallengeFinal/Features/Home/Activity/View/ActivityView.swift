@@ -12,6 +12,7 @@ struct ActivityView: View {
     
     // MARK: - Variables
     let interactor: ActivityInteractorProtocol
+    let currentCategory: ActivityCategory
     var store: ActivityStore
 
     // MARK: - View
@@ -19,10 +20,24 @@ struct ActivityView: View {
         VStack(spacing: 24) {
             switch store.displayCurrentStep() {
             case .draw:
-                DrawChallengeView(returnAction: {
+                DrawChallengeView(startDetection: {
+                    interactor.detectMotion(for: currentCategory)
+                }, finishDetection: {
+                    interactor.finishDetection()
+                }, returnAction: {
                     interactor.finishActivity()
                 })
-            case .challenge:  Text("Desafio")
+                
+            case .challenge:
+                if let title = store.activityTitle {
+                    ChallengeDisplayView(challengeTitle: title, archiveAction: {
+                        
+                    }, acceptAction: {
+                        
+                    }, refuseAction: {
+                        
+                    })
+                }
             case .inProgress: Text("Em andamento")
             case .mood:       Text("Humor")
             case .photo:      Text("Foto")
@@ -30,22 +45,33 @@ struct ActivityView: View {
             }
         }
         .animation(.default, value: store.displayCurrentStep())
+        .onAppear() {
+            interactor.prepare(for: currentCategory)
+        }
     }
 }
 
 // MARK: - Stubs pro preview
 
 final class ActivityInteractorStub: ActivityInteractorProtocol {
+    func prepare(for category: ActivityCategory) {}
+    
+    func detectMotion(for category: ActivityCategory) {}
+    
+    func detectMotion() {}
+    
+    func finishDetection() {}
+    
     func finishActivity() {}
 }
 
 extension ActivityStore {
     static var preview: ActivityStore {
-        return ActivityStore(coordinator: ActivityCoordinator(onFinish: {}))
+        return ActivityStore(coordinator: ActivityCoordinator(selectedCategory: .cognitive, onFinish: {}))
     }
 }
 
 // MARK: - Preview
 #Preview {
-    ActivityView(interactor: ActivityInteractorStub(), store: .preview)
+    ActivityView(interactor: ActivityInteractorStub(), currentCategory: .cognitive, store: .preview)
 }

@@ -9,6 +9,8 @@ import SwiftUI
 
 struct DrawChallengeView: View {
     
+    var startDetection: () -> Void
+    var finishDetection: () -> Void
     var returnAction: () -> Void
     
     var body: some View {
@@ -32,9 +34,15 @@ struct DrawChallengeView: View {
             Spacer()
         }
         .padding(.horizontal)
+        .onAppear {
+            startDetection()
+        }
+        .onDisappear {
+            finishDetection()
+        }
     }
 }
 
 #Preview {
-    DrawChallengeView(returnAction: {})
+    DrawChallengeView(startDetection: {}, finishDetection: {}, returnAction: {})
 }

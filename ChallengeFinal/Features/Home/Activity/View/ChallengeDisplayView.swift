@@ -8,11 +8,38 @@
 import SwiftUI
 
 struct ChallengeDisplayView: View {
+    
+    let challengeTitle: String
+    let archiveAction: () -> Void
+    let acceptAction: () -> Void
+    let refuseAction: () -> Void
+    
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        VStack {
+            ZStack {
+                ChallengeCircle(text: challengeTitle, size: .medium)
+                VStack {
+                    Text("Gostaria de iniciar esse desafio?")
+                    HStack {
+                        Button(action: refuseAction, label: {
+                            Text("outro desafio")
+                        })
+                        Button(action: acceptAction, label: {
+                            Text("aceitar")
+                        })
+                    }
+                }
+            }
+            Button(action: archiveAction, label: {
+                HStack {
+                    Image(systemName: "archivebox.fill")
+                    Text("Arquivar desafio da lista")
+                }
+            })
+        }
     }
 }
 
 #Preview {
-    ChallengeDisplayView()
+    ChallengeDisplayView(challengeTitle: "teste", archiveAction: {}, acceptAction: {}, refuseAction: {})
 }
