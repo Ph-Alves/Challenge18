@@ -97,6 +97,7 @@ final class ActivityInteractor: ActivityInteractorProtocol {
     private func raffle(for category: ActivityCategory) {
         Task {
             isRaffling = true
+            presenter.presentSearching()
             do {
                 let archived: [Activity] = try activityRepository.getAll().filter(\.archived)
                 await foundationWorker.generate(for: category, archived: archived)
@@ -109,7 +110,9 @@ final class ActivityInteractor: ActivityInteractorProtocol {
                 presenter.presentChallenge(challenge)
             case .failed(let message):
                 print("Erro: \(message)")
-            default: break
+                presenter.presentSearchFailed()
+            default:
+                presenter.presentSearchFailed()
             }
             isRaffling = false
         }

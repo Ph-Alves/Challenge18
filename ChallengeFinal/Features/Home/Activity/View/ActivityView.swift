@@ -20,14 +20,20 @@ struct ActivityView: View {
         VStack(spacing: 24) {
             switch store.displayCurrentStep() {
             case .draw:
-                DrawChallengeView(startDetection: {
-                    interactor.detectMotion(for: currentCategory)
-                }, finishDetection: {
-                    interactor.finishDetection()
-                }, returnAction: {
-                    interactor.finishActivity()
-                })
-                
+                DrawChallengeView(
+                    isSearching: store.isSearching,
+                    isChallengeReady: store.isChallengeReady,
+                    startDetection: {
+                        interactor.detectMotion(for: currentCategory)
+                    }, finishDetection: {
+                        interactor.finishDetection()
+                    }, returnAction: {
+                        interactor.finishActivity()
+                    }, growFinished: {
+                        store.transitionToChallenge()
+                    })
+                .transition(.opacity)
+
             case .challenge:
                 if let title = store.activityTitle {
                     ChallengeDisplayView(challengeTitle: title, archiveAction: {
@@ -37,6 +43,7 @@ struct ActivityView: View {
                     }, refuseAction: {
                         
                     })
+                    .transition(.opacity)
                 }
             case .inProgress: Text("Em andamento")
             case .mood:       Text("Humor")
@@ -44,7 +51,7 @@ struct ActivityView: View {
             case .summary:    Text("Resumo")
             }
         }
-        .animation(.default, value: store.displayCurrentStep())
+        .animation(.easeInOut(duration: 0.4), value: store.displayCurrentStep())
         .onAppear() {
             interactor.prepare(for: currentCategory)
         }

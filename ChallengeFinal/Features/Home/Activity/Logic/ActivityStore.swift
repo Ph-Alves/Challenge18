@@ -12,6 +12,9 @@ protocol ActivityStoreProtocol: AnyObject {
     func displayCurrentStep() -> ActivityStep
     func displayActivityFinished()
     func displayChallenge(_ challenge: FrictionChallenge)
+    func displaySearching()
+    func displaySearchFailed()
+    func transitionToChallenge()
 }
 
 @MainActor
@@ -21,7 +24,9 @@ final class ActivityStore: ActivityStoreProtocol {
     private(set) var activityTitle: String?
     private(set) var activitySubtitle: String?
     private(set) var activityDescription: String?
-    
+    private(set) var isSearching = false
+    private(set) var isChallengeReady = false
+
     init(coordinator: ActivityRouting) {
         self.coordinator = coordinator
     }
@@ -31,10 +36,24 @@ final class ActivityStore: ActivityStoreProtocol {
     }
     
     func displayChallenge(_ challenge: FrictionChallenge) {
-        self.coordinator.didDraw()
         self.activityTitle = challenge.title
         self.activitySubtitle = challenge.subTitle
         self.activityDescription = challenge.rationale
+        self.isSearching = false
+        // A view anima a bola e só depois chama transitionToChallenge()
+        self.isChallengeReady = true
+    }
+
+    func displaySearching() {
+        self.isSearching = true
+    }
+
+    func displaySearchFailed() {
+        self.isSearching = false
+    }
+
+    func transitionToChallenge() {
+        self.coordinator.didDraw()
     }
     
     func displayActivityFinished() {
