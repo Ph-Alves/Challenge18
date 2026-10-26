@@ -16,5 +16,5 @@ protocol HomeRouting: AnyObject {
     var step: HomeStep { get }
     
     func startHomeFlow(context: ModelContext) -> HomeView
-    func startActivityFlow()
+    func startActivityFlow(category: ActivityCategory)
 }

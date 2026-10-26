@@ -28,10 +28,10 @@ final class HomeCoordinator: HomeRouting {
     @ObservationIgnored var cached: HomeView?
     
     // Começa o fluxo do challenge (pendente)
-    func startActivityFlow() {
+    func startActivityFlow(category: ActivityCategory) {
         //ok, isso é uma closure para "quando o fluxo acabar, execute o onfinish).
         //o self aqui remete a HomeCoordinator, pois foi ele quem "escreveu o bilhete".
-        let flow = ActivityCoordinator(onFinish: { [weak self] in
+        let flow = ActivityCoordinator(selectedCategory: category, onFinish: { [weak self] in
             self?.step = .home
         })
         step = .activity(flow)
