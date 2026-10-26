@@ -40,7 +40,7 @@ final class HomeStore: HomeStoreProtocol {
     // MARK: - Navigation Functions
     
     func displayActivityFlow() {
-        self.coordinator.startActivityFlow()
+        self.coordinator.startActivityFlow(category: currentCategory)
     }
     
     // MARK: - Funções do ciclo VIP
