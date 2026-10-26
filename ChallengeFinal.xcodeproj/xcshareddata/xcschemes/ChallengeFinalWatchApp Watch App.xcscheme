@@ -79,7 +79,10 @@
          </BuildableReference>
       </BuildableProductRunnable>
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> b3c9848bb09fdaaa86d2dcd00fd3d23aa46858d0
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
@@ -88,7 +91,10 @@
             ReferencedContainer = "container:ChallengeFinal.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
+<<<<<<< HEAD
 >>>>>>> 4ece5a01cfe3a81ef836b0efc50a996697f4c3a5
+=======
+>>>>>>> b3c9848bb09fdaaa86d2dcd00fd3d23aa46858d0
    </ProfileAction>
    <AnalyzeAction
       buildConfiguration = "Debug">

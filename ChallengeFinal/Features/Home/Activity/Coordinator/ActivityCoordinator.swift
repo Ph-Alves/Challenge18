@@ -39,6 +39,7 @@ final class ActivityCoordinator {
 }
 
 extension ActivityCoordinator: ActivityRouting {
+    func didReturn()            { step = .draw }
     func didDraw()              { step = .challenge }
     func didAcceptChallenge()   { step = .inProgress }
     func didCompleteChallenge() { step = .mood }

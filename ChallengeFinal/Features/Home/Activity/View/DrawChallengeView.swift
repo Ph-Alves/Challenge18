@@ -16,7 +16,7 @@ struct DrawChallengeView: View {
     var returnAction: () -> Void
     var growFinished: () -> Void
 
-    @State private var ballScale: CGFloat = 0
+    @State private var ballScale: CGFloat = 1
     @State private var contentOpacity: Double = 1
 
     var body: some View {

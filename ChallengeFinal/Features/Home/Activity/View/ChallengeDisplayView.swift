@@ -14,61 +14,30 @@ struct ChallengeDisplayView: View {
     let acceptAction: () -> Void
     let refuseAction: () -> Void
 
+    @State private var showActions = false
+
     var body: some View {
-        VStack(spacing: 24) {
-            ZStack(alignment: .bottom) {
-                ChallengeCircle(text: challengeTitle, size: .big)
-                    .offset(y: -110)
-                VStack(spacing: 19) {
-                    Text("Gostaria de iniciar esse desafio?")
-                        .bold()
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal, 72)
+        ZStack {
+            // O círculo com o desafio aparece primeiro, centralizado
+            ChallengeCircle(text: challengeTitle, size: .big)
 
-                    HStack {
-                        Spacer()
-                        Button(action: refuseAction, label: {
-                            Text("outro desafio")
-                        })
-                        .buttonStyle(.plain)
-                        .padding(.horizontal, 20)
-                        .padding(.vertical, 5)
-                        .background(.gray.opacity(0.3))
-                        .clipShape(RoundedRectangle(cornerRadius: 39))
+            // Depois do círculo, entram o diálogo e o botão
+            VStack(spacing: 24) {
+                Spacer()
+                ActionDialogComponent(title: "Gostaria de iniciar esse desafio?", firstOptionText: "Outra opção", secondOptionText: "aceitar", firstAction: refuseAction, secondAction: acceptAction)
+                    .padding(.horizontal)
 
-                        Spacer()
-                        Button(action: acceptAction, label: {
-                            Text("aceitar")
-                                .foregroundStyle(.white)
-                        })
-                        .buttonStyle(.plain)
-                        .padding(.horizontal, 20)
-                        .padding(.vertical, 5)
-                        .background(.gray)
-                        .clipShape(RoundedRectangle(cornerRadius: 39))
-
-                        Spacer()
-                    }
-                }
-                .padding()
-                .background(.white)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
-                .overlay{
-                    RoundedRectangle(cornerRadius: 12).stroke(lineWidth: 1)
-                }
-                .padding(.horizontal)
+                CustomButtonComponent(title: "Arquivar desafio da lista", icon: "archivebox.fill", action: archiveAction)
             }
-            Button(action: archiveAction, label: {
-                HStack {
-                    Image(systemName: "archivebox.fill")
-                    Text("Arquivar desafio da lista")
-                }
-            })
-            .buttonStyle(.plain)
-            .padding(.horizontal, 20)
-            .padding(.vertical, 5)
-            .background(.gray.opacity(0.1))
-            .clipShape(RoundedRectangle(cornerRadius: 39))
+            .opacity(showActions ? 1 : 0)
+            .offset(y: showActions ? 0 : 20)
+            .allowsHitTesting(showActions)
+        }
+        .task {
+            try? await Task.sleep(for: .seconds(0.6))
+            withAnimation(.easeOut(duration: 0.4)) {
+                showActions = true
+            }
         }
     }
 }

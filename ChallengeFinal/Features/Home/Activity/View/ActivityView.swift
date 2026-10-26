@@ -18,7 +18,7 @@ struct ActivityView: View {
     // MARK: - View
     var body: some View {
         VStack(spacing: 24) {
-            switch store.displayCurrentStep() {
+            switch store.currentStep {
             case .draw:
                 DrawChallengeView(
                     isSearching: store.isSearching,
@@ -30,20 +30,29 @@ struct ActivityView: View {
                     }, returnAction: {
                         interactor.finishActivity()
                     }, growFinished: {
-                        store.transitionToChallenge()
+                        interactor.goToActivityDetail()
                     })
                 .transition(.opacity)
 
             case .challenge:
-                if let title = store.activityTitle {
-                    ChallengeDisplayView(challengeTitle: title, archiveAction: {
-                        
-                    }, acceptAction: {
-                        
-                    }, refuseAction: {
-                        
-                    })
-                    .transition(.opacity)
+                if let title = store.activityTitle, let subtitle = store.activitySubtitle, let description = store.activityDescription {
+                    if !store.isChallengeAccepted {
+                        ChallengeDisplayView(challengeTitle: title, archiveAction: {
+                            interactor.archiveChallenge(title: title, description: subtitle, in: currentCategory)
+                            interactor.returnToStart()
+                        }, acceptAction: {
+                            interactor.acceptChallenge()
+                        }, refuseAction: {
+                            interactor.returnToStart()
+                        })
+                        .transition(.opacity)
+                    } else {
+                        ChallengeAcceptedView(challengeTitle: title, challengeSubTitle: subtitle, challengeDescription: description, startAction: {
+                            interactor.startChallenge()
+                        }, cancelAction: {
+                            interactor.returnToStart()
+                        })
+                    }
                 }
             case .inProgress: Text("Em andamento")
             case .mood:       Text("Humor")
@@ -51,7 +60,7 @@ struct ActivityView: View {
             case .summary:    Text("Resumo")
             }
         }
-        .animation(.easeInOut(duration: 0.4), value: store.displayCurrentStep())
+        .animation(.easeInOut(duration: 0.4), value: store.currentStep)
         .onAppear() {
             interactor.prepare(for: currentCategory)
         }
@@ -61,15 +70,25 @@ struct ActivityView: View {
 // MARK: - Stubs pro preview
 
 final class ActivityInteractorStub: ActivityInteractorProtocol {
-    func prepare(for category: ActivityCategory) {}
-    
     func detectMotion(for category: ActivityCategory) {}
     
-    func detectMotion() {}
+    func archiveChallenge(title: String, description: String, in category: ActivityCategory) {}
+    
+    func reroll(for category: ActivityCategory) {}
+    
+    func acceptChallenge() {}
+    
+    func startChallenge() {}
+    
+    func goToActivityDetail() {}
+    
+    func returnToStart() {}
     
     func finishDetection() {}
     
     func finishActivity() {}
+    
+    func prepare(for category: ActivityCategory) {}
 }
 
 extension ActivityStore {

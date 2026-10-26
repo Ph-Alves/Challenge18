@@ -11,6 +11,12 @@ import FoundationModels
 
 protocol ActivityInteractorProtocol: AnyObject {
     func detectMotion(for category: ActivityCategory)
+    func archiveChallenge(title: String, description: String, in category: ActivityCategory)
+    func reroll(for category: ActivityCategory)
+    func acceptChallenge()
+    func startChallenge()
+    func goToActivityDetail()
+    func returnToStart()
     func finishDetection()
     func finishActivity()
     func prepare(for category: ActivityCategory)
@@ -81,6 +87,36 @@ final class ActivityInteractor: ActivityInteractorProtocol {
         if foundationWorker.availability == .available {
             foundationWorker.prewarm(for: category)
         }
+    }
+    
+    func archiveChallenge(title: String, description: String, in category: ActivityCategory) {
+        let activity = Activity(category: category, result: nil, name: title, description: description, archived: true)
+        do {
+            try activityRepository.add(activity)
+            prepare(for: category)
+        } catch {
+            print("Erro ao adicionar elemento: \(error.localizedDescription)")
+        }
+    }
+    
+    func reroll(for category: ActivityCategory) {
+        raffle(for: category)
+    }
+    
+    func acceptChallenge() {
+        presenter.presentAcceptedActivity()
+    }
+    
+    func startChallenge() {
+        presenter.presentStartedChallenge()
+    }
+    
+    func goToActivityDetail() {
+        presenter.presentActivityDetail()
+    }
+    
+    func returnToStart() {
+        presenter.presentStartAgain()
     }
     
     func finishDetection() {
