@@ -11,12 +11,16 @@ import SwiftData
 protocol ActivityStoreProtocol: AnyObject {
     func displayCurrentStep() -> ActivityStep
     func displayActivityFinished()
+    func displayChallenge(_ challenge: FrictionChallenge)
 }
 
 @MainActor
 @Observable
 final class ActivityStore: ActivityStoreProtocol {
-    let coordinator: ActivityRouting
+    private let coordinator: ActivityRouting
+    private(set) var activityTitle: String?
+    private(set) var activitySubtitle: String?
+    private(set) var activityDescription: String?
     
     init(coordinator: ActivityRouting) {
         self.coordinator = coordinator
@@ -24,6 +28,13 @@ final class ActivityStore: ActivityStoreProtocol {
     
     func displayCurrentStep() -> ActivityStep {
         return self.coordinator.step
+    }
+    
+    func displayChallenge(_ challenge: FrictionChallenge) {
+        self.coordinator.didDraw()
+        self.activityTitle = challenge.title
+        self.activitySubtitle = challenge.subTitle
+        self.activityDescription = challenge.rationale
     }
     
     func displayActivityFinished() {

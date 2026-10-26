@@ -9,11 +9,12 @@ import Foundation
 
 protocol ActivityPresenterProtocol: AnyObject {
     func presentActivityFinished()
+    func presentChallenge(_ challenge: FrictionChallenge)
 }
 
 @MainActor
 final class ActivityPresenter: ActivityPresenterProtocol {
-    weak var store: ActivityStoreProtocol?
+    private weak var store: ActivityStoreProtocol?
     
     init(store: ActivityStoreProtocol) {
         self.store = store
@@ -21,5 +22,9 @@ final class ActivityPresenter: ActivityPresenterProtocol {
     
     func presentActivityFinished() {
         store?.displayActivityFinished()
+    }
+    
+    func presentChallenge(_ challenge: FrictionChallenge) {
+        store?.displayChallenge(challenge)
     }
 }
