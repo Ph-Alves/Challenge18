@@ -136,18 +136,29 @@ Regras:
 - Nunca repita nem se aproxime dos desafios que a pessoa já viu.
 """
 
+enum State {
+    case idle
+    case loading
+    // Não vamos usar streaming por enquanto, mas pode ser util pra montar animações.
+    case streaming(FrictionChallenge.PartiallyGenerated)
+    case finished(FrictionChallenge)
+    case failed(String)
+}
+
+@MainActor
+protocol FoundationWorkerProtocol: AnyObject {
+    var state: State { get }
+    var availability: SystemLanguageModel.Availability { get }
+    
+    func prewarm(for category: ActivityCategory)
+    func generate(for category: ActivityCategory, archived: [Activity]) async
+}
+
 /// Entrega um desafio para uma categoria, intercalando desafios 100% gerados pelo modelo
 /// com desafios pré-prontos em que o modelo escreve só o título.
 @MainActor
 @Observable
-final class FrictionEngine {
-    enum State {
-        case idle
-        case loading
-        case streaming(FrictionChallenge.PartiallyGenerated)
-        case finished(FrictionChallenge)
-        case failed(String)
-    }
+final class FoundationWorker: FoundationWorkerProtocol {
 
     private(set) var state: State = .idle
 
@@ -235,7 +246,7 @@ final class FrictionEngine {
         guard availability == .available else { throw EngineError.modelUnavailable }
 
         var options = GenerationOptions()
-        options.temperature = 0.5
+        options.temperature = Double.random(in: 0..<1)
 
         let response = try await takeSession().respond(
             to: titlePrompt(for: preset, context: context),
@@ -370,7 +381,7 @@ final class FrictionEngine {
                 return "O modelo ainda está sendo preparado neste aparelho. Tente novamente em breve."
             case .decodingFailure, .unsupportedGuide:
                 return "O desafio veio em um formato inesperado. Tente novamente."
-            @unknown default:
+            default:
                 return "Não foi possível gerar o desafio agora."
             }
         }
