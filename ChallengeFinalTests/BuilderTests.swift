@@ -29,32 +29,46 @@ struct BuilderTests {
     
     @Test func testingHomeBuilding() async {
         let coordinator = makeHomeCoordinator()
-        let home: HomeView? = coordinator.startHome(context: modelContainer.mainContext)
+        let home: HomeView? = coordinator.startHomeFlow(context: modelContainer.mainContext)
         
         #expect(home != nil)
     }
     
     @Test func testingCheckHomeCachedView() async {
         let coordinator = makeHomeCoordinator()
-        _ = coordinator.startHome(context: modelContainer.mainContext)
+        _ = coordinator.startHomeFlow(context: modelContainer.mainContext)
         
-        #expect(coordinator.cachedHomeView != nil)
+        #expect(coordinator.cached != nil)
     }
-//    @Test func testingActivitiesBuilding() async throws {
-//        let builder: ActivitiesBuilderProtocol = createActivityBuilder()
-//        let viewConfig = builder.buildConfig()
-//        
-//        #expect(viewConfig == ActivitiesConfig())
-//    }
-//    
-//    @Test func testingCheckActivityCachedView() async throws {
-//        let builder: ActivitiesBuilderProtocol = createActivityBuilder()
-//        _ = builder.build()
-//        
-//        #expect(builder.cachedView != nil)
-//    }
-//
-//    
+    
+    @Test func testingActivityBuilding() async {
+        let coordinator = ActivityCoordinator(selectedCategory: .physical, onFinish: {})
+        let view = coordinator.startActivityView(context: modelContainer.mainContext)
+        
+        #expect(coordinator.cached != nil)
+        _ = view
+    }
+    
+    @Test func testingActivityViewIsCachedAcrossCalls() async {
+        let coordinator = ActivityCoordinator(selectedCategory: .social, onFinish: {})
+        let first = coordinator.startActivityView(context: modelContainer.mainContext)
+        let second = coordinator.startActivityView(context: modelContainer.mainContext)
+        
+        // Mesma instância de store = a view não foi reconstruída.
+        #expect(first.store === second.store)
+    }
+    
+    @Test func testingStartActivityFlowChangesHomeStep() async {
+        let coordinator = makeHomeCoordinator()
+        
+        coordinator.startActivityFlow(category: .cognitive)
+        
+        if case .activity = coordinator.step {} else {
+            Issue.record("Esperava o step .activity depois de iniciar o fluxo")
+        }
+    }
+    
+
 //    @Test func testingProfileBuilding() async throws {
 //        let builder: ProfileBuilderProtocol = createProfileBuilder()
 //        let viewConfig = builder.buildConfig()

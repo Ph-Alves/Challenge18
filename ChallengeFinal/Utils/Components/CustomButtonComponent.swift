@@ -19,7 +19,7 @@ struct CustomButtonComponent: View {
     let title: String
     let icon: String?
     var type: CustomButtonType = .primary
-    var action: () -> Void = {}
+    var action: () -> Void
     
     private var backgroundColor: Color {
         switch type {
@@ -67,5 +67,5 @@ struct CustomButtonComponent: View {
 }
 
 #Preview {
-    CustomButtonComponent(title: "arquivar", icon: "calendar", type: .primary)
+    CustomButtonComponent(title: "arquivar", icon: "calendar", type: .primary, action: {})
 }

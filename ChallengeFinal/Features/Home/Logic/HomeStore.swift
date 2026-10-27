@@ -13,6 +13,7 @@ import SwiftUI
 protocol HomeStoreProtocol: AnyObject {
     func displayCategory(_ current: ActivityCategory) // Mostrar a categoria para a view
     func displayWeek(days: [String]) // Salvar a semana que vai ser mostrada
+    func displayActivityFlow()
 }
 
 // MARK: - Class
@@ -38,8 +39,9 @@ final class HomeStore: HomeStoreProtocol {
     
     // MARK: - Navigation Functions
     
-    func startActivityFlow() {
-        
+    // Abre o fluxo de Activity levando a categoria que está na tela agora.
+    func displayActivityFlow() {
+        self.coordinator.startActivityFlow(category: currentCategory)
     }
     
     // MARK: - Funções do ciclo VIP

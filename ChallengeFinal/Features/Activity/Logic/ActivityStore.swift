@@ -2,15 +2,26 @@
 //  ActivityStore.swift
 //  ChallengeFinal
 //
-//  Created by Raquel Souza on 23/10/26.
+//  Created by Paulo Henrique Costa Alves on 23/10/26.
 //
 
-///apenas dados. A View só lê o meu Store e o Presenter escreve nele.
-
+import Foundation
+import SwiftData
 import SwiftUI
 
-//MARK: - Protocolo
+// MARK: - Protocol
+/// O que o Presenter enxerga da Store: métodos `display...` (dados prontos
+/// para a tela) e `transitionTo...` (mudança de step).
 protocol ActivityStoreProtocol: AnyObject {
+    
+    // MARK: Steps .draw e .challenge (implementados em ActivityStore+Draw.swift)
+    func displayChallenge(_ challenge: FrictionChallenge)
+    func displaySearching()
+    func displaySearchFailed()
+    func displayAcceptedChallenge()
+    func transitionToStart()
+    func transitionToMood()
+    func transitionToPhoto()
     
     // MARK: Step .photo
     func displayPhoto(_ photo: Image?)
@@ -18,42 +29,46 @@ protocol ActivityStoreProtocol: AnyObject {
     func displayFlashIcon(_ icon: String)
     func displayPermissionAlert(_ message: String?)
     func displayError(_ message: String?)
+    
+    // MARK: Transitions
+    func transitionToInProgress()
+    func transitionToDraw()
+    func transitionToChallenge()
+    func transitionToSummary()
+    func finishFlow()
 }
 
-//// MARK: - ViewModels
-//
-///// Tudo que a tela de foto precisa mostrar, já pronto para exibir.
-///// Quem monta é o Presenter; a Store guarda; a View só lê.
-//struct PhotoStepViewModel {
-//    /// A foto escolhida. `nil` = card vazio (tela inicial).
-//    var photo: Image?
-//    /// "tire uma foto!" ou "tirar outra foto".
-//    var captureButtonTitle: String
-//    /// SF Symbol do botão: "camera.fill" ou "arrow.clockwise".
-//    var captureButtonIcon: String
-//    /// "continuar sem foto" ou "continuar".
-//    var continueButtonTitle: String
-//}
-//
-//extension PhotoStepViewModel {
-//    /// Estado inicial, antes de qualquer foto.
-//    static let empty = PhotoStepViewModel(
-//        photo: nil,
-//        captureButtonTitle: "tire uma foto!",
-//        captureButtonIcon: "camera.fill",
-//        continueButtonTitle: "continuar sem foto"
-//    )
-//}
-
-
-//MARK: - Store
-
+//MARK: - Class
+/// Estado da tela de Activity. A View só LÊ daqui; quem escreve é o Presenter.
+/// As propriedades são `private(set)` para garantir esse sentido único.
+/// Também repassa as transições de step ao Coordinator.
 @MainActor
 @Observable
 final class ActivityStore: ActivityStoreProtocol {
- 
+    
     // MARK: - Variables
- 
+    
+    /// Coordinator para navegação
+    let coordinator: ActivityRouting
+    
+    // MARK: Steps .draw e .challenge
+    // Não são `private(set)` porque quem escreve é o `ActivityStore+Draw.swift`.
+    // Extensions não podem ter propriedades armazenadas, por isso ficam aqui.
+    
+    /// Desafio sorteado (título, subtítulo e descrição). `nil` = ainda não sorteou.
+    var activityTitle: String?
+    var activitySubtitle: String?
+    var activityDescription: String?
+    
+    /// Está procurando um desafio.
+    var isSearching = false
+    
+    /// O desafio ficou pronto: a View anima a bola e só depois avança de step.
+    var isChallengeReady = false
+    
+    /// O usuário aceitou o desafio (o step `.challenge` mostra a tela de aceito).
+    var isChallengeAccepted = false
+    
     /// A foto escolhida. `nil` = card vazio (tela inicial).
     private(set) var photo: Image?
  
@@ -68,18 +83,21 @@ final class ActivityStore: ActivityStoreProtocol {
  
     /// Mensagem de erro (ex.: falha na captura). `nil` = sem erro.
     private(set) var errorMessage: String?
- 
-    // MARK: Outros steps
-    // Cada step adiciona aqui as suas propriedades (sempre `private(set)`).
- 
-    // MARK: - Init
- 
-    deinit {
-        print("ActivityStore liberado")
+    
+    /// Step atual, vindo do Coordinator. Por ser @Observable, a View
+    /// é redesenhada quando ele muda.
+    var currentStep: ActivityStep {
+        return self.coordinator.step
     }
- 
+
+    // MARK: - Init
+    
+    init(coordinator: ActivityRouting) {
+        self.coordinator = coordinator
+    }
+    
     // MARK: - Functions
- 
+    
     // MARK: Step .photo
  
     func displayPhoto(_ photo: Image?) {
@@ -101,7 +119,27 @@ final class ActivityStore: ActivityStoreProtocol {
     func displayError(_ message: String?) {
         errorMessage = message
     }
- 
-    // MARK: Outros steps
-    // Cada step adiciona aqui os seus métodos `display...` (e no protocolo acima).
+    
+    // MARK: Transitions
+    
+    func transitionToInProgress() {
+        self.coordinator.goToInProgress()
+    }
+    
+    func transitionToDraw() {
+        self.coordinator.goToDraw()
+    }
+
+    func transitionToChallenge() {
+        self.coordinator.goToChallenge()
+    }
+    
+    func transitionToSummary() {
+        self.coordinator.goToSummary()
+    }
+    
+    func finishFlow() {
+        self.coordinator.finishFlow()
+    }
+    
 }

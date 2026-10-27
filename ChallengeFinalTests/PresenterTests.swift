@@ -80,35 +80,69 @@ struct PresenterTests {
         
         #expect(store.daysOfWeek == ["D", "S", "T", "Q", "Q", "S", "S"])
     }
-//
-//    // MARK: - ActivitiesPresenter
-//
-//    @Test func testingActivitiesFetchDataDelegatesToInteractor() async throws {
-//        let interactorSpy = ActivitiesInteractorSpy()
-//        let store = ActivitiesStore()
-//        let presenter = ActivitiesPresenter(interactor: interactorSpy, store: store)
-//
-//        presenter.fetchData()
-//
-//        #expect(interactorSpy.fetchHistoryCallCount == 1)
-//    }
-//
-//    @Test func testingPresentHistoryUpdatesStoreLists() async throws {
-//        let interactorSpy = ActivitiesInteractorSpy()
-//        let store = ActivitiesStore()
-//        let presenter = ActivitiesPresenter(interactor: interactorSpy, store: store)
-//        let group = Group(groupID: UUID(), type: .cognitive, context: "home")
-//        let accepted = Activity(activityID: UUID(), group: group, result: nil, name: "Done", description: "-", archived: true)
-//        let recused = Activity(activityID: UUID(), group: group, result: nil, name: "Skipped", description: "-", archived: true)
-//
-//        presenter.presentHistory(accepted: [accepted], recused: [recused])
-//
-//        #expect(presenter.accepted.first?.activityID == accepted.activityID)
-//        #expect(presenter.recused.first?.activityID == recused.activityID)
-//        #expect(store.accepted.count == 1)
-//        #expect(store.recused.count == 1)
-//    }
-//
+
+    // MARK: - ActivityPresenter (sorteio de desafios)
+    
+    // Mesmo cuidado do Home: o presenter guarda o store como weak, então o teste segura o store.
+    private func createActivityPresenterAndStore() -> (presenter: ActivityPresenter, store: ActivityStore) {
+        let coordinator = ActivityCoordinator(selectedCategory: .physical, onFinish: {})
+        let store = ActivityStore(coordinator: coordinator)
+        let presenter = ActivityPresenter(store: store)
+        return (presenter, store)
+    }
+    
+    @Test func testingPresentSearchingMarksStoreAsSearching() {
+        let (presenter, store) = createActivityPresenterAndStore()
+        
+        presenter.presentSearching()
+        
+        #expect(store.isSearching == true)
+    }
+    
+    @Test func testingPresentChallengeFillsStoreAndMarksReady() {
+        let (presenter, store) = createActivityPresenterAndStore()
+        presenter.presentSearching()
+        let challenge = FrictionChallenge(title: "respire fundo", subTitle: "Pausa", rationale: "Respire por um minuto.")
+        
+        presenter.presentChallenge(challenge)
+        
+        #expect(store.activityTitle == "respire fundo")
+        #expect(store.activitySubtitle == "Pausa")
+        #expect(store.activityDescription == "Respire por um minuto.")
+        #expect(store.isChallengeReady == true)
+        #expect(store.isSearching == false)
+    }
+    
+    @Test func testingPresentSearchFailedStopsSearchingWithoutChallenge() {
+        let (presenter, store) = createActivityPresenterAndStore()
+        presenter.presentSearching()
+        
+        presenter.presentSearchFailed()
+        
+        #expect(store.isSearching == false)
+        #expect(store.isChallengeReady == false)
+        #expect(store.activityTitle == nil)
+    }
+    
+    @Test func testingPresentAcceptedActivityMarksChallengeAsAccepted() {
+        let (presenter, store) = createActivityPresenterAndStore()
+        
+        presenter.presentAcceptedActivity()
+        
+        #expect(store.isChallengeAccepted == true)
+    }
+    
+    @Test func testingPresentStartAgainClearsRaffleState() {
+        let (presenter, store) = createActivityPresenterAndStore()
+        presenter.presentChallenge(FrictionChallenge(title: "t", subTitle: "s", rationale: "r"))
+        presenter.presentAcceptedActivity()
+        
+        presenter.presentStartAgain()
+        
+        #expect(store.isChallengeReady == false)
+        #expect(store.isChallengeAccepted == false)
+        #expect(store.isSearching == false)
+    }
 //    // MARK: - ProfilePresenter
 //
 //    @Test func testingProfileFetchDataDelegatesToInteractor() async throws {
