@@ -14,7 +14,7 @@ import PhotosUI
 /// Step `.photo` do fluxo de Activity (telas "sorria! você será fotografado").
 ///
 /// Ela não conhece o Interactor nem a Store diretamente: recebe o que mostrar
-/// (`viewModel`) e avisa os toques por closures. Quem liga as closures ao
+/// (`photo`) e avisa os toques por closures. Quem liga as closures ao
 /// Interactor é a `ActivityView` (o container dos steps).
 ///
 /// Os textos dos botões dependem só de ter foto ou não, por isso são calculados aqui mesmo.

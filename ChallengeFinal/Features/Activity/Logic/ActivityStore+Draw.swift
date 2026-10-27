@@ -16,7 +16,7 @@ extension ActivityStore {
     // MARK: Display
 
     /// Guarda o desafio sorteado e marca como pronto.
-    func displayChallenge(_ challenge: FrictionChallenge) {
+    func displayActivity(_ challenge: FrictionChallenge) {
         self.activityTitle = challenge.title
         self.activitySubtitle = challenge.subTitle
         self.activityDescription = challenge.rationale
@@ -35,7 +35,7 @@ extension ActivityStore {
         self.isSearching = false
     }
 
-    func displayAcceptedChallenge() {
+    func displayAcceptedActivity() {
         self.isChallengeAccepted = true
     }
 

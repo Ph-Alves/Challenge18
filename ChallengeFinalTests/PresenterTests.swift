@@ -104,7 +104,7 @@ struct PresenterTests {
         presenter.presentSearching()
         let challenge = FrictionChallenge(title: "respire fundo", subTitle: "Pausa", rationale: "Respire por um minuto.")
         
-        presenter.presentChallenge(challenge)
+        presenter.presentActivity(challenge)
         
         #expect(store.activityTitle == "respire fundo")
         #expect(store.activitySubtitle == "Pausa")
@@ -134,7 +134,7 @@ struct PresenterTests {
     
     @Test func testingPresentStartAgainClearsRaffleState() {
         let (presenter, store) = createActivityPresenterAndStore()
-        presenter.presentChallenge(FrictionChallenge(title: "t", subTitle: "s", rationale: "r"))
+        presenter.presentActivity(FrictionChallenge(title: "t", subTitle: "s", rationale: "r"))
         presenter.presentAcceptedActivity()
         
         presenter.presentStartAgain()
@@ -142,6 +142,34 @@ struct PresenterTests {
         #expect(store.isChallengeReady == false)
         #expect(store.isChallengeAccepted == false)
         #expect(store.isSearching == false)
+    }
+
+    // MARK: ActivityPresenter (cronômetro)
+
+    // Cada par é (segundos recebidos do Interactor, texto esperado na Store).
+    @Test(arguments: [
+        (TimeInterval(0), "00:00:00"),
+        (TimeInterval(5), "00:00:05"),
+        (TimeInterval(65), "00:01:05"),
+        (TimeInterval(3725), "01:02:05"),
+        (TimeInterval(36000), "10:00:00"),
+        (TimeInterval(59.9), "00:00:59")     
+    ])
+    func testingPresentTimeFormatsHoursMinutesAndSeconds(elapsed: TimeInterval, expected: String) {
+        let (presenter, store) = createActivityPresenterAndStore()
+
+        presenter.presentTime(elapsed)
+
+        #expect(store.timeText == expected)
+    }
+
+    @Test func testingPresentTimeReplacesPreviousTime() {
+        let (presenter, store) = createActivityPresenterAndStore()
+        presenter.presentTime(3725)
+
+        presenter.presentTime(0)
+
+        #expect(store.timeText == "00:00:00")
     }
 //    // MARK: - ProfilePresenter
 //

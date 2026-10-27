@@ -14,9 +14,11 @@ import SwiftUI
 /// Com o protocolo, nos testes do Interactor dá para usar um *spy*
 /// (um Presenter falso que só anota o que foi chamado), sem Store nem View.
 protocol ActivityPresenterProtocol: AnyObject {
+    // MARK: -  Step do cronometro
+    func presentTime(_ elapsed: TimeInterval)
     
     // MARK: Steps .draw e .challenge (implementados em ActivityPresenter+Draw.swift)
-    func presentChallenge(_ challenge: FrictionChallenge)
+    func presentActivity(_ challenge: FrictionChallenge)
     func presentSearching()
     func presentSearchFailed()
     func presentAcceptedActivity()
@@ -37,7 +39,7 @@ protocol ActivityPresenterProtocol: AnyObject {
     func presentSummary()
     func presentFlowFinished()
     func presentInProgress()
-    func presentChallenge()
+    func presentActivityStep()
     func presentDraw()
 }
 
@@ -54,6 +56,10 @@ protocol ActivityPresenterProtocol: AnyObject {
 /// - Só conhece a Store pelo `ActivityStoreProtocol`.
 @MainActor
 final class ActivityPresenter: ActivityPresenterProtocol {
+   
+    
+    
+    
     
     // MARK: - Variables
     /// Não é `private` porque `ActivityPresenter+Draw.swift` também usa.
@@ -140,6 +146,18 @@ final class ActivityPresenter: ActivityPresenterProtocol {
         store?.displayError(nil)
     }
     
+    // MARK: - Step do cronometro
+    /// Recebe o tempo em segundos e entrega o texto "hh:mm:ss" para a Store.
+    /// Formatar é papel do Presenter: o Interactor nunca monta texto de tela.
+    /// Ex.: 3725s = 1h 02min 05s -> "01:02:05" (`%02d` completa com zero à esquerda).
+    func presentTime(_ elapsed: TimeInterval) {
+        let total = Int(elapsed)
+        let hours = total / 3600
+        let minutes = (total % 3600) / 60
+        let seconds = total % 60
+        store?.displayTimer(String(format: "%02d:%02d:%02d", hours, minutes, seconds))
+    }
+    
     // MARK: Navigation
     // Não há o que formatar: só traduz "apresentar X" em "transicionar para X" na Store.
     func presentSummary() {
@@ -154,8 +172,8 @@ final class ActivityPresenter: ActivityPresenterProtocol {
         store?.transitionToInProgress()
     }
     
-    func presentChallenge() {
-        store?.transitionToChallenge()
+    func presentActivityStep() {
+        store?.transitionToActivity()
     }
     
     func presentDraw() {

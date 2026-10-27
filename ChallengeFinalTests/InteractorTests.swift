@@ -34,6 +34,8 @@ final class HomePresenterSpy: HomePresenterProtocol {
 /// Anota, em ordem, tudo que o Interactor pediu ao Presenter.
 final class ActivityPresenterSpy: ActivityPresenterProtocol {
     
+    
+    
     enum Event: Equatable {
         case searching
         case searchFailed
@@ -41,7 +43,15 @@ final class ActivityPresenterSpy: ActivityPresenterProtocol {
     }
     
     private(set) var events: [Event] = []
-    
+
+    // Cronômetro: guardados à parte de `events` para não misturar com os testes de sorteio.
+    private(set) var presentedTimes: [TimeInterval] = []
+    private(set) var inProgressCount = 0
+    private(set) var moodCount = 0
+    private(set) var flowFinishedCount = 0
+
+    func presentTime(_ elapsed: TimeInterval) { presentedTimes.append(elapsed) }
+
     // Sorteio
     func presentChallenge(_ challenge: FrictionChallenge) { events.append(.challenge(title: challenge.title)) }
     func presentSearching() { events.append(.searching) }
@@ -50,7 +60,7 @@ final class ActivityPresenterSpy: ActivityPresenterProtocol {
     // Fora do escopo dos testes de sorteio
     func presentAcceptedActivity() {}
     func presentStartAgain() {}
-    func presentMood() {}
+    func presentMood() { moodCount += 1 }
     func presentPhoto() {}
     func presentCamera() {}
     func presentCameraClosed() {}
@@ -60,10 +70,12 @@ final class ActivityPresenterSpy: ActivityPresenterProtocol {
     func presentError(_ error: Error) {}
     func presentAlertsDismissed() {}
     func presentSummary() {}
-    func presentFlowFinished() {}
-    func presentInProgress() {}
+    func presentFlowFinished() { flowFinishedCount += 1 }
+    func presentInProgress() { inProgressCount += 1 }
     func presentChallenge() {}
     func presentDraw() {}
+    func presentActivity(_ challenge: ChallengeFinal.FrictionChallenge) { events.append(.challenge(title: challenge.title)) }
+    func presentActivityStep() {}
 }
 
 /// Foundation Models falso: devolve o estado que o teste mandar, sem usar o modelo do aparelho.
@@ -125,6 +137,32 @@ final class CameraWorkerMock: CameraWorkerProtocol {
     func stopSession() {}
     func switchCamera(completion: @escaping (Result<Void, Error>) -> Void) { completion(.success(())) }
     func capturePhoto(flash: Bool, completion: @escaping (Result<Data, Error>) -> Void) { completion(.success(Data())) }
+}
+
+/// Cronômetro falso: não espera 1 segundo de verdade. O teste decide quando o tick acontece
+/// (`emitTick()`) e consegue ver quantas vezes o Interactor pediu ticks e quantos fluxos terminaram.
+///
+/// `@unchecked Sendable` porque o `onTermination` do `AsyncStream` é um closure `@Sendable`
+/// que precisa escrever aqui; nos testes tudo roda na main thread.
+final class TimerWorkerMock: TimerWorkerProtocol, @unchecked Sendable {
+    private var continuation: AsyncStream<Void>.Continuation?
+
+    private(set) var ticksCallCount = 0
+    private(set) var terminationCount = 0
+
+    func ticks() -> AsyncStream<Void> {
+        ticksCallCount += 1
+        return AsyncStream { continuation in
+            self.continuation = continuation
+            // Roda quando o Interactor cancela o Task que escuta os ticks.
+            continuation.onTermination = { [weak self] _ in self?.terminationCount += 1 }
+        }
+    }
+
+    /// Simula "passou 1 segundo" no fluxo mais recente.
+    func emitTick() {
+        continuation?.yield()
+    }
 }
 
 //final class ProfilePresenterSpy: ProfilePresenterProtocol {
@@ -219,6 +257,7 @@ struct InteractorTests {
         let foundation: FoundationWorkerMock
         let haptics: HapticsWorkerMock
         let motion: CoreMotionWorkerMock
+        let timer: TimerWorkerMock
         let repository: GenericRepository<Activity>
     }
     
@@ -227,6 +266,7 @@ struct InteractorTests {
         let foundation = FoundationWorkerMock()
         let haptics = HapticsWorkerMock()
         let motion = CoreMotionWorkerMock()
+        let timer = TimerWorkerMock()
         let repository = makeActivityRepository()
         let interactor = ActivityInteractor(
             presenter: presenter,
@@ -234,10 +274,11 @@ struct InteractorTests {
             hapticWorker: haptics,
             coreMotionWorker: motion,
             foundationWorker: foundation,
-            camera: CameraWorkerMock()
+            camera: CameraWorkerMock(),
+            timer: timer
         )
         return ActivitySUT(interactor: interactor, presenter: presenter, foundation: foundation,
-                            haptics: haptics, motion: motion, repository: repository)
+                            haptics: haptics, motion: motion, timer: timer, repository: repository)
     }
     
     /// O sorteio roda dentro de um `Task`; espera até a condição valer (ou 2s).
@@ -315,7 +356,7 @@ struct InteractorTests {
     @Test func testingArchiveChallengeSavesArchivedActivityAndPrewarms() throws {
         let sut = makeActivitySUT()
         
-        sut.interactor.archiveChallenge(title: "Cardio sem fones", description: "Faça cardio", in: .physical)
+        sut.interactor.archiveActivity(title: "Cardio sem fones", description: "Faça cardio", in: .physical)
         
         let saved = try sut.repository.getAll()
         #expect(saved.count == 1)
@@ -413,6 +454,157 @@ struct InteractorTests {
         #expect(sut.interactor.shakeIdleTimer == nil)
     }
     
+    // MARK: ActivityInteractor (cronômetro)
+
+    @Test func testingStartTimerStoresStartDateAndListensToTicks() async {
+        let sut = makeActivitySUT()
+
+        sut.interactor.startTimer()
+        defer { sut.interactor.cancelTimer() }
+        await wait { sut.timer.ticksCallCount == 1 }
+
+        #expect(sut.interactor.timerStartDate != nil)
+        #expect(sut.timer.ticksCallCount == 1)
+    }
+
+    @Test func testingEachTickPresentsElapsedTime() async {
+        let sut = makeActivitySUT()
+        sut.interactor.startTimer()
+        defer { sut.interactor.cancelTimer() }
+        await wait { sut.timer.ticksCallCount == 1 }
+
+        sut.timer.emitTick()
+        sut.timer.emitTick()
+        await wait { sut.presenter.presentedTimes.count >= 2 }
+
+        #expect(sut.presenter.presentedTimes.count == 2)
+        #expect(sut.presenter.presentedTimes.allSatisfy { $0 >= 0 })
+    }
+
+    // O tempo vem da data de início, não de um contador: 90s atrás tem que dar ~90s.
+    @Test func testingCurrentElapsedIsCalculatedFromStartDate() {
+        let sut = makeActivitySUT()
+        sut.interactor.timerStartDate = Date().addingTimeInterval(-90)
+
+        let elapsed = sut.interactor.currentElapsed()
+
+        #expect(elapsed >= 90)
+        #expect(elapsed < 91)
+    }
+
+    @Test func testingCurrentElapsedIsZeroWhenTimerIsNotRunning() {
+        let sut = makeActivitySUT()
+
+        #expect(sut.interactor.currentElapsed() == 0)
+    }
+
+    @Test func testingStopTimerFixesFinalElapsedTimeAndClearsStartDate() {
+        let sut = makeActivitySUT()
+        sut.interactor.timerStartDate = Date().addingTimeInterval(-30)
+
+        sut.interactor.stopTimer()
+
+        #expect(sut.interactor.timerElapsed >= 30)
+        #expect(sut.interactor.timerElapsed < 31)
+        #expect(sut.interactor.timerStartDate == nil)
+    }
+
+    @Test func testingStopTimerStopsListeningToTicks() async {
+        let sut = makeActivitySUT()
+        sut.interactor.startTimer()
+        await wait { sut.timer.ticksCallCount == 1 }
+
+        sut.interactor.stopTimer()
+        await wait { sut.timer.terminationCount == 1 }
+        let updatesBefore = sut.presenter.presentedTimes.count
+        sut.timer.emitTick()
+        try? await Task.sleep(for: .milliseconds(100))
+
+        #expect(sut.timer.terminationCount == 1)
+        #expect(sut.presenter.presentedTimes.count == updatesBefore)
+    }
+
+    @Test func testingCancelTimerDiscardsTimeAndPresentsZero() {
+        let sut = makeActivitySUT()
+        sut.interactor.timerStartDate = Date().addingTimeInterval(-30)
+        sut.interactor.timerElapsed = 45
+
+        sut.interactor.cancelTimer()
+
+        #expect(sut.interactor.timerElapsed == 0)
+        #expect(sut.interactor.timerStartDate == nil)
+        #expect(sut.interactor.timerTask == nil)
+        #expect(sut.presenter.presentedTimes == [0])
+    }
+
+    @Test func testingCancelTimerStopsListeningToTicks() async {
+        let sut = makeActivitySUT()
+        sut.interactor.startTimer()
+        await wait { sut.timer.ticksCallCount == 1 }
+
+        sut.interactor.cancelTimer()
+        await wait { sut.timer.terminationCount == 1 }
+        let updatesBefore = sut.presenter.presentedTimes.count
+        sut.timer.emitTick()
+        try? await Task.sleep(for: .milliseconds(100))
+
+        #expect(sut.timer.terminationCount == 1)
+        #expect(sut.presenter.presentedTimes.count == updatesBefore)
+    }
+
+    // Começar duas vezes não pode deixar dois "ouvintes": o primeiro é cancelado.
+    @Test func testingStartingTimerTwiceKeepsOnlyOneListener() async {
+        let sut = makeActivitySUT()
+        sut.interactor.startTimer()
+        await wait { sut.timer.ticksCallCount == 1 }
+
+        sut.interactor.startTimer()
+        defer { sut.interactor.cancelTimer() }
+        await wait { sut.timer.ticksCallCount == 2 && sut.timer.terminationCount == 1 }
+
+        sut.timer.emitTick()
+        await wait { !sut.presenter.presentedTimes.isEmpty }
+        try? await Task.sleep(for: .milliseconds(100))
+
+        #expect(sut.timer.terminationCount == 1)
+        #expect(sut.presenter.presentedTimes.count == 1)
+    }
+
+    @Test func testingStartActivityStartsTimerAndGoesToInProgress() async {
+        let sut = makeActivitySUT()
+
+        sut.interactor.startActivity()
+        defer { sut.interactor.cancelTimer() }
+        await wait { sut.timer.ticksCallCount == 1 }
+
+        #expect(sut.interactor.timerStartDate != nil)
+        #expect(sut.presenter.inProgressCount == 1)
+    }
+
+    @Test func testingCompleteActivityStopsTimerAndGoesToMood() {
+        let sut = makeActivitySUT()
+        sut.interactor.timerStartDate = Date().addingTimeInterval(-10)
+
+        sut.interactor.completeActivity()
+
+        #expect(sut.interactor.timerStartDate == nil)
+        #expect(sut.interactor.timerElapsed >= 10)
+        #expect(sut.presenter.moodCount == 1)
+    }
+
+    // Sair do fluxo no meio (ou cancelar) descarta o tempo e não deixa o cronômetro rodando.
+    @Test func testingFinishActivityFlowCancelsTimerAndFinishesFlow() {
+        let sut = makeActivitySUT()
+        sut.interactor.timerStartDate = Date().addingTimeInterval(-10)
+        sut.interactor.timerElapsed = 10
+
+        sut.interactor.finishActivityFlow()
+
+        #expect(sut.interactor.timerStartDate == nil)
+        #expect(sut.interactor.timerElapsed == 0)
+        #expect(sut.presenter.flowFinishedCount == 1)
+    }
+
 //    // MARK: - ProfileInteractor (RF24/onboarding - perfil padrão)
 //
 //    @Test func testingFetchProfileCreatesDefaultWhenMissing() async throws {
