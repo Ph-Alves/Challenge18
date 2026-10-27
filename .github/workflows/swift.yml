@@ -12,12 +12,24 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      - name: Show Xcode and simulators
+        run: |
+          xcodebuild -version
+          xcrun simctl list devices available
+
+      # Se o runner vier sem runtime de iOS, baixa o runtime
+      - name: Install iOS simulator runtime if missing
+        run: |
+          if ! xcrun simctl list devices available | grep -q "iPhone"; then
+            xcodebuild -downloadPlatform iOS
+          fi
+
       - name: Build & Test
         run: |
           xcodebuild test \
             -project ChallengeFinal.xcodeproj \
             -scheme ChallengeFinal \
-            -destination 'platform=iOS Simulator,name=iPhone 17,OS=26.5' \
+            -destination 'platform=iOS Simulator,name=iPhone 17' \
             -skip-testing:ChallengeFinalUITests \
             CODE_SIGNING_ALLOWED=NO \
             SDKROOT=iphonesimulator
