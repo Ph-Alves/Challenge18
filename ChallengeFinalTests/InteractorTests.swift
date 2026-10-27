@@ -165,6 +165,19 @@ final class TimerWorkerMock: TimerWorkerProtocol, @unchecked Sendable {
     }
 }
 
+/// Live Activity falsa: não abre a Dynamic Island de verdade. Só anota o que o Interactor pediu.
+/// `@MainActor` porque o `WidgetWorkerProtocol` também é.
+@MainActor
+final class WidgetWorkerMock: WidgetWorkerProtocol {
+    private(set) var startCalls: [(name: String, startDate: Date)] = []
+    private(set) var stopElapsed: [TimeInterval] = []
+    private(set) var cancelCount = 0
+
+    func startLiveActivity(name: String, startDate: Date) async { startCalls.append((name, startDate)) }
+    func stopLiveActivity(elapsed: TimeInterval) async { stopElapsed.append(elapsed) }
+    func cancelLiveActivity() async { cancelCount += 1 }
+}
+
 //final class ProfilePresenterSpy: ProfilePresenterProtocol {
 //    private(set) var presentedProfile: Profile?
 //    func presentProfile(_ profile: Profile) {
@@ -258,6 +271,7 @@ struct InteractorTests {
         let haptics: HapticsWorkerMock
         let motion: CoreMotionWorkerMock
         let timer: TimerWorkerMock
+        let liveActivity: WidgetWorkerMock
         let repository: GenericRepository<Activity>
     }
     
@@ -267,6 +281,7 @@ struct InteractorTests {
         let haptics = HapticsWorkerMock()
         let motion = CoreMotionWorkerMock()
         let timer = TimerWorkerMock()
+        let liveActivity = WidgetWorkerMock()
         let repository = makeActivityRepository()
         let interactor = ActivityInteractor(
             presenter: presenter,
@@ -275,10 +290,12 @@ struct InteractorTests {
             coreMotionWorker: motion,
             foundationWorker: foundation,
             camera: CameraWorkerMock(),
-            timer: timer
+            timer: timer,
+            liveActivity: liveActivity,
+            currentCategory: .physical
         )
         return ActivitySUT(interactor: interactor, presenter: presenter, foundation: foundation,
-                            haptics: haptics, motion: motion, timer: timer, repository: repository)
+                            haptics: haptics, motion: motion, timer: timer, liveActivity: liveActivity, repository: repository)
     }
     
     /// O sorteio roda dentro de um `Task`; espera até a condição valer (ou 2s).
@@ -603,6 +620,88 @@ struct InteractorTests {
         #expect(sut.interactor.timerStartDate == nil)
         #expect(sut.interactor.timerElapsed == 0)
         #expect(sut.presenter.flowFinishedCount == 1)
+    }
+
+    // MARK: ActivityInteractor (Live Activity / Dynamic Island)
+
+    // A ilha precisa começar no MESMO instante do cronômetro do app, senão os dois mostram tempos diferentes.
+    @Test func testingStartTimerStartsLiveActivityWithSameStartDate() async {
+        let sut = makeActivitySUT()
+
+        sut.interactor.startTimer()
+        defer { sut.interactor.cancelTimer() }
+        await wait { sut.liveActivity.startCalls.count == 1 }
+
+        #expect(sut.liveActivity.startCalls.count == 1)
+        #expect(sut.liveActivity.startCalls.first?.startDate == sut.interactor.timerStartDate)
+    }
+
+    // O grupo da atividade (escolhido na Home) é o nome que aparece na ilha (o `.text` da categoria).
+    @Test func testingStartTimerSendsCategoryNameToLiveActivity() async {
+        let sut = makeActivitySUT()
+
+        sut.interactor.startTimer()
+        defer { sut.interactor.cancelTimer() }
+        await wait { sut.liveActivity.startCalls.count == 1 }
+
+        #expect(sut.liveActivity.startCalls.first?.name == ActivityCategory.physical.text)
+    }
+
+    @Test func testingStopTimerSendsFinalTimeToLiveActivity() async throws {
+        let sut = makeActivitySUT()
+        sut.interactor.timerStartDate = Date().addingTimeInterval(-30)
+
+        sut.interactor.stopTimer()
+        await wait { sut.liveActivity.stopElapsed.count == 1 }
+
+        let elapsed = try #require(sut.liveActivity.stopElapsed.first)
+        #expect(elapsed >= 30)
+        #expect(elapsed < 31)
+        #expect(sut.liveActivity.cancelCount == 0)
+    }
+
+    @Test func testingCancelTimerCancelsLiveActivityWithoutSendingTime() async {
+        let sut = makeActivitySUT()
+        sut.interactor.timerStartDate = Date().addingTimeInterval(-30)
+
+        sut.interactor.cancelTimer()
+        await wait { sut.liveActivity.cancelCount == 1 }
+
+        #expect(sut.liveActivity.cancelCount == 1)
+        #expect(sut.liveActivity.stopElapsed.isEmpty)
+    }
+
+    @Test func testingStartActivityStartsLiveActivity() async {
+        let sut = makeActivitySUT()
+
+        sut.interactor.startActivity()
+        defer { sut.interactor.cancelTimer() }
+        await wait { sut.liveActivity.startCalls.count == 1 }
+
+        #expect(sut.liveActivity.startCalls.count == 1)
+    }
+
+    @Test func testingCompleteActivityStopsLiveActivityInsteadOfCancelling() async {
+        let sut = makeActivitySUT()
+        sut.interactor.timerStartDate = Date().addingTimeInterval(-10)
+
+        sut.interactor.completeActivity()
+        await wait { sut.liveActivity.stopElapsed.count == 1 }
+
+        #expect(sut.liveActivity.stopElapsed.count == 1)
+        #expect(sut.liveActivity.cancelCount == 0)
+    }
+
+    // Sair do fluxo no meio não pode deixar a ilha "órfã" na tela.
+    @Test func testingFinishActivityFlowCancelsLiveActivity() async {
+        let sut = makeActivitySUT()
+        sut.interactor.timerStartDate = Date().addingTimeInterval(-10)
+
+        sut.interactor.finishActivityFlow()
+        await wait { sut.liveActivity.cancelCount == 1 }
+
+        #expect(sut.liveActivity.cancelCount == 1)
+        #expect(sut.liveActivity.stopElapsed.isEmpty)
     }
 
 //    // MARK: - ProfileInteractor (RF24/onboarding - perfil padrão)

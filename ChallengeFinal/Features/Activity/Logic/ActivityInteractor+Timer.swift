@@ -12,7 +12,7 @@ import Foundation
 /// Ações do cronômetro da atividade em andamento.
 ///
 /// O tempo NÃO é um contador (`segundos += 1`): guarda só a data de início
-/// (`timerStartDate`) e calcula"agora - início" quando precisa. Assim o
+/// (`timerStartDate`) e calcula "agora - início" quando precisa. Assim o
 /// valor continua certo mesmo se o app for para o background.
 /// O `TimerWorker` só entrega os "ticks" (um por segundo) que mandam a tela
 /// atualizar; ele não conta nada.
@@ -23,7 +23,13 @@ extension ActivityInteractor {
     func startTimer( ) {
         // Garante um só Task rodando, caso o início seja chamado duas vezes.
         timerTask?.cancel()
-        timerStartDate = Date()
+        let startDate = Date()
+        timerStartDate = startDate
+        
+        // Liga a Live Activity (Dynamic Island) com a MESMA data do cronômetro do app e o grupo
+        // da atividade (`category.text`). O `Task` é necessário porque o worker é `async`.
+        Task { await liveActivity.startLiveActivity(name: category.text, startDate: startDate) }
+        
         // O Task é necessário porque o `for await` só roda em contexto assíncrono.
         // Fica guardado em `timerTask` para podermos cancelar depois.
         // `[weak self]` evita que o Task segure o Interactor vivo para sempre.
@@ -44,6 +50,9 @@ extension ActivityInteractor {
         timerTask?.cancel()
         timerElapsed = currentElapsed()
         timerStartDate = nil
+        
+        // A ilha passa a mostrar o tempo final (parado) e some depois de alguns segundos.
+        Task { await liveActivity.stopLiveActivity(elapsed: timerElapsed)}
     }
 
     /// Cancelou a atividade: para os ticks e descarta o tempo (nada é salvo).
@@ -54,6 +63,9 @@ extension ActivityInteractor {
         timerStartDate = nil
         timerElapsed = 0
         presenter.presentTime(0)
+        
+        // Encerra a ilha na hora, sem mostrar o tempo (nada foi concluído).
+        Task { await liveActivity.cancelLiveActivity()}
     }
 
     /// Quanto tempo já passou desde `timerStartDate`, em segundos.

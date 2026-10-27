@@ -26,6 +26,10 @@ enum ActivityBuilder {
         
         // Só entrega os ticks (1 por segundo); o tempo em si é calculado no Interactor.
         let timer = TimerWorker()
+        // Abre, para e cancela a Live Activity (Dynamic Island). O grupo da atividade
+        // (`currentCategory`) vai para o Interactor, que o repassa à ilha.
+        let liveActivity = WidgetWorker()
+        
         
         let interactor = ActivityInteractor(
             presenter: presenter,
@@ -34,7 +38,7 @@ enum ActivityBuilder {
             coreMotionWorker: CoreMotionWorker(),
             foundationWorker: FoundationWorker(),
             camera: camera,
-            timer: timer)
+            timer: timer, liveActivity: liveActivity, currentCategory: currentCategory)
         
         // A View segura a Store com força: o Presenter guarda a Store como `weak`.
         return ActivityView(
