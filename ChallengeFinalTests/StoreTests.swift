@@ -53,27 +53,89 @@ struct StoreTests {
 
         #expect(store.daysOfWeek.isEmpty)
     }
-//
-//    // MARK: - ActivitiesStore
-//
-//    @Test func testingActivitiesStoreStartsEmpty() async throws {
-//        let store = ActivitiesStore()
-//
-//        #expect(store.accepted.isEmpty)
-//        #expect(store.recused.isEmpty)
-//        #expect(store.currentActivity == nil)
-//    }
-//
-//    @Test func testingActivitiesStoreHoldsCurrentActivity() async throws {
-//        let store = ActivitiesStore()
-//        let group = Group(groupID: UUID(), type: .social, context: "home")
-//        let activity = Activity(activityID: UUID(), group: group, result: nil, name: "Draw", description: "-", archived: false)
-//
-//        store.currentActivity = activity
-//
-//        #expect(store.currentActivity?.activityID == activity.activityID)
-//    }
-//
+
+    // MARK: - ActivityStore (sorteio de desafios)
+    
+    private func createActivityStore() -> (store: ActivityStore, coordinator: ActivityCoordinator) {
+        let coordinator = ActivityCoordinator(selectedCategory: .physical, onFinish: {})
+        return (ActivityStore(coordinator: coordinator), coordinator)
+    }
+    
+    @Test func testingActivityStoreStartsWithDefaultState() {
+        let (store, _) = createActivityStore()
+        
+        #expect(store.activityTitle == nil)
+        #expect(store.activitySubtitle == nil)
+        #expect(store.activityDescription == nil)
+        #expect(store.isSearching == false)
+        #expect(store.isChallengeReady == false)
+        #expect(store.isChallengeAccepted == false)
+        #expect(store.currentStep == .draw)
+    }
+    
+    @Test func testingDisplayChallengeStoresFieldsAndMarksReady() {
+        let (store, _) = createActivityStore()
+        store.displaySearching()
+        
+        store.displayChallenge(FrictionChallenge(title: "título", subTitle: "sub", rationale: "descrição"))
+        
+        #expect(store.activityTitle == "título")
+        #expect(store.activitySubtitle == "sub")
+        #expect(store.activityDescription == "descrição")
+        #expect(store.isChallengeReady == true)
+        #expect(store.isSearching == false)
+    }
+    
+    @Test func testingDisplaySearchingAlsoUndoesAccepted() {
+        let (store, _) = createActivityStore()
+        store.displayAcceptedChallenge()
+        
+        store.displaySearching()
+        
+        #expect(store.isSearching == true)
+        #expect(store.isChallengeAccepted == false)
+    }
+    
+    @Test func testingDisplaySearchFailedStopsSearching() {
+        let (store, _) = createActivityStore()
+        store.displaySearching()
+        
+        store.displaySearchFailed()
+        
+        #expect(store.isSearching == false)
+    }
+    
+    @Test func testingTransitionToStartResetsStateAndGoesToChallenge() {
+        let (store, coordinator) = createActivityStore()
+        store.displayChallenge(FrictionChallenge(title: "t", subTitle: "s", rationale: "r"))
+        store.displayAcceptedChallenge()
+        
+        store.transitionToStart()
+        
+        #expect(store.isSearching == false)
+        #expect(store.isChallengeReady == false)
+        #expect(store.isChallengeAccepted == false)
+        #expect(coordinator.step == .challenge)
+    }
+    
+    @Test func testingTransitionsForwardToCoordinator() {
+        let (store, coordinator) = createActivityStore()
+        
+        store.transitionToMood()
+        #expect(coordinator.step == .mood)
+        
+        store.transitionToPhoto()
+        #expect(coordinator.step == .photo)
+        
+        store.transitionToChallenge()
+        #expect(coordinator.step == .challenge)
+        
+        store.transitionToInProgress()
+        #expect(store.currentStep == .inProgress)
+        
+        store.transitionToDraw()
+        #expect(store.currentStep == .draw)
+    }
 //    // MARK: - ProfileStore
 //
 //    @Test func testingProfileStoreStartsWithDefaultProfile() async throws {
