@@ -136,7 +136,7 @@ Regras:
 - Nunca repita nem se aproxime dos desafios que a pessoa já viu.
 """
 
-enum State {
+enum FoundationWorkerState {
     case idle
     case loading
     // Não vamos usar streaming por enquanto, mas pode ser util pra montar animações.
@@ -147,7 +147,7 @@ enum State {
 
 @MainActor
 protocol FoundationWorkerProtocol: AnyObject {
-    var state: State { get }
+    var state: FoundationWorkerState { get }
     var availability: SystemLanguageModel.Availability { get }
     
     func prewarm(for category: ActivityCategory)
@@ -160,7 +160,7 @@ protocol FoundationWorkerProtocol: AnyObject {
 @Observable
 final class FoundationWorker: FoundationWorkerProtocol {
 
-    private(set) var state: State = .idle
+    private(set) var state: FoundationWorkerState = .idle
 
     private var session: LanguageModelSession?
 
