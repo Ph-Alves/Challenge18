@@ -8,11 +8,29 @@
 import SwiftUI
 
 struct ChallengeDescription: View {
+    
+    let challengeTitle: String
+    let challengeSubTitle: String
+    let challengeDescription: String
+    
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        ChallengeCircle(text: challengeTitle, size: .small)
+            .padding(.bottom, 31)
+        
+        Text(challengeSubTitle)
+            .font(.title2)
+            .bold()
+            .multilineTextAlignment(.center)
+            .padding(.horizontal, 82)
+            .padding(.bottom, 12)
+        
+        Text(challengeDescription)
+            .multilineTextAlignment(.center)
+            .padding(.horizontal, 42)
+            .padding(.bottom, 73)
     }
 }
 
 #Preview {
-    ChallengeDescription()
+    ChallengeDescription(challengeTitle: "", challengeSubTitle: "", challengeDescription: "")
 }
