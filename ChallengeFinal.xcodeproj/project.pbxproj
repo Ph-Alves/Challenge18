@@ -59,6 +59,13 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		4BA513CB30911174000F1A68 /* Exceptions for "ChallengeFinalWidget" folder in "ChallengeFinal" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				ChallengeFinalWidgetAttributes.swift,
+			);
+			target = 000000000000000100000000 /* ChallengeFinal */;
+		};
 		4BC1A022308BDD4B009D777C /* Exceptions for "ChallengeFinalWidget" folder in "ChallengeFinalWidgetExtension" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -77,6 +84,7 @@
 		4BC1A011308BDD4B009D777C /* ChallengeFinalWidget */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
+				4BA513CB30911174000F1A68 /* Exceptions for "ChallengeFinalWidget" folder in "ChallengeFinal" target */,
 				4BC1A022308BDD4B009D777C /* Exceptions for "ChallengeFinalWidget" folder in "ChallengeFinalWidgetExtension" target */,
 			);
 			path = ChallengeFinalWidget;
@@ -447,6 +455,7 @@
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSCameraUsageDescription = "Usamos a camera para registrar uma atividade.";
+				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -495,6 +504,7 @@
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSCameraUsageDescription = "Usamos a camera para registrar uma atividade.";
+				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;

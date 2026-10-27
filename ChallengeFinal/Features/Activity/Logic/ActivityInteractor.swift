@@ -89,6 +89,11 @@ final class ActivityInteractor: ActivityInteractorProtocol {
     /// O cronômetro: só entrega os ticks de 1 segundo. Pelo protocolo, para dar mock nos testes.
     let timer: TimerWorkerProtocol
     
+    /// A Live Activity (Dynamic Island) do cronômetro. Pelo protocolo, para dar mock nos testes.
+    /// Quem fala com ela é o Interactor direto, sem passar pelo Presenter: é algo do sistema,
+    /// não da tela do app.
+    let liveActivity: WidgetWorkerProtocol
+    
     // MARK: - Dados do fluxo
     
     /// Foto escolhida no step `.photo` (câmera ou galeria).
@@ -109,6 +114,12 @@ final class ActivityInteractor: ActivityInteractorProtocol {
     /// O Task que escuta os ticks do worker. Fica guardado para poder ser cancelado.
     var timerTask: Task<Void, Never>?
 
+    /// Grupo da atividade (mente, movimento, sentidos ou conexão), escolhido na Home.
+    /// Não muda durante o fluxo, por isso entra no init em vez de ser passado a cada ação.
+    /// Aparece na Live Activity.
+    let category: ActivityCategory
+
+
     // Estado do sorteio (usado em ActivityInteractor+Draw.swift)
     var shakeWasStrongEnough = false
     var shakeIdleTimer: Timer?
@@ -123,7 +134,10 @@ final class ActivityInteractor: ActivityInteractorProtocol {
          coreMotionWorker: CoreMotionWorkerProtocol,
          foundationWorker: FoundationWorkerProtocol,
          camera: CameraWorkerProtocol, 
-         timer: TimerWorkerProtocol) {
+         timer: TimerWorkerProtocol,
+         liveActivity: WidgetWorkerProtocol,
+         currentCategory: ActivityCategory
+        ) {
         self.presenter = presenter
         self.activityRepository = activityRepository
         self.hapticWorker = hapticWorker
@@ -131,6 +145,8 @@ final class ActivityInteractor: ActivityInteractorProtocol {
         self.foundationWorker = foundationWorker
         self.camera = camera
         self.timer = timer
+        self.liveActivity = liveActivity
+        self.category = currentCategory
     }
     
     // MARK: - Navigation

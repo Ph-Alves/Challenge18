@@ -246,7 +246,7 @@ final class FoundationWorker: FoundationWorkerProtocol {
         guard availability == .available else { throw EngineError.modelUnavailable }
 
         var options = GenerationOptions()
-        options.temperature = Double.random(in: 0..<1)
+        options.temperature = Double.random(in: 0.2..<0.9)
 
         let response = try await takeSession().respond(
             to: titlePrompt(for: preset, context: context),
