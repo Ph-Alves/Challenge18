@@ -66,6 +66,9 @@ final class ActivityInteractor: ActivityInteractorProtocol {
 
     /// A câmera. Pelo protocolo, para dar mock nos testes.
     let camera: CameraWorking
+    
+    /// O cronometro utilizando protocolo
+    let timer: TimerWorkerProtocol
 
     // MARK: - Dados do fluxo
 
@@ -75,15 +78,25 @@ final class ActivityInteractor: ActivityInteractorProtocol {
 
     /// Se o flash está ligado na tela da câmera.
     var isFlashOn = false
+    
+    /// Quando o timer foi inciado
+    var timerStartDate: Date?
+    
+    /// O tempo que se passounem segundos
+    var timerElapsed: TimeInterval = 0
+    
+    /// Variável que guarda o Task de timer
+    var timerTask: Task<Void, Never>?
 
     // MARK: - Init
 
     init(presenter: ActivityPresenterProtocol,
          routing: ActivityRouting,
-         camera: CameraWorking) {
+         camera: CameraWorking, timer: TimerWorkerProtocol) {
         self.presenter = presenter
         self.routing = routing
         self.camera = camera
+        self.timer = timer
     }
 
     deinit {
