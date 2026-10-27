@@ -18,6 +18,13 @@ import SwiftUI
 /// `#Preview`, dá para passar um Interactor falso que só anota os toques.
 protocol ActivityInteractorProtocol: AnyObject {
     
+    // MARK: Step .draw (implementados em ActivityInteractor+Draw.swift)
+    func detectMotion(for category: ActivityCategory)
+    func finishDetection()
+    func prepare(for category: ActivityCategory)
+    func archiveChallenge(title: String, description: String, in category: ActivityCategory)
+    func reroll(for category: ActivityCategory)
+    
     // MARK: Step .photo (implementados em ActivityInteractor+Photo.swift)
     func openCamera()
     func retakePhoto()
@@ -34,6 +41,8 @@ protocol ActivityInteractorProtocol: AnyObject {
     func startChallenge()
     func goToActivityDetail()
     func returnToStart()
+    func completeChallenge()
+    func selectMood()
     func finishActivity()
 }
 
@@ -64,13 +73,13 @@ final class ActivityInteractor: ActivityInteractorProtocol {
     /// A câmera. Pelo protocolo, para dar mock nos testes.
     let camera: CameraWorkerProtocol
     
-    private let activityRepository: GenericRepository<Activity>
+    let activityRepository: GenericRepository<Activity>
     
-    private var hapticWorker: HapticsWorkerProtocol
+    var hapticWorker: HapticsWorkerProtocol
     
-    private var coreMotionWorker: CoreMotionWorkerProtocol
+    var coreMotionWorker: CoreMotionWorkerProtocol
     /// Worker responsável pelas operações do foundation
-    private var foundationWorker: FoundationWorkerProtocol
+    var foundationWorker: FoundationWorkerProtocol
     
     // MARK: - Dados do fluxo
     
@@ -81,10 +90,11 @@ final class ActivityInteractor: ActivityInteractorProtocol {
     /// Se o flash está ligado na tela da câmera.
     var isFlashOn = false
     
-    private var shakeWasStrongEnough = false
-    private var shakeIdleTimer: Timer?
-    private let motionFeedbackThreshold: Double = 0.3
-    private var isRaffling: Bool = false
+    // Estado do sorteio (usado em ActivityInteractor+Draw.swift)
+    var shakeWasStrongEnough = false
+    var shakeIdleTimer: Timer?
+    let motionFeedbackThreshold: Double = 0.3
+    var isRaffling: Bool = false
     
     // MARK: - Init
     
@@ -107,9 +117,10 @@ final class ActivityInteractor: ActivityInteractorProtocol {
     // Por enquanto só pedem ao Presenter para trocar de step.
     // A regra de cada step (sorteio, tempo, humor...) entra nas próximas extensions.
     
-    /// Aceitou o desafio sorteado: vai para "em andamento".
+    /// Aceitou o desafio sorteado: continua no step `.challenge`,
+    /// que passa a mostrar a tela de desafio aceito.
     func acceptChallenge() {
-        presenter.presentInProgress()
+        presenter.presentAcceptedActivity()
     }
     
     /// Começou a executar o desafio: também vai para "em andamento".
@@ -122,9 +133,19 @@ final class ActivityInteractor: ActivityInteractorProtocol {
         presenter.presentChallenge()
     }
     
-    /// Volta para o sorteio.
+    /// Volta para o sorteio, limpando o desafio anterior.
     func returnToStart() {
-        presenter.presentDraw()
+        presenter.presentStartAgain()
+    }
+    
+    /// Terminou o desafio: vai para o humor.
+    func completeChallenge() {
+        presenter.presentMood()
+    }
+    
+    /// Escolheu o humor: vai para a foto.
+    func selectMood() {
+        presenter.presentPhoto()
     }
     
     /// Termina o fluxo e volta para a Home.
