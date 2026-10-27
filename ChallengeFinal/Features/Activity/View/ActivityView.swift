@@ -11,7 +11,8 @@ import SwiftUI
 /// e liga os toques de cada step ao Interactor.
 struct ActivityView: View {
 
-    let coordinator: ActivityCoordinator
+    /// Para abrir os Ajustes do iPhone no alerta de permissão.
+    @Environment(\.openURL) private var openURL
 
     // Por que `@State` nas três?
     //
@@ -23,23 +24,13 @@ struct ActivityView: View {
     // Assim, a View fica sempre com o mesmo conjunto (o primeiro), e os três
     // continuam combinando entre si: a `session` mostrada no preview é a do
     // mesmo worker que o Interactor usa.
-    @State private var interactor: any ActivityInteractorProtocol
-    @State private var store: ActivityStore
-    @State private var cameraPreview: CameraPreviewView
-
-    /// Para abrir os Ajustes do iPhone no alerta de permissão.
-    @Environment(\.openURL) private var openURL
-
-    init(coordinator: ActivityCoordinator, interactor: any ActivityInteractorProtocol, store: ActivityStore, cameraPreview: CameraPreviewView) {
-        self.coordinator = coordinator
-        _interactor = State(initialValue: interactor)
-        _store = State(initialValue: store)
-        _cameraPreview = State(initialValue: cameraPreview)
-    }
+    @State var interactor: any ActivityInteractorProtocol
+    @State var store: ActivityStore
+    @State var cameraPreview: CameraPreviewView
 
     var body: some View {
         stepView
-            .animation(.default, value: coordinator.step)
+            .animation(.default, value: store.currentStep)
             // Permissão de câmera negada.
             .alert("Câmera bloqueada", isPresented: isPermissionAlertPresented) {
                 Button("Abrir Ajustes") {
@@ -72,7 +63,7 @@ struct ActivityView: View {
 
     @ViewBuilder
     private var stepView: some View {
-        switch coordinator.step {
+        switch store.currentStep {
         case .photo:
             PhotoStepView(
                 photo: store.photo,
@@ -96,7 +87,6 @@ struct ActivityView: View {
             Text(title)
 
             Button("Próximo") {
-                coordinator.debugNext()
             }
             .buttonStyle(.borderedProminent)
         }
@@ -139,3 +129,17 @@ struct ActivityView: View {
         )
     }
 }
+
+// MARK: - Stubs pro protótipo
+extension ActivityStore {
+    static var preview: ActivityStore {
+        let store = ActivityStore(coordinator: ActivityCoordinator(selectedCategory: .cognitive, onFinish: {}))
+        
+        return store
+    }
+}
+
+
+//#Preview {
+//    ActivityView(interactor: <#T##any ActivityInteractorProtocol#>, store: .preview, cameraPreview: CameraPreviewView(session: AVCaptureSession()))
+//}

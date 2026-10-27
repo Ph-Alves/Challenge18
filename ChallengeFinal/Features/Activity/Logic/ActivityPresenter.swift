@@ -5,15 +5,16 @@
 //  Created by Raquel Souza on 19/10/26.
 //
 
+import Foundation
 import SwiftUI
 
+// MARK: - Protocol
 /// O que o Interactor enxerga do Presenter.
 ///
 /// Com o protocolo, nos testes do Interactor dá para usar um *spy*
 /// (um Presenter falso que só anota o que foi chamado), sem Store nem View.
-@MainActor
 protocol ActivityPresenterProtocol: AnyObject {
-
+    
     // MARK: Step .photo
     func presentCamera()
     func presentCameraClosed()
@@ -22,10 +23,16 @@ protocol ActivityPresenterProtocol: AnyObject {
     func presentFlash(isOn: Bool)
     func presentError(_ error: Error)
     func presentAlertsDismissed()
+    
+    // MARK: Navigation
+    func presentSummary()
+    func presentFlowFinished()
+    func presentInProgress()
+    func presentChallenge()
+    func presentDraw()
 }
 
 // MARK: - Class
-
 /// O "tradutor" do fluxo de Activity.
 ///
 /// Recebe dados crus do Interactor (`Data`, `Bool`, `Error`), transforma em
@@ -38,25 +45,17 @@ protocol ActivityPresenterProtocol: AnyObject {
 /// - Só conhece a Store pelo `ActivityStoreProtocol`.
 @MainActor
 final class ActivityPresenter: ActivityPresenterProtocol {
-
+    
     // MARK: - Variables
-
-    /// Quem segura a Store de verdade é a View. Se ninguém segurar,
-    /// ela vira `nil` e o Presenter para de escrever, sem crashar.
-    weak var store: ActivityStoreProtocol?
-
+    private weak var store: ActivityStoreProtocol?
+    
     // MARK: - Init
-
     init(store: ActivityStoreProtocol) {
         self.store = store
     }
-
-    deinit {
-        print("ActivityPresenter liberado")
-    }
-
+    
     // MARK: - Functions
-
+    
     // MARK: Step .photo
 
     /// Permissão OK: abre a tela da câmera.
@@ -130,6 +129,26 @@ final class ActivityPresenter: ActivityPresenterProtocol {
         store?.displayPermissionAlert(nil)
         store?.displayError(nil)
     }
-
-    // MARK: Outros steps
+    
+    // MARK: Navigation
+    // Não há o que formatar: só traduz "apresentar X" em "transicionar para X" na Store.
+    func presentSummary() {
+        store?.transitionToSummary()
+    }
+    
+    func presentFlowFinished() {
+        store?.finishFlow()
+    }
+    
+    func presentInProgress() {
+        store?.transitionToInProgress()
+    }
+    
+    func presentChallenge() {
+        store?.transitionToChallenge()
+    }
+    
+    func presentDraw() {
+        store?.transitionToDraw()
+    }
 }

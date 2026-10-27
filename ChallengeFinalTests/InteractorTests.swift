@@ -13,6 +13,7 @@ import Foundation
 // MARK: - Spies (test doubles for the Presenter protocols the Interactors talk to)
 
 final class HomePresenterSpy: HomePresenterProtocol {
+    
     private(set) var presentedCategory: ActivityCategory?
     private(set) var week: [Date]?
     
@@ -22,6 +23,10 @@ final class HomePresenterSpy: HomePresenterProtocol {
     
     func presentWeek(days: [Date]) {
         week = days
+    }
+    
+    func presentActivityFlow() {
+        
     }
 }
 

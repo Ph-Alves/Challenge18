@@ -24,7 +24,7 @@ final class Activity {
     
     var archived: Bool = false
     
-    init(category: ActivityCategory, result: ActivityResult, name: String, description: String, archived: Bool) {
+    init(category: ActivityCategory, result: ActivityResult?, name: String, description: String, archived: Bool) {
         self.category = category
         self.result = result
         self.name = name

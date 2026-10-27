@@ -13,8 +13,8 @@ struct ActionDialogComponent: View {
     var firstOptionText: String
     var secondOptionText: String
     
-    var firstAction: () -> Void = {}
-    var secondAction: () -> Void = {}
+    var firstAction: () -> Void
+    var secondAction: () -> Void
     
     var body: some View {
         VStack(spacing: 20) {

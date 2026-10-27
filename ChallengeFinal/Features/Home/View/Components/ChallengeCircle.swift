@@ -7,16 +7,33 @@
 
 import SwiftUI
 
+enum CircleSize {
+    case big
+    case medium
+    case small
+}
+
 struct ChallengeCircle: View {
     // MARK: - Variables
     let text: String
+    let size: CircleSize
+    var frameSize: CGFloat {
+        switch size {
+        case .big:
+            return 300
+        case .medium:
+            return 250
+        case .small:
+            return 100
+        }
+    }
 
     // MARK: - View
     var body: some View {
         ZStack {
             Circle()
                 .stroke(LinearGradient(colors: [.black, .gray], startPoint: UnitPoint(x: 1, y: 1), endPoint: UnitPoint(x: 0, y: 1)), lineWidth: 45)
-                .frame(width: 300, height: 300)
+                .frame(width: frameSize, height: frameSize)
 
             Text(text)
                 .multilineTextAlignment(.center)
@@ -28,8 +45,8 @@ struct ChallengeCircle: View {
 // MARK: - Preview
 #Preview {
     VStack(spacing: 40) {
-        ChallengeCircle(text: "Escolha as escadas: Na próxima oportunidade, use as escadas em vez do elevador, se for seguro e viável.")
-        ChallengeCircle(text: "Descubra sua própria mão: Observe sua mão e identifique mentalmente o máximo de características que conseguir: linhas, marcas, formatos, texturas e detalhes.")
-        ChallengeCircle(text: "Bata claras à mão: Na próxima receita adequada, bata as claras em neve manualmente com um batedor, sem usar uma batedeira elétrica.")
+        ChallengeCircle(text: "Escolha as escadas: Na próxima oportunidade, use as escadas em vez do elevador, se for seguro e viável.", size: .big)
+        ChallengeCircle(text: "Descubra sua própria mão.", size: .medium)
+        ChallengeCircle(text: "abc", size: .small)
     }
 }

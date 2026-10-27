@@ -145,7 +145,7 @@ extension ActivityInteractor {
     /// e para o `ActivityResult` no final do fluxo.
     func continueFromPhoto() {
         camera.stopSession()
-        routing?.didCapturePhoto()
+        presenter.presentSummary()
     }
 
     /// O usuário fechou um alerta (permissão negada ou erro).

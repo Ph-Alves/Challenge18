@@ -50,7 +50,7 @@ enum CameraError: Error {
 ///
 /// O resultado vem como `Result`. No Interactor, use `try result.get()`
 /// dentro de um `do/catch`: assim os erros são tratados com `throw`.
-protocol CameraWorking: AnyObject {
+protocol CameraWorkerProtocol: AnyObject {
     
     /// Consulta a permissão atual, sem mostrar nada ao usuário.
     func permissionStatus() -> CameraPermission
@@ -78,7 +78,7 @@ protocol CameraWorking: AnyObject {
 /// o estado da tela fica na `ActivityStore`. O worker só executa e devolve resultados.
 ///
 
-final class CameraWorker: NSObject, CameraWorking {
+final class CameraWorker: NSObject, CameraWorkerProtocol {
 
     // MARK: Propriedades
 
