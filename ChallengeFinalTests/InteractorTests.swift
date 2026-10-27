@@ -64,6 +64,8 @@ final class ActivityPresenterSpy: ActivityPresenterProtocol {
     func presentInProgress() {}
     func presentChallenge() {}
     func presentDraw() {}
+    func presentActivity(_ challenge: ChallengeFinal.FrictionChallenge) { events.append(.challenge(title: challenge.title)) }
+    func presentActivityStep() {}
 }
 
 /// Foundation Models falso: devolve o estado que o teste mandar, sem usar o modelo do aparelho.
@@ -315,7 +317,7 @@ struct InteractorTests {
     @Test func testingArchiveChallengeSavesArchivedActivityAndPrewarms() throws {
         let sut = makeActivitySUT()
         
-        sut.interactor.archiveChallenge(title: "Cardio sem fones", description: "Faça cardio", in: .physical)
+        sut.interactor.archiveActivity(title: "Cardio sem fones", description: "Faça cardio", in: .physical)
         
         let saved = try sut.repository.getAll()
         #expect(saved.count == 1)

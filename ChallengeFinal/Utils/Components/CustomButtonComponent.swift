@@ -53,7 +53,7 @@ struct CustomButtonComponent: View {
                 
                 Text(title)
             }
-            .font(.body)
+            .font(.subheadline)
             .padding(.horizontal, 20)
             .padding(.vertical, 5)
             .frame(maxWidth: .infinity)

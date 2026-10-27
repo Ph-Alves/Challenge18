@@ -17,10 +17,10 @@ protocol ActivityStoreProtocol: AnyObject {
     func displayTimer(_ text: String)
     
     // MARK: Steps .draw e .challenge (implementados em ActivityStore+Draw.swift)
-    func displayChallenge(_ challenge: FrictionChallenge)
+    func displayActivity(_ challenge: FrictionChallenge)
     func displaySearching()
     func displaySearchFailed()
-    func displayAcceptedChallenge()
+    func displayAcceptedActivity()
     func transitionToStart()
     func transitionToMood()
     func transitionToPhoto()
@@ -35,7 +35,7 @@ protocol ActivityStoreProtocol: AnyObject {
     // MARK: Transitions
     func transitionToInProgress()
     func transitionToDraw()
-    func transitionToChallenge()
+    func transitionToActivity()
     func transitionToSummary()
     func finishFlow()
 }
@@ -146,7 +146,7 @@ final class ActivityStore: ActivityStoreProtocol {
         self.coordinator.goToDraw()
     }
 
-    func transitionToChallenge() {
+    func transitionToActivity() {
         self.coordinator.goToChallenge()
     }
     

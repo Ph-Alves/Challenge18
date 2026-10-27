@@ -77,7 +77,7 @@ struct StoreTests {
         let (store, _) = createActivityStore()
         store.displaySearching()
         
-        store.displayChallenge(FrictionChallenge(title: "título", subTitle: "sub", rationale: "descrição"))
+        store.displayActivity(FrictionChallenge(title: "título", subTitle: "sub", rationale: "descrição"))
         
         #expect(store.activityTitle == "título")
         #expect(store.activitySubtitle == "sub")
@@ -88,7 +88,7 @@ struct StoreTests {
     
     @Test func testingDisplaySearchingAlsoUndoesAccepted() {
         let (store, _) = createActivityStore()
-        store.displayAcceptedChallenge()
+        store.displayAcceptedActivity()
         
         store.displaySearching()
         
@@ -107,8 +107,8 @@ struct StoreTests {
     
     @Test func testingTransitionToStartResetsStateAndGoesToChallenge() {
         let (store, coordinator) = createActivityStore()
-        store.displayChallenge(FrictionChallenge(title: "t", subTitle: "s", rationale: "r"))
-        store.displayAcceptedChallenge()
+        store.displayActivity(FrictionChallenge(title: "t", subTitle: "s", rationale: "r"))
+        store.displayAcceptedActivity()
         
         store.transitionToStart()
         
@@ -127,7 +127,7 @@ struct StoreTests {
         store.transitionToPhoto()
         #expect(coordinator.step == .photo)
         
-        store.transitionToChallenge()
+        store.transitionToActivity()
         #expect(coordinator.step == .challenge)
         
         store.transitionToInProgress()

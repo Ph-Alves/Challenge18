@@ -18,7 +18,7 @@ protocol ActivityPresenterProtocol: AnyObject {
     func presentTime(_ elapsed: TimeInterval)
     
     // MARK: Steps .draw e .challenge (implementados em ActivityPresenter+Draw.swift)
-    func presentChallenge(_ challenge: FrictionChallenge)
+    func presentActivity(_ challenge: FrictionChallenge)
     func presentSearching()
     func presentSearchFailed()
     func presentAcceptedActivity()
@@ -39,7 +39,7 @@ protocol ActivityPresenterProtocol: AnyObject {
     func presentSummary()
     func presentFlowFinished()
     func presentInProgress()
-    func presentChallenge()
+    func presentActivityStep()
     func presentDraw()
 }
 
@@ -172,8 +172,8 @@ final class ActivityPresenter: ActivityPresenterProtocol {
         store?.transitionToInProgress()
     }
     
-    func presentChallenge() {
-        store?.transitionToChallenge()
+    func presentActivityStep() {
+        store?.transitionToActivity()
     }
     
     func presentDraw() {
