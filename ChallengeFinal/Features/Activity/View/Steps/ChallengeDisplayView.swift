@@ -21,9 +21,7 @@ struct ChallengeDisplayView: View {
     @State private var showActions = false
 
     var body: some View {
-        VStack {
-            
-            Spacer()
+        VStack(alignment: .center) {
             ZStack {
                 // O círculo com o desafio aparece primeiro, centralizado
                 ChallengeCircle(text: isSearching ? "Procurando um novo desafio..." : challengeTitle, size: .big)
@@ -31,14 +29,13 @@ struct ChallengeDisplayView: View {
                 
                 // Depois do círculo, entram o diálogo e o botão
                 VStack(spacing: 24) {
-                    Spacer()
                     ActionDialogComponent(title: "Gostaria de iniciar esse desafio?", firstOptionText: "Outra opção", secondOptionText: "aceitar", firstAction: refuseAction, secondAction: acceptAction)
                         .padding(.horizontal)
                     
                     CustomButtonComponent(title: "Arquivar desafio da lista", icon: "archivebox.fill", action: archiveAction)
                         .padding(.horizontal, 70)
-                    Spacer()
                 }
+                .padding(.top, 250)
                 .opacity(showActions ? 1 : 0)
                 .offset(y: showActions ? 0 : 20)
                 .allowsHitTesting(showActions)
@@ -59,7 +56,6 @@ struct ChallengeDisplayView: View {
                     showActions = true
                 }
             }
-            Spacer()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity) // centraliza na tela toda
         .overlay(alignment: .topLeading) {

@@ -18,16 +18,7 @@ struct ChallengeAcceptedView: View {
     let cancelAction: () -> Void
 
     var body: some View {
-        VStack {
-            HStack {
-                BackButton(action: returnAction)
-                    .padding(.bottom, 24)
-                
-                Spacer()
-            }
-            .padding(.horizontal)
-            
-            Spacer()
+        VStack(alignment: .center) {
             
             ChallengeDescription(challengeTitle: challengeTitle, challengeSubTitle: challengeSubTitle, challengeDescription: challengeDescription)
             
@@ -35,7 +26,11 @@ struct ChallengeAcceptedView: View {
                 .padding(.horizontal, 113)
             CustomButtonComponent(title: "cancelar o desafio", icon: nil, action: cancelAction)
                 .padding(.horizontal, 113)
-            Spacer()
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .overlay(alignment: .topLeading) {
+            BackButton(action: returnAction)
+                .padding(.horizontal)
         }
     }
 }

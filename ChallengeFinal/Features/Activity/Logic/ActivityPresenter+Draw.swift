@@ -13,8 +13,8 @@ import Foundation
 extension ActivityPresenter {
 
     /// O sorteio terminou: entrega o desafio para a Store mostrar.
-    func presentChallenge(_ challenge: FrictionChallenge) {
-        store?.displayChallenge(challenge)
+    func presentActivity(_ challenge: FrictionChallenge) {
+        store?.displayActivity(challenge)
     }
 
     /// Começou a procurar: a tela troca os textos para "procurando...".
@@ -30,7 +30,7 @@ extension ActivityPresenter {
     /// O usuário aceitou: o step continua `.challenge`, mas passa a mostrar
     /// a tela de desafio aceito (não é uma troca de step).
     func presentAcceptedActivity() {
-        store?.displayAcceptedChallenge()
+        store?.displayAcceptedActivity()
     }
 
     // MARK: Navigation

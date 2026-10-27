@@ -104,7 +104,7 @@ struct PresenterTests {
         presenter.presentSearching()
         let challenge = FrictionChallenge(title: "respire fundo", subTitle: "Pausa", rationale: "Respire por um minuto.")
         
-        presenter.presentChallenge(challenge)
+        presenter.presentActivity(challenge)
         
         #expect(store.activityTitle == "respire fundo")
         #expect(store.activitySubtitle == "Pausa")
@@ -134,7 +134,7 @@ struct PresenterTests {
     
     @Test func testingPresentStartAgainClearsRaffleState() {
         let (presenter, store) = createActivityPresenterAndStore()
-        presenter.presentChallenge(FrictionChallenge(title: "t", subTitle: "s", rationale: "r"))
+        presenter.presentActivity(FrictionChallenge(title: "t", subTitle: "s", rationale: "r"))
         presenter.presentAcceptedActivity()
         
         presenter.presentStartAgain()

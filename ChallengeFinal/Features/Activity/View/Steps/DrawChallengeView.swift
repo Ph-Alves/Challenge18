@@ -7,18 +7,21 @@
 
 import SwiftUI
 
+// MARK: - View
 struct DrawChallengeView: View {
     
+    // MARK: - Variables
     var isSearching: Bool
     var isChallengeReady: Bool
+    var swipeRaffle: () -> Void
     var startDetection: () -> Void
     var finishDetection: () -> Void
     var returnAction: () -> Void
     var growFinished: () -> Void
 
+    // MARK: - View
     var body: some View {
         VStack(alignment: .center, spacing: isSearching ? 0 : 66) {
-            Spacer()
             
             if !isSearching {
                 VStack {
@@ -33,8 +36,15 @@ struct DrawChallengeView: View {
             }
 
             ChallengeCircle(text: isSearching ? "Procurando um novo desafio..." : "Pode me chacoalhar :)", size: .medium)
-
-            Spacer()
+                .gesture(
+                    DragGesture(minimumDistance: 20)
+                        .onEnded { value in
+                            let isHorizontalSwipe = abs(value.translation.width) > abs(value.translation.height)
+                            if isHorizontalSwipe {
+                                swipeRaffle()
+                            }
+                        }
+                )
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity) // centraliza na tela toda
         .overlay(alignment: .topLeading) {
@@ -59,6 +69,12 @@ struct DrawChallengeView: View {
     }
 }
 
-#Preview {
-    DrawChallengeView(isSearching: true, isChallengeReady: false, startDetection: {}, finishDetection: {}, returnAction: {}, growFinished: {})
+// MARK: - Preview
+
+#Preview("Searching") {
+    DrawChallengeView(isSearching: true, isChallengeReady: false, swipeRaffle: {}, startDetection: {}, finishDetection: {}, returnAction: {}, growFinished: {})
+}
+
+#Preview("Shake") {
+    DrawChallengeView(isSearching: false, isChallengeReady: false, swipeRaffle: {}, startDetection: {}, finishDetection: {}, returnAction: {}, growFinished: {})
 }
