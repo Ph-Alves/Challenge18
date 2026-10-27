@@ -338,6 +338,9 @@ final class FoundationWorker: FoundationWorkerProtocol {
             }
         }
 
+        // LanguageModelError e SystemLanguageModel.Error só existem no SDK do Xcode 27 (Swift 6.4).
+        // Com SDKs anteriores (ex.: CI com Xcode 26.x) este trecho nem é compilado.
+        #if compiler(>=6.4)
         if #available(iOS 27.0, macOS 27.0, visionOS 27.0, *), let modelError = error as? LanguageModelError {
             switch modelError {
             case .contextSizeExceeded:
@@ -363,6 +366,7 @@ final class FoundationWorker: FoundationWorkerProtocol {
                 return "Não foi possível gerar o desafio agora."
             }
         }
+        #endif
 
         // iOS 26 (antes de existir o LanguageModelError) lança este tipo.
         if let generationError = error as? LanguageModelSession.GenerationError {
