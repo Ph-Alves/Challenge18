@@ -8,14 +8,19 @@
 import Foundation
 
 // MARK: - Protocol
+// O que a View enxerga do Interactor: só as ações do usuário.
 @MainActor
 protocol HomeInteractorProtocol: AnyObject {
-    func nextCategory(current: ActivityCategory)
-    func previousCategory(current: ActivityCategory)
-    func getCurrentWeek()
+    func nextCategory(current: ActivityCategory)     // swipe para a esquerda
+    func previousCategory(current: ActivityCategory) // swipe para a direita
+    func getCurrentWeek()                            // monta os dias da semana atual
+    func startActivity()                             // toque no círculo de desafio
 }
 
 // MARK: - Class
+// Regras da Home: qual a próxima/anterior categoria, quais são os dias da semana
+// e quando iniciar a Activity. Não decide como mostrar (isso é do Presenter).
+// Aqui o repository ainda não é usado: fica pronto para o registro de humor.
 @MainActor
 final class HomeInteractor: HomeInteractorProtocol {
     
@@ -83,5 +88,11 @@ final class HomeInteractor: HomeInteractorProtocol {
         case .social:
             presenter.presentCategory(.sensorial)
         }
+    }
+    
+    // O usuário tocou no círculo: a categoria atual já está na Store,
+    // então só pedimos ao Presenter para abrir o fluxo (Presenter -> Store -> Coordinator).
+    func startActivity() {
+        presenter.presentActivityFlow()
     }
 }

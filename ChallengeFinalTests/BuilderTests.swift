@@ -29,16 +29,16 @@ struct BuilderTests {
     
     @Test func testingHomeBuilding() async {
         let coordinator = makeHomeCoordinator()
-        let home: HomeView? = coordinator.startHome(context: modelContainer.mainContext)
+        let home: HomeView? = coordinator.startHomeFlow(context: modelContainer.mainContext)
         
         #expect(home != nil)
     }
     
     @Test func testingCheckHomeCachedView() async {
         let coordinator = makeHomeCoordinator()
-        _ = coordinator.startHome(context: modelContainer.mainContext)
+        _ = coordinator.startHomeFlow(context: modelContainer.mainContext)
         
-        #expect(coordinator.cachedHomeView != nil)
+        #expect(coordinator.cached != nil)
     }
 //    @Test func testingActivitiesBuilding() async throws {
 //        let builder: ActivitiesBuilderProtocol = createActivityBuilder()

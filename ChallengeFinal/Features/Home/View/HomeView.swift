@@ -7,6 +7,9 @@
 
 import SwiftUI
 
+// Tela inicial: mostra a semana, o círculo de desafio e a categoria atual.
+// Swipe horizontal troca a categoria; toque no círculo inicia a Activity.
+// A View só LÊ a Store e só CHAMA o Interactor, sem regra própria.
 struct HomeView: View {
 
     // MARK: - Variables
@@ -28,7 +31,7 @@ struct HomeView: View {
                 .font(.title.bold())
 
             // Circulo de desafio
-            ChallengeCircle(text: "Eu te ajudo no que fazer <3")
+            ChallengeCircle(text: "Eu te ajudo no que fazer <3", size: .big)
             // Gesture para o swipe (esquerda/direita)
                 .gesture(
                     DragGesture(minimumDistance: 20)
@@ -49,6 +52,9 @@ struct HomeView: View {
                         }
                 )
                 .padding(.horizontal)
+                .onTapGesture {
+                    interactor.startActivity()
+                }
 
             
             // Texto da respectiva categoria
@@ -70,6 +76,8 @@ struct HomeView: View {
 // Usamos o stub por que controlamos melhor o que o preview vai mostrar e como vai mostrar
 // No caso eu testo so a tela, sem interações.
 private final class HomeInteractorStub: HomeInteractorProtocol {
+    func startActivity() {}
+    
     func getCurrentWeek() {}
     
     func nextCategory(current: ActivityCategory) {}

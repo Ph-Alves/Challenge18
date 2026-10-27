@@ -538,6 +538,7 @@
 				INFOPLIST_FILE = ChallengeFinalWidget/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = ChallengeFinalWidget;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -575,6 +576,7 @@
 				INFOPLIST_FILE = ChallengeFinalWidget/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = ChallengeFinalWidget;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",

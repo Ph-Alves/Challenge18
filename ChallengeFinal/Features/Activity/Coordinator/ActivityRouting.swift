@@ -8,10 +8,15 @@
 import Foundation
 
 protocol ActivityRouting: AnyObject {
-    func didDraw()
-    func didAcceptChallenge()
-    func didCompleteChallenge()
-    func didSelectMood()
-    func didCapturePhoto()
-    func didFinishChallenge()
+    var cached: ActivityView? { get set }
+    var step: ActivityStep { get }
+    
+    func goToDraw()
+    func goToChallenge()
+    func goToInProgress()
+    func goToMood()
+    func goToPhoto()
+    func goToSummary()
+    /// Encerra o fluxo inteiro e devolve o usuário para a Home.
+    func finishFlow()
 }
