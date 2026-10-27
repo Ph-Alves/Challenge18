@@ -16,35 +16,30 @@ struct DrawChallengeView: View {
     var returnAction: () -> Void
     var growFinished: () -> Void
 
-    @State private var ballScale: CGFloat = 1
-    @State private var contentOpacity: Double = 1
-
     var body: some View {
-        VStack(spacing: 66) {
-            HStack {
-                BackButton(action: returnAction)
-                    .padding(.bottom, 24)
-                    .opacity(contentOpacity)
-                Spacer()
-            }
-
-            VStack {
-                Text("Atrás de um novo desafio?")
-                    .font(.title.bold())
-                    .multilineTextAlignment(.center)
-                    .contentTransition(.opacity)
-                if !isSearching {
+        VStack(alignment: .center, spacing: isSearching ? 0 : 66) {
+            Spacer()
+            
+            if !isSearching {
+                VStack {
+                    Text("Atrás de um novo desafio?")
+                        .font(.title.bold())
+                        .multilineTextAlignment(.center)
+                        .contentTransition(.opacity)
                     Text("chacoalhe seu iphone e desafie-se")
                 }
+                .padding(.horizontal, 40)
+                .animation(.easeInOut, value: isSearching)
             }
-            .padding(.horizontal, 40)
-            .opacity(contentOpacity)
-            .animation(.easeInOut, value: isSearching)
 
             ChallengeCircle(text: isSearching ? "Procurando um novo desafio..." : "Pode me chacoalhar :)", size: .medium)
-                .scaleEffect(ballScale)
-            
+
             Spacer()
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity) // centraliza na tela toda
+        .overlay(alignment: .topLeading) {
+            BackButton(action: returnAction)
+                .padding(.horizontal)
         }
         .padding(.horizontal)
         .onAppear {
@@ -54,8 +49,6 @@ struct DrawChallengeView: View {
             guard ready else { return }
             // Bola cresce até preencher a tela e só então avança para o desafio
             withAnimation(.easeIn(duration: 0.6)) {
-                ballScale = 2
-                contentOpacity = 0
             } completion: {
                 growFinished()
             }
@@ -67,5 +60,5 @@ struct DrawChallengeView: View {
 }
 
 #Preview {
-    DrawChallengeView(isSearching: false, isChallengeReady: false, startDetection: {}, finishDetection: {}, returnAction: {}, growFinished: {})
+    DrawChallengeView(isSearching: true, isChallengeReady: false, startDetection: {}, finishDetection: {}, returnAction: {}, growFinished: {})
 }

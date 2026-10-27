@@ -13,24 +13,33 @@ struct ChallengeAcceptedView: View {
     let challengeSubTitle: String
     let challengeDescription: String
     
+    let returnAction: () -> Void
     let startAction: () -> Void
     let cancelAction: () -> Void
-    
+
     var body: some View {
         VStack {
-            ChallengeCircle(text: challengeTitle, size: .big)
-                .offset(y: -110)
+            HStack {
+                BackButton(action: returnAction)
+                    .padding(.bottom, 24)
+                
+                Spacer()
+            }
+            .padding(.horizontal)
             
-            Text(challengeSubTitle)
+            Spacer()
             
-            Text(challengeDescription)
+            ChallengeDescription(challengeTitle: challengeTitle, challengeSubTitle: challengeSubTitle, challengeDescription: challengeDescription)
             
             CustomButtonComponent(title: "iniciar", icon: nil, action: startAction)
+                .padding(.horizontal, 113)
             CustomButtonComponent(title: "cancelar o desafio", icon: nil, action: cancelAction)
+                .padding(.horizontal, 113)
+            Spacer()
         }
     }
 }
 
 #Preview {
-    ChallengeAcceptedView(challengeTitle: "você consegue :)", challengeSubTitle: "menos distração, mais foco", challengeDescription: "sem redes sociais, seu cardio vira um momento para cuidar do corpo e desacelerar a mente.", startAction: {}, cancelAction: {})
+    ChallengeAcceptedView(challengeTitle: "você consegue :)", challengeSubTitle: "menos distração, mais foco", challengeDescription: "sem redes sociais, seu cardio vira um momento para cuidar do corpo e desacelerar a mente.", returnAction: {}, startAction: {}, cancelAction: {})
 }
