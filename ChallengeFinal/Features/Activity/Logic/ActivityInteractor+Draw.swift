@@ -49,15 +49,14 @@ extension ActivityInteractor {
         
         self.coreMotionWorker.startMonitoring()
         
-        Task { [weak self] in
-            // Como não há um evento de "parou de sacudir", verificamos periodicamente
-            // se faz tempo que não chega leitura acima do threshold e paramos o haptic.
-            self?.shakeIdleTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
-                // O closure do Timer é Sendable; o timer foi agendado na main run loop,
-                // então podemos assumir o isolamento do MainActor para acessar o worker.
-                MainActor.assumeIsolated {
-                    self?.hapticWorker.stopShakeLoopIfIdle(timeout: 0.25)
-                }
+        // Como não há um evento de "parou de sacudir", verificamos periodicamente
+        // se faz tempo que não chega leitura acima do threshold e paramos o haptic.
+        shakeIdleTimer?.invalidate()
+        shakeIdleTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
+            // O closure do Timer é Sendable; o timer foi agendado na main run loop,
+            // então podemos assumir o isolamento do MainActor para acessar o worker.
+            MainActor.assumeIsolated {
+                self?.hapticWorker.stopShakeLoopIfIdle(timeout: 0.25)
             }
         }
     }
