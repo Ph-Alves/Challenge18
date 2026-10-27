@@ -11,11 +11,12 @@ protocol ActivityRouting: AnyObject {
     var cached: ActivityView? { get set }
     var step: ActivityStep { get }
     
-    func didReturn()
-    func didDraw()
-    func didAcceptChallenge()
-    func didCompleteChallenge()
-    func didSelectMood()
-    func didCapturePhoto()
-    func didFinishChallenge()
+    func goToDraw()
+    func goToChallenge()
+    func goToInProgress()
+    func goToMood()
+    func goToPhoto()
+    func goToSummary()
+    /// Encerra o fluxo inteiro e devolve o usuário para a Home.
+    func finishFlow()
 }

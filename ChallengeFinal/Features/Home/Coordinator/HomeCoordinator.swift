@@ -10,12 +10,17 @@ import SwiftUI
 import SwiftData
 
 // MARK: - Enum
+// Telas possíveis a partir da Home.
+// `.activity` carrega o Coordinator do fluxo filho: a Home é dona dele,
+// e quando o fluxo termina (onFinish) voltamos para `.home`.
 enum HomeStep {
     case home
     case activity(ActivityCoordinator)
 }
 
 // MARK: - Class
+// Coordinator da Home: decide QUANDO mostrar cada tela (Home ou fluxo de Activity).
+// É @Observable para a RootView reagir às mudanças de `step`.
 @MainActor
 @Observable
 final class HomeCoordinator: HomeRouting {

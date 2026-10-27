@@ -39,6 +39,7 @@ final class HomeStore: HomeStoreProtocol {
     
     // MARK: - Navigation Functions
     
+    // Abre o fluxo de Activity levando a categoria que está na tela agora.
     func displayActivityFlow() {
         self.coordinator.startActivityFlow(category: currentCategory)
     }
