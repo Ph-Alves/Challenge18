@@ -24,13 +24,17 @@ enum ActivityBuilder {
         
         let camera = CameraWorker()
         
+        // Só entrega os ticks (1 por segundo); o tempo em si é calculado no Interactor.
+        let timer = TimerWorker()
+        
         let interactor = ActivityInteractor(
             presenter: presenter,
             activityRepository: GenericRepository<Activity>(context: context),
             hapticWorker: HapticsWorker(),
             coreMotionWorker: CoreMotionWorker(),
             foundationWorker: FoundationWorker(),
-            camera: camera)
+            camera: camera,
+            timer: timer)
         
         // A View segura a Store com força: o Presenter guarda a Store como `weak`.
         return ActivityView(

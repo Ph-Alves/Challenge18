@@ -17,6 +17,10 @@ import SwiftUI
 /// Com o protocolo, a View não depende da classe concreta. Nos testes e nos
 /// `#Preview`, dá para passar um Interactor falso que só anota os toques.
 protocol ActivityInteractorProtocol: AnyObject {
+    // MARK: Step .inProgress (implementados em ActivityInteractor+Timer.swift)
+    func startTimer()
+    func stopTimer()
+    func cancelTimer()
     
     // MARK: Step .draw (implementados em ActivityInteractor+Draw.swift)
     func detectMotion(for category: ActivityCategory)
@@ -81,6 +85,9 @@ final class ActivityInteractor: ActivityInteractorProtocol {
     var coreMotionWorker: CoreMotionWorkerProtocol
     /// Worker responsável pelas operações do foundation
     var foundationWorker: FoundationWorkerProtocol
+
+    /// O cronômetro: só entrega os ticks de 1 segundo. Pelo protocolo, para dar mock nos testes.
+    let timer: TimerWorkerProtocol
     
     // MARK: - Dados do fluxo
     
@@ -91,6 +98,17 @@ final class ActivityInteractor: ActivityInteractorProtocol {
     /// Se o flash está ligado na tela da câmera.
     var isFlashOn = false
     
+    /// Quando o cronômetro foi iniciado. `nil` = parado.
+    /// O tempo é sempre calculado a partir desta data, nunca contado de 1 em 1.
+    var timerStartDate: Date?
+    
+    /// Tempo final da atividade, em segundos, fixado ao terminar (`stopTimer`).
+    /// Vai para o `ActivityResult` no final. Volta a 0 se o usuário cancelar.
+    var timerElapsed: TimeInterval = 0
+    
+    /// O Task que escuta os ticks do worker. Fica guardado para poder ser cancelado.
+    var timerTask: Task<Void, Never>?
+
     // Estado do sorteio (usado em ActivityInteractor+Draw.swift)
     var shakeWasStrongEnough = false
     var shakeIdleTimer: Timer?
@@ -104,13 +122,15 @@ final class ActivityInteractor: ActivityInteractorProtocol {
          hapticWorker: HapticsWorkerProtocol,
          coreMotionWorker: CoreMotionWorkerProtocol,
          foundationWorker: FoundationWorkerProtocol,
-         camera: CameraWorkerProtocol) {
+         camera: CameraWorkerProtocol, 
+         timer: TimerWorkerProtocol) {
         self.presenter = presenter
         self.activityRepository = activityRepository
         self.hapticWorker = hapticWorker
         self.coreMotionWorker = coreMotionWorker
         self.foundationWorker = foundationWorker
         self.camera = camera
+        self.timer = timer
     }
     
     // MARK: - Navigation
@@ -126,6 +146,7 @@ final class ActivityInteractor: ActivityInteractorProtocol {
     
     /// Começou a executar o desafio: também vai para "em andamento".
     func startActivity() {
+        startTimer()
         presenter.presentInProgress()
     }
     
@@ -141,6 +162,7 @@ final class ActivityInteractor: ActivityInteractorProtocol {
     
     /// Terminou o desafio: vai para o humor.
     func completeActivity() {
+        stopTimer()
         presenter.presentMood()
     }
     
@@ -151,6 +173,7 @@ final class ActivityInteractor: ActivityInteractorProtocol {
     
     /// Termina o fluxo e volta para a Home.
     func finishActivityFlow() {
+        cancelTimer()
         presenter.presentFlowFinished()
     }
 }

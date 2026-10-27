@@ -136,6 +136,31 @@ struct StoreTests {
         store.transitionToDraw()
         #expect(store.currentStep == .draw)
     }
+
+    // MARK: ActivityStore (cronômetro)
+
+    @Test func testingActivityStoreStartsWithZeroedTime() {
+        let (store, _) = createActivityStore()
+
+        #expect(store.timeText == "00:00:00")
+    }
+
+    @Test func testingDisplayTimerUpdatesTimeText() {
+        let (store, _) = createActivityStore()
+
+        store.displayTimer("01:02:05")
+
+        #expect(store.timeText == "01:02:05")
+    }
+
+    @Test func testingDisplayTimerReplacesPreviousTime() {
+        let (store, _) = createActivityStore()
+        store.displayTimer("01:02:05")
+
+        store.displayTimer("00:00:00")
+
+        #expect(store.timeText == "00:00:00")
+    }
 //    // MARK: - ProfileStore
 //
 //    @Test func testingProfileStoreStartsWithDefaultProfile() async throws {
