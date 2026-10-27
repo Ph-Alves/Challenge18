@@ -86,9 +86,10 @@ struct ActivityView: View {
             DrawChallengeView(
                 isSearching: store.isSearching,
                 isChallengeReady: store.isChallengeReady,
+                swipeRaffle: { interactor.raffle(for: currentCategory) },
                 startDetection: { interactor.detectMotion(for: currentCategory) },
                 finishDetection: { interactor.finishDetection() },
-                returnAction: { interactor.finishActivity() },
+                returnAction: { interactor.finishActivityFlow() },
                 growFinished: { interactor.goToActivityDetail() }
             )
             .transition(.opacity)
@@ -97,9 +98,9 @@ struct ActivityView: View {
             challengeStepView
 
         // Os outros steps continuam como placeholder até serem implementados
-        case .inProgress: placeholder("Em andamento") { interactor.completeChallenge() }
+        case .inProgress: placeholder("Em andamento") { interactor.completeActivity() }
         case .mood:       placeholder("Humor") { interactor.selectMood() }
-        case .summary:    placeholder("Resumo") { interactor.finishActivity() }
+        case .summary:    placeholder("Resumo") { interactor.finishActivityFlow() }
         }
     }
 
@@ -116,12 +117,12 @@ struct ActivityView: View {
                 ChallengeDisplayView(
                     challengeTitle: title,
                     isSearching: store.isSearching,
-                    returnAction: { interactor.finishActivity() },
+                    returnAction: { interactor.finishActivityFlow() },
                     archiveAction: {
-                        interactor.archiveChallenge(title: title, description: subtitle, in: currentCategory)
+                        interactor.archiveActivity(title: title, description: subtitle, in: currentCategory)
                         interactor.reroll(for: currentCategory)
                     },
-                    acceptAction: { interactor.acceptChallenge() },
+                    acceptAction: { interactor.acceptActivity() },
                     refuseAction: { interactor.reroll(for: currentCategory) }
                 )
                 .transition(.opacity)
@@ -131,8 +132,8 @@ struct ActivityView: View {
                     challengeTitle: title,
                     challengeSubTitle: subtitle,
                     challengeDescription: description,
-                    returnAction: { interactor.finishActivity() },
-                    startAction: { interactor.startChallenge() },
+                    returnAction: { interactor.finishActivityFlow() },
+                    startAction: { interactor.startActivity() },
                     cancelAction: { interactor.reroll(for: currentCategory) }
                 )
             }
@@ -188,16 +189,7 @@ struct ActivityView: View {
     }
 }
 
-// MARK: - Stubs pro protótipo
-extension ActivityStore {
-    static var preview: ActivityStore {
-        let store = ActivityStore(coordinator: ActivityCoordinator(selectedCategory: .cognitive, onFinish: {}))
-        
-        return store
-    }
-}
-
-
+// MARK: - Preview
 #Preview {
     // Usa o Builder com um container em memória, pra montar o mesmo conjunto do app.
     let container = try! ModelContainer(

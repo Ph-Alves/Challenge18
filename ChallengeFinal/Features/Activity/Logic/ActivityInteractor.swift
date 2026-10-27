@@ -22,8 +22,9 @@ protocol ActivityInteractorProtocol: AnyObject {
     func detectMotion(for category: ActivityCategory)
     func finishDetection()
     func prepare(for category: ActivityCategory)
-    func archiveChallenge(title: String, description: String, in category: ActivityCategory)
+    func archiveActivity(title: String, description: String, in category: ActivityCategory)
     func reroll(for category: ActivityCategory)
+    func raffle(for category: ActivityCategory)
     
     // MARK: Step .photo (implementados em ActivityInteractor+Photo.swift)
     func openCamera()
@@ -37,13 +38,13 @@ protocol ActivityInteractorProtocol: AnyObject {
     func dismissAlerts()
     
     // MARK: Navigation
-    func acceptChallenge()
-    func startChallenge()
+    func acceptActivity()
+    func startActivity()
     func goToActivityDetail()
     func returnToStart()
-    func completeChallenge()
+    func completeActivity()
     func selectMood()
-    func finishActivity()
+    func finishActivityFlow()
 }
 
 // MARK: - Class
@@ -119,18 +120,18 @@ final class ActivityInteractor: ActivityInteractorProtocol {
     
     /// Aceitou o desafio sorteado: continua no step `.challenge`,
     /// que passa a mostrar a tela de desafio aceito.
-    func acceptChallenge() {
+    func acceptActivity() {
         presenter.presentAcceptedActivity()
     }
     
     /// Começou a executar o desafio: também vai para "em andamento".
-    func startChallenge() {
+    func startActivity() {
         presenter.presentInProgress()
     }
     
     /// Abre os detalhes do desafio.
     func goToActivityDetail() {
-        presenter.presentChallenge()
+        presenter.presentActivityStep()
     }
     
     /// Volta para o sorteio, limpando o desafio anterior.
@@ -139,7 +140,7 @@ final class ActivityInteractor: ActivityInteractorProtocol {
     }
     
     /// Terminou o desafio: vai para o humor.
-    func completeChallenge() {
+    func completeActivity() {
         presenter.presentMood()
     }
     
@@ -149,7 +150,7 @@ final class ActivityInteractor: ActivityInteractorProtocol {
     }
     
     /// Termina o fluxo e volta para a Home.
-    func finishActivity() {
+    func finishActivityFlow() {
         presenter.presentFlowFinished()
     }
 }

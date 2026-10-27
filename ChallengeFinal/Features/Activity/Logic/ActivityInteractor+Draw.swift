@@ -73,7 +73,7 @@ extension ActivityInteractor {
     
     /// "Arquivar desafio da lista": salva o desafio como `archived`.
     /// O sorteio usa os arquivados para não repetir esse tipo de desafio.
-    func archiveChallenge(title: String, description: String, in category: ActivityCategory) {
+    func archiveActivity(title: String, description: String, in category: ActivityCategory) {
         let activity = Activity(category: category, result: nil, name: title, description: description, archived: true)
         do {
             try activityRepository.add(activity)
@@ -96,14 +96,12 @@ extension ActivityInteractor {
         shakeIdleTimer = nil
         hapticWorker.stopShakeLoop()
     }
-    
-    // MARK: Auxiliares privados
 
     /// Gera o desafio com o Foundation Models, em 3 passos:
     /// 1. Avisa o Presenter que está procurando (a tela troca o texto).
     /// 2. Pede ao worker um desafio, passando os arquivados para ele evitar.
     /// 3. Entrega o resultado: o desafio pronto ou "falhou".
-    private func raffle(for category: ActivityCategory) {
+    func raffle(for category: ActivityCategory) {
         Task {
             isRaffling = true
             presenter.presentSearching()
@@ -116,7 +114,7 @@ extension ActivityInteractor {
             
             switch foundationWorker.state {
             case .finished(let challenge):
-                presenter.presentChallenge(challenge)
+                presenter.presentActivity(challenge)
             case .failed(let message):
                 print("Erro: \(message)")
                 presenter.presentSearchFailed()
