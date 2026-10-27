@@ -24,7 +24,7 @@ struct ChallengeCircle: View {
         case .medium:
             return 250
         case .small:
-            return 100
+            return 177
         }
     }
 
@@ -32,7 +32,7 @@ struct ChallengeCircle: View {
     var body: some View {
         ZStack {
             Circle()
-                .stroke(LinearGradient(colors: [.black, .gray], startPoint: UnitPoint(x: 1, y: 1), endPoint: UnitPoint(x: 0, y: 1)), lineWidth: 45)
+                .stroke(LinearGradient(colors: [.black, .gray], startPoint: UnitPoint(x: 1, y: 1), endPoint: UnitPoint(x: 0, y: 1)), lineWidth: 35)
                 .frame(width: frameSize, height: frameSize)
 
             Text(text)

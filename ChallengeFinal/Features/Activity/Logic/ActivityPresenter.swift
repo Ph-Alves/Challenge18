@@ -15,6 +15,15 @@ import SwiftUI
 /// (um Presenter falso que só anota o que foi chamado), sem Store nem View.
 protocol ActivityPresenterProtocol: AnyObject {
     
+    // MARK: Steps .draw e .challenge (implementados em ActivityPresenter+Draw.swift)
+    func presentChallenge(_ challenge: FrictionChallenge)
+    func presentSearching()
+    func presentSearchFailed()
+    func presentAcceptedActivity()
+    func presentStartAgain()
+    func presentMood()
+    func presentPhoto()
+    
     // MARK: Step .photo
     func presentCamera()
     func presentCameraClosed()
@@ -47,7 +56,8 @@ protocol ActivityPresenterProtocol: AnyObject {
 final class ActivityPresenter: ActivityPresenterProtocol {
     
     // MARK: - Variables
-    private weak var store: ActivityStoreProtocol?
+    /// Não é `private` porque `ActivityPresenter+Draw.swift` também usa.
+    weak var store: ActivityStoreProtocol?
     
     // MARK: - Init
     init(store: ActivityStoreProtocol) {
