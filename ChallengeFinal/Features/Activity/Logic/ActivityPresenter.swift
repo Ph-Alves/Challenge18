@@ -56,6 +56,8 @@ protocol ActivityPresenterProtocol: AnyObject {
 /// - Só conhece a Store pelo `ActivityStoreProtocol`.
 @MainActor
 final class ActivityPresenter: ActivityPresenterProtocol {
+   
+    
     
     
     
@@ -146,6 +148,8 @@ final class ActivityPresenter: ActivityPresenterProtocol {
     
     // MARK: - Step do cronometro
     /// Recebe o tempo em segundos e entrega o texto "hh:mm:ss" para a Store.
+    /// Formatar é papel do Presenter: o Interactor nunca monta texto de tela.
+    /// Ex.: 3725s = 1h 02min 05s -> "01:02:05" (`%02d` completa com zero à esquerda).
     func presentTime(_ elapsed: TimeInterval) {
         let total = Int(elapsed)
         let hours = total / 3600

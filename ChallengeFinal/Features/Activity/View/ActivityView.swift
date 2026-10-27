@@ -96,8 +96,13 @@ struct ActivityView: View {
         case .challenge:
             challengeStepView
 
+        // Em andamento: mostra o desafio e o cronômetro (`store.timeText`, atualizado a cada tick).
+        // "encerrar" para o cronômetro e segue para o humor; "cancelar" (já confirmado no alerta
+        // da própria tela) sai do fluxo, e o `finishActivity` cancela o cronômetro antes.
+        case .inProgress:
+            InProgressView(message: store.activityTitle ?? "", challengeSubTitle: store.activitySubtitle ?? "", challengeDescription: store.activityDescription ?? "", timeText: store.timeText, finishAction: {interactor.completeChallenge()}, cancelAction: interactor.finishActivity)
+            
         // Os outros steps continuam como placeholder até serem implementados
-        case .inProgress: placeholder("Em andamento") { interactor.completeChallenge() }
         case .mood:       placeholder("Humor") { interactor.selectMood() }
         case .summary:    placeholder("Resumo") { interactor.finishActivity() }
         }

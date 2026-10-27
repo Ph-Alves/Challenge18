@@ -88,7 +88,8 @@ final class ActivityStore: ActivityStoreProtocol {
     /// Mensagem de erro (ex.: falha na captura). `nil` = sem erro.
     private(set) var errorMessage: String?
     
-    /// Tempo do cronômetro já formatado ("hh:mm:ss")
+    /// Tempo do cronômetro já formatado ("hh:mm:ss").
+    /// O Presenter escreve a cada tick; a View só lê.
     private(set) var timeText: String = "00:00:00"
     
     /// Step atual, vindo do Coordinator. Por ser @Observable, a View
@@ -127,7 +128,10 @@ final class ActivityStore: ActivityStoreProtocol {
         errorMessage = message
     }
     
-    // MARK: - Timer
+    // MARK: Step .inProgress (cronômetro)
+
+    /// Guarda o texto do tempo já formatado pelo Presenter.
+    /// Como a Store é `@Observable`, a View que lê `timeText` se atualiza sozinha.
     func displayTimer(_ text: String) {
         timeText = text
     }

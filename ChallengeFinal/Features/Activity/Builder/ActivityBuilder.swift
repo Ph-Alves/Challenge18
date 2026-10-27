@@ -24,6 +24,7 @@ enum ActivityBuilder {
         
         let camera = CameraWorker()
         
+        // Só entrega os ticks (1 por segundo); o tempo em si é calculado no Interactor.
         let timer = TimerWorker()
         
         let interactor = ActivityInteractor(

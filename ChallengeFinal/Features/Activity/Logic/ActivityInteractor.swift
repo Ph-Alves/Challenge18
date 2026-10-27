@@ -17,7 +17,7 @@ import SwiftUI
 /// Com o protocolo, a View não depende da classe concreta. Nos testes e nos
 /// `#Preview`, dá para passar um Interactor falso que só anota os toques.
 protocol ActivityInteractorProtocol: AnyObject {
-    // MARK: - Step do cronometro
+    // MARK: Step .inProgress (implementados em ActivityInteractor+Timer.swift)
     func startTimer()
     func stopTimer()
     func cancelTimer()
@@ -83,9 +83,9 @@ final class ActivityInteractor: ActivityInteractorProtocol {
     
     var coreMotionWorker: CoreMotionWorkerProtocol
     /// Worker responsável pelas operações do foundation
-    private var foundationWorker: FoundationWorkerProtocol
+    var foundationWorker: FoundationWorkerProtocol
 
-    /// O cronometro utilizando protocolo
+    /// O cronômetro: só entrega os ticks de 1 segundo. Pelo protocolo, para dar mock nos testes.
     let timer: TimerWorkerProtocol
     
     // MARK: - Dados do fluxo
@@ -97,13 +97,15 @@ final class ActivityInteractor: ActivityInteractorProtocol {
     /// Se o flash está ligado na tela da câmera.
     var isFlashOn = false
     
-    /// Quando o timer foi inciado
+    /// Quando o cronômetro foi iniciado. `nil` = parado.
+    /// O tempo é sempre calculado a partir desta data, nunca contado de 1 em 1.
     var timerStartDate: Date?
     
-    /// O tempo que se passounem segundos
+    /// Tempo final da atividade, em segundos, fixado ao terminar (`stopTimer`).
+    /// Vai para o `ActivityResult` no final. Volta a 0 se o usuário cancelar.
     var timerElapsed: TimeInterval = 0
     
-    /// Variável que guarda o Task de timer
+    /// O Task que escuta os ticks do worker. Fica guardado para poder ser cancelado.
     var timerTask: Task<Void, Never>?
 
     // Estado do sorteio (usado em ActivityInteractor+Draw.swift)
@@ -141,8 +143,9 @@ final class ActivityInteractor: ActivityInteractorProtocol {
         presenter.presentAcceptedActivity()
     }
     
-    /// Começou a executar o desafio: também vai para "em andamento".
+    /// Começou a executar o desafio: liga o cronômetro e vai para "em andamento".
     func startChallenge() {
+        startTimer()
         presenter.presentInProgress()
     }
     
@@ -156,8 +159,9 @@ final class ActivityInteractor: ActivityInteractorProtocol {
         presenter.presentStartAgain()
     }
     
-    /// Terminou o desafio: vai para o humor.
+    /// Terminou o desafio: para o cronômetro (fixa o tempo) e vai para o humor.
     func completeChallenge() {
+        stopTimer()
         presenter.presentMood()
     }
     
@@ -167,7 +171,10 @@ final class ActivityInteractor: ActivityInteractorProtocol {
     }
     
     /// Termina o fluxo e volta para a Home.
+    /// Também é o que o "cancelar" da atividade em andamento chama: cancela o cronômetro
+    /// para ele não continuar contando depois que o usuário sai.
     func finishActivity() {
+        cancelTimer()
         presenter.presentFlowFinished()
     }
 }
