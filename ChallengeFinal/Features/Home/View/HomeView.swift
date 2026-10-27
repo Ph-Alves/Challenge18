@@ -52,6 +52,7 @@ struct HomeView: View {
                         }
                 )
                 .padding(.horizontal)
+                .contentShape(Circle())
                 .onTapGesture {
                     interactor.startActivity()
                 }

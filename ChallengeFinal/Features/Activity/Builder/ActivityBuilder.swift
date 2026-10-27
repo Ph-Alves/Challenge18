@@ -39,7 +39,8 @@ enum ActivityBuilder {
         return ActivityView(
             interactor: interactor,
             store: store,
-            cameraPreview: CameraPreviewView(session: camera.session)
+            cameraPreview: CameraPreviewView(session: camera.session),
+            currentCategory: currentCategory
         )
     }
 }

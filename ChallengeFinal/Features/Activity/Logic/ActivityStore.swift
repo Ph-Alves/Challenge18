@@ -16,6 +16,15 @@ protocol ActivityStoreProtocol: AnyObject {
     // MARK: - Step do timer
     func displayTimer(_ text: String)
     
+    // MARK: Steps .draw e .challenge (implementados em ActivityStore+Draw.swift)
+    func displayChallenge(_ challenge: FrictionChallenge)
+    func displaySearching()
+    func displaySearchFailed()
+    func displayAcceptedChallenge()
+    func transitionToStart()
+    func transitionToMood()
+    func transitionToPhoto()
+    
     // MARK: Step .photo
     func displayPhoto(_ photo: Image?)
     func displayCamera(isPresented: Bool)
@@ -44,7 +53,25 @@ final class ActivityStore: ActivityStoreProtocol {
     // MARK: - Variables
     
     /// Coordinator para navegação
-    private let coordinator: ActivityRouting
+    let coordinator: ActivityRouting
+    
+    // MARK: Steps .draw e .challenge
+    // Não são `private(set)` porque quem escreve é o `ActivityStore+Draw.swift`.
+    // Extensions não podem ter propriedades armazenadas, por isso ficam aqui.
+    
+    /// Desafio sorteado (título, subtítulo e descrição). `nil` = ainda não sorteou.
+    var activityTitle: String?
+    var activitySubtitle: String?
+    var activityDescription: String?
+    
+    /// Está procurando um desafio.
+    var isSearching = false
+    
+    /// O desafio ficou pronto: a View anima a bola e só depois avança de step.
+    var isChallengeReady = false
+    
+    /// O usuário aceitou o desafio (o step `.challenge` mostra a tela de aceito).
+    var isChallengeAccepted = false
     
     /// A foto escolhida. `nil` = card vazio (tela inicial).
     private(set) var photo: Image?

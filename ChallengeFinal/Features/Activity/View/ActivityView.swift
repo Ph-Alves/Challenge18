@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import SwiftData
 
 /// Container do fluxo de Activity: mostra a view do step atual
 /// e liga os toques de cada step ao Interactor.
@@ -27,10 +28,16 @@ struct ActivityView: View {
     @State var interactor: any ActivityInteractorProtocol
     @State var store: ActivityStore
     @State var cameraPreview: CameraPreviewView
+    
+    /// Categoria escolhida na Home, usada no sorteio.
+    let currentCategory: ActivityCategory
 
     var body: some View {
         stepView
-            .animation(.default, value: store.currentStep)
+            .animation(.easeInOut(duration: 0.4), value: store.currentStep)
+            .onAppear {
+                interactor.prepare(for: currentCategory)
+            }
             // Permissão de câmera negada.
             .alert("Câmera bloqueada", isPresented: isPermissionAlertPresented) {
                 Button("Abrir Ajustes") {
@@ -72,24 +79,74 @@ struct ActivityView: View {
                 onContinue: { interactor.continueFromPhoto() }
             )
 
+        // Sorteio: a tela liga o acelerômetro ao aparecer e desliga ao sair.
+        // Quando o desafio fica pronto, a bola cresce e `growFinished` avança para `.challenge`.
+        // A seta de voltar encerra o fluxo e devolve o usuário à Home.
+        case .draw:
+            DrawChallengeView(
+                isSearching: store.isSearching,
+                isChallengeReady: store.isChallengeReady,
+                startDetection: { interactor.detectMotion(for: currentCategory) },
+                finishDetection: { interactor.finishDetection() },
+                returnAction: { interactor.finishActivity() },
+                growFinished: { interactor.goToActivityDetail() }
+            )
+            .transition(.opacity)
+
+        case .challenge:
+            challengeStepView
+
         // Os outros steps continuam como placeholder até serem implementados
-        case .draw:       placeholder("Sortear")
-        case .challenge:  placeholder("Desafio")
-        case .inProgress:
-            InProgressView(store: store, interactor: interactor)
-        case .mood:       placeholder("Humor")
-        case .summary:    placeholder("Resumo")
+        case .inProgress: placeholder("Em andamento") { interactor.completeChallenge() }
+        case .mood:       placeholder("Humor") { interactor.selectMood() }
+        case .summary:    placeholder("Resumo") { interactor.finishActivity() }
+        }
+    }
+
+    /// Step `.challenge`: desafio sorteado ou, depois de aceito, a tela de desafio aceito.
+    @ViewBuilder
+    private var challengeStepView: some View {
+        if let title = store.activityTitle,
+           let subtitle = store.activitySubtitle,
+           let description = store.activityDescription {
+            // Antes de aceitar: aceitar, pedir outra opção ou arquivar.
+            // "Outra opção" e "arquivar" geram outro desafio por baixo dos panos
+            // (o arquivar salva antes) e continuam nesta tela.
+            if !store.isChallengeAccepted {
+                ChallengeDisplayView(
+                    challengeTitle: title,
+                    isSearching: store.isSearching,
+                    returnAction: { interactor.finishActivity() },
+                    archiveAction: {
+                        interactor.archiveChallenge(title: title, description: subtitle, in: currentCategory)
+                        interactor.reroll(for: currentCategory)
+                    },
+                    acceptAction: { interactor.acceptChallenge() },
+                    refuseAction: { interactor.reroll(for: currentCategory) }
+                )
+                .transition(.opacity)
+            // Depois de aceitar: "iniciar" segue para `.inProgress`; "cancelar" gera outro desafio.
+            } else {
+                ChallengeAcceptedView(
+                    challengeTitle: title,
+                    challengeSubTitle: subtitle,
+                    challengeDescription: description,
+                    returnAction: { interactor.finishActivity() },
+                    startAction: { interactor.startChallenge() },
+                    cancelAction: { interactor.reroll(for: currentCategory) }
+                )
+            }
         }
     }
 
     //CHANGE: remover quando todos os steps tiverem as suas views.
-    private func placeholder(_ title: String) -> some View {
+    @ViewBuilder
+    private func placeholder(_ title: String, next: @escaping () -> Void) -> some View {
         VStack(spacing: 24) {
             Text(title)
 
-            Button("Próximo") {
-            }
-            .buttonStyle(.borderedProminent)
+            Button("Próximo", action: next)
+                .buttonStyle(.borderedProminent)
         }
     }
 
@@ -141,6 +198,17 @@ extension ActivityStore {
 }
 
 
-//#Preview {
-//    ActivityView(interactor: <#T##any ActivityInteractorProtocol#>, store: .preview, cameraPreview: CameraPreviewView(session: AVCaptureSession()))
-//}
+#Preview {
+    // Usa o Builder com um container em memória, pra montar o mesmo conjunto do app.
+    let container = try! ModelContainer(
+        for: Activity.self,
+        configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+    )
+    let coordinator = ActivityCoordinator(selectedCategory: .cognitive, onFinish: {})
+
+    return ActivityBuilder.build(
+        coordinator: coordinator,
+        context: container.mainContext,
+        currentCategory: .cognitive
+    )
+}

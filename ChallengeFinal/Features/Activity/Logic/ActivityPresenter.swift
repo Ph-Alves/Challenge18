@@ -17,6 +17,15 @@ protocol ActivityPresenterProtocol: AnyObject {
     // MARK: -  Step do cronometro
     func presentTime(_ elapsed: TimeInterval)
     
+    // MARK: Steps .draw e .challenge (implementados em ActivityPresenter+Draw.swift)
+    func presentChallenge(_ challenge: FrictionChallenge)
+    func presentSearching()
+    func presentSearchFailed()
+    func presentAcceptedActivity()
+    func presentStartAgain()
+    func presentMood()
+    func presentPhoto()
+    
     // MARK: Step .photo
     func presentCamera()
     func presentCameraClosed()
@@ -51,7 +60,8 @@ final class ActivityPresenter: ActivityPresenterProtocol {
     
     
     // MARK: - Variables
-    private weak var store: ActivityStoreProtocol?
+    /// Não é `private` porque `ActivityPresenter+Draw.swift` também usa.
+    weak var store: ActivityStoreProtocol?
     
     // MARK: - Init
     init(store: ActivityStoreProtocol) {
