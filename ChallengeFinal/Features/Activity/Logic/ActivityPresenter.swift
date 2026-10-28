@@ -26,6 +26,9 @@ protocol ActivityPresenterProtocol: AnyObject {
     func presentMood()
     func presentPhoto()
     
+    //MARK: Step .mood
+    func presentHumor(_ humor: Humor)
+    
     // MARK: Step .photo
     func presentCamera()
     func presentCameraClosed()
@@ -34,6 +37,11 @@ protocol ActivityPresenterProtocol: AnyObject {
     func presentFlash(isOn: Bool)
     func presentError(_ error: Error)
     func presentAlertsDismissed()
+    
+    // MARK: Step .summary (implementados em ActivityPresenter+Summary.swift)
+    func presentStory(_ result: ActivityResult, title: String?, subtitle: String?, description: String?)
+    func presentShareSheet(fileURL: URL)
+    func presentShareFinished(completed: Bool)
     
     // MARK: Navigation
     func presentSummary()
@@ -71,6 +79,12 @@ final class ActivityPresenter: ActivityPresenterProtocol {
     }
     
     // MARK: - Functions
+    
+    //MARK: Step .mood
+    /// O humor mudou na roleta: a Store atualiza e a roleta gira até ele.
+    func presentHumor(_ humor: Humor) {
+        store?.displayHumor(humor)
+    }
     
     // MARK: Step .photo
 
@@ -133,6 +147,9 @@ final class ActivityPresenter: ActivityPresenterProtocol {
             message = "Não foi possível tirar a foto. Tente novamente."
         case PhotoLibraryError.loadFailed:
             message = "Não foi possível carregar a foto da galeria. Tente outra."
+        case ShareError.renderFailed,
+                     ShareError.encodingFailed:
+                    message = "Não foi possível preparar a imagem para compartilhar. Tente novamente."
         default:
             message = "Algo deu errado. Tente novamente."
         }

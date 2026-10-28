@@ -16,7 +16,8 @@ final class ActivityResult {
     var humor: Humor = Humor.chill
     var activity: Activity?
     
-    init(photo: Data, time: TimeInterval, humor: Humor) {
+    /// `photo` é opcional porque o usuário pode "continuar sem foto"
+    init(photo: Data? = nil, time: TimeInterval, humor: Humor) {
         self.photo = photo
         self.time = time
         self.humor = humor

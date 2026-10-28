@@ -20,7 +20,7 @@ struct CameraView: View {
 
     let interactor: any ActivityInteractorProtocol
     let store: ActivityStore
-    let preview: CameraPreviewView
+    let preview: CameraPreview
 
     /// Item escolhido no "da biblioteca". Estado só de UI:
     /// assim que chega, repassamos ao Interactor e limpamos.

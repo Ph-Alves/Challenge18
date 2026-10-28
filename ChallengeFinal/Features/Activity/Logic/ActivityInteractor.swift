@@ -30,6 +30,10 @@ protocol ActivityInteractorProtocol: AnyObject {
     func reroll(for category: ActivityCategory)
     func raffle(for category: ActivityCategory)
     
+    // MARK: Step .mood (implementados em ActivityInteractor+Mood.swift)
+    func nextHumor()
+    func previousHumor()
+    
     // MARK: Step .photo (implementados em ActivityInteractor+Photo.swift)
     func openCamera()
     func retakePhoto()
@@ -40,6 +44,11 @@ protocol ActivityInteractorProtocol: AnyObject {
     func didSelectFromGallery(_ item: PhotosPickerItem)
     func continueFromPhoto()
     func dismissAlerts()
+    
+    // MARK: Step .summary (implementados em ActivityInteractor+Summary.swift)
+    func loadSummary(title: String?, subtitle: String?, description: String?)
+    func shareStory(_ image: UIImage?)
+    func didFinishSharing(completed: Bool)
     
     // MARK: Navigation
     func acceptActivity()
@@ -75,10 +84,12 @@ final class ActivityInteractor: ActivityInteractorProtocol {
     /// Para quem o Interactor manda os resultados. Pelo protocolo, para dar spy nos testes.
     let presenter: ActivityPresenterProtocol
     
-    /// A câmera. Pelo protocolo, para dar mock nos testes.
     let camera: CameraWorkerProtocol
     
     let activityRepository: GenericRepository<Activity>
+    
+    /// Grava a imagem do story em PNG para o share sheet.
+    let share: ShareWorkerProtocol
     
     var hapticWorker: HapticsWorkerProtocol
     
@@ -96,12 +107,20 @@ final class ActivityInteractor: ActivityInteractorProtocol {
     
     // MARK: - Dados do fluxo
     
+    /// Humor escolhido no step `.mood`.
+    /// TODO: preencher quando o `.mood` for implementado.
+    var selectedHumor: Humor?
+    
     /// Foto escolhida no step `.photo` (câmera ou galeria).
     /// `nil` = o usuário continuou sem foto. Vai para o `ActivityResult` no final.
     var selectedPhoto: Data?
     
     /// Se o flash está ligado na tela da câmera.
     var isFlashOn = false
+    
+    /// O resultado do desafio, montado ao chegar no `.summary`.
+    /// É dele que sai a foto do story, e é ele que deve ser salvo no banco.
+    var result: ActivityResult?
     
     /// Quando o cronômetro foi iniciado. `nil` = parado.
     /// O tempo é sempre calculado a partir desta data, nunca contado de 1 em 1.
@@ -119,7 +138,6 @@ final class ActivityInteractor: ActivityInteractorProtocol {
     /// Aparece na Live Activity.
     let category: ActivityCategory
 
-
     // Estado do sorteio (usado em ActivityInteractor+Draw.swift)
     var shakeWasStrongEnough = false
     var shakeIdleTimer: Timer?
@@ -133,7 +151,8 @@ final class ActivityInteractor: ActivityInteractorProtocol {
          hapticWorker: HapticsWorkerProtocol,
          coreMotionWorker: CoreMotionWorkerProtocol,
          foundationWorker: FoundationWorkerProtocol,
-         camera: CameraWorkerProtocol, 
+         camera: CameraWorkerProtocol,
+         share: ShareWorkerProtocol,
          timer: TimerWorkerProtocol,
          liveActivity: WidgetWorkerProtocol,
          currentCategory: ActivityCategory
@@ -144,6 +163,7 @@ final class ActivityInteractor: ActivityInteractorProtocol {
         self.coreMotionWorker = coreMotionWorker
         self.foundationWorker = foundationWorker
         self.camera = camera
+        self.share = share
         self.timer = timer
         self.liveActivity = liveActivity
         self.category = currentCategory

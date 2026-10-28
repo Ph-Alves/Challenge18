@@ -9,6 +9,7 @@ import Testing
 import SwiftData
 import Foundation
 import FoundationModels
+import UIKit
 @testable import ChallengeFinal
 
 // MARK: - Spies (test doubles for the Presenter protocols the Interactors talk to)
@@ -34,8 +35,6 @@ final class HomePresenterSpy: HomePresenterProtocol {
 /// Anota, em ordem, tudo que o Interactor pediu ao Presenter.
 final class ActivityPresenterSpy: ActivityPresenterProtocol {
     
-    
-    
     enum Event: Equatable {
         case searching
         case searchFailed
@@ -51,6 +50,13 @@ final class ActivityPresenterSpy: ActivityPresenterProtocol {
     private(set) var flowFinishedCount = 0
 
     func presentTime(_ elapsed: TimeInterval) { presentedTimes.append(elapsed) }
+    
+    // Humor e compartilhamento
+    private(set) var presentedHumors: [Humor] = []
+    private(set) var presentedErrors: [Error] = []
+    private(set) var storyCount = 0
+    private(set) var shareSheetURL: URL?
+    private(set) var shareFinished: Bool?
 
     // Sorteio
     func presentChallenge(_ challenge: FrictionChallenge) { events.append(.challenge(title: challenge.title)) }
@@ -67,7 +73,6 @@ final class ActivityPresenterSpy: ActivityPresenterProtocol {
     func presentPermissionDenied() {}
     func presentCaptured(_ data: Data) {}
     func presentFlash(isOn: Bool) {}
-    func presentError(_ error: Error) {}
     func presentAlertsDismissed() {}
     func presentSummary() {}
     func presentFlowFinished() { flowFinishedCount += 1 }
@@ -76,6 +81,14 @@ final class ActivityPresenterSpy: ActivityPresenterProtocol {
     func presentDraw() {}
     func presentActivity(_ challenge: ChallengeFinal.FrictionChallenge) { events.append(.challenge(title: challenge.title)) }
     func presentActivityStep() {}
+    // Humor
+    func presentHumor(_ humor: Humor) { presentedHumors.append(humor) }
+    // Erros
+    func presentError(_ error: Error) { presentedErrors.append(error) }
+    // Resumo e compartilhamento
+    func presentStory(_ result: ActivityResult, title: String?, subtitle: String?, description: String?) { storyCount += 1 }
+    func presentShareSheet(fileURL: URL) { shareSheetURL = fileURL }
+    func presentShareFinished(completed: Bool) { shareFinished = completed }
 }
 
 /// Foundation Models falso: devolve o estado que o teste mandar, sem usar o modelo do aparelho.
@@ -137,6 +150,20 @@ final class CameraWorkerMock: CameraWorkerProtocol {
     func stopSession() {}
     func switchCamera(completion: @escaping (Result<Void, Error>) -> Void) { completion(.success(())) }
     func capturePhoto(flash: Bool, completion: @escaping (Result<Data, Error>) -> Void) { completion(.success(Data())) }
+}
+
+/// Worker de share falso: não grava arquivo de verdade.
+/// Devolve uma URL fixa ou lança o erro configurado no teste.
+final class ShareWorkerMock: ShareWorkerProtocol {
+    var errorToThrow: Error?
+    private(set) var receivedImage: UIImage?
+    let url = URL(fileURLWithPath: "/tmp/Desafio-Concluído.png")
+
+    func makeShareFile(from image: UIImage) throws -> URL {
+        receivedImage = image
+        if let errorToThrow { throw errorToThrow }
+        return url
+    }
 }
 
 /// Cronômetro falso: não espera 1 segundo de verdade. O teste decide quando o tick acontece
@@ -272,6 +299,7 @@ struct InteractorTests {
         let motion: CoreMotionWorkerMock
         let timer: TimerWorkerMock
         let liveActivity: WidgetWorkerMock
+        let share: ShareWorkerMock
         let repository: GenericRepository<Activity>
     }
     
@@ -282,6 +310,7 @@ struct InteractorTests {
         let motion = CoreMotionWorkerMock()
         let timer = TimerWorkerMock()
         let liveActivity = WidgetWorkerMock()
+        let share = ShareWorkerMock()
         let repository = makeActivityRepository()
         let interactor = ActivityInteractor(
             presenter: presenter,
@@ -290,13 +319,15 @@ struct InteractorTests {
             coreMotionWorker: motion,
             foundationWorker: foundation,
             camera: CameraWorkerMock(),
+            share: share,
             timer: timer,
             liveActivity: liveActivity,
             currentCategory: .physical
         )
         return ActivitySUT(interactor: interactor, presenter: presenter, foundation: foundation,
-                            haptics: haptics, motion: motion, timer: timer, liveActivity: liveActivity, repository: repository)
-    }
+                           haptics: haptics, motion: motion, timer: timer, liveActivity: liveActivity,
+                           share: share, repository: repository)
+        }
     
     /// O sorteio roda dentro de um `Task`; espera até a condição valer (ou 2s).
     private func wait(until condition: () -> Bool) async {
@@ -620,6 +651,59 @@ struct InteractorTests {
         #expect(sut.interactor.timerStartDate == nil)
         #expect(sut.interactor.timerElapsed == 0)
         #expect(sut.presenter.flowFinishedCount == 1)
+    }
+    
+    
+    // MARK: - ActivityInteractor (humor)
+
+    @Test func testingNextHumorWrapsFromLastToFirst() {
+        let sut = makeActivitySUT()
+        sut.interactor.selectedHumor = .chill   // último da roleta
+
+        sut.interactor.nextHumor()
+
+        #expect(sut.interactor.selectedHumor == .frustrated)
+        #expect(sut.presenter.presentedHumors == [.frustrated])
+    }
+
+    @Test func testingPreviousHumorWrapsFromFirstToLast() {
+        let sut = makeActivitySUT()
+        sut.interactor.selectedHumor = .frustrated   // primeiro da roleta
+
+        sut.interactor.previousHumor()
+
+        #expect(sut.interactor.selectedHumor == .chill)
+        #expect(sut.presenter.presentedHumors == [.chill])
+    }
+
+    // MARK: - ActivityInteractor (compartilhamento)
+
+    @Test func testingShareStoryWithoutImagePresentsError() {
+        let sut = makeActivitySUT()
+
+        sut.interactor.shareStory(nil)
+
+        #expect(sut.presenter.presentedErrors.first as? ShareError == .renderFailed)
+        #expect(sut.presenter.shareSheetURL == nil)
+    }
+
+    @Test func testingShareStoryOpensShareSheetWithFile() {
+        let sut = makeActivitySUT()
+
+        sut.interactor.shareStory(UIImage())
+
+        #expect(sut.share.receivedImage != nil)
+        #expect(sut.presenter.shareSheetURL == sut.share.url)
+    }
+
+    @Test func testingShareStoryWorkerFailurePresentsError() {
+        let sut = makeActivitySUT()
+        sut.share.errorToThrow = ShareError.encodingFailed
+
+        sut.interactor.shareStory(UIImage())
+
+        #expect(sut.presenter.presentedErrors.first as? ShareError == .encodingFailed)
+        #expect(sut.presenter.shareSheetURL == nil)
     }
 
     // MARK: ActivityInteractor (Live Activity / Dynamic Island)
