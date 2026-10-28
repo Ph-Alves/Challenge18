@@ -18,7 +18,7 @@ import AVFoundation
 ///
 /// Ela só recebe a `session` e mostra o vídeo. Não sabe tirar foto, trocar
 /// câmera nem nada: isso é papel do worker, chamado pelo Interactor.
-struct CameraPreviewView: UIViewRepresentable {
+struct CameraPreview: UIViewRepresentable {
 
     /// A sessão do `CameraWorker`. Quem entrega é o Builder.
     let session: AVCaptureSession

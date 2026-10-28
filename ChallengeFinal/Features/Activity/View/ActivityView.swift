@@ -27,7 +27,7 @@ struct ActivityView: View {
     // mesmo worker que o Interactor usa.
     @State var interactor: any ActivityInteractorProtocol
     @State var store: ActivityStore
-    @State var cameraPreview: CameraPreviewView
+    @State var cameraPreview: CameraPreview
     
     /// Categoria escolhida na Home, usada no sorteio.
     let currentCategory: ActivityCategory
@@ -100,7 +100,9 @@ struct ActivityView: View {
         // Os outros steps continuam como placeholder até serem implementados
         case .inProgress: placeholder("Em andamento") { interactor.completeActivity() }
         case .mood:       placeholder("Humor") { interactor.selectMood() }
-        case .summary:    placeholder("Resumo") { interactor.finishActivityFlow() }
+            
+        case .summary:
+            summaryStepView
         }
     }
 
@@ -139,6 +141,29 @@ struct ActivityView: View {
             }
         }
     }
+    
+    /// Step `.summary`: tela "desafio finalizado".
+    /// Os dados já estão na Store desde os steps anteriores (desafio, foto, humor).
+    /// Ao aparecer, pede ao Interactor para gerar a imagem do story.
+    private var summaryStepView: some View {
+        SummaryStepView(
+            title: store.activitySubtitle ?? "",
+            description: store.activityDescription ?? "",
+            photo: store.photo,
+            humor: store.humor,
+            onFinish: { interactor.finishActivityFlow() },
+            // A imagem do story já está pronta na Store: só repassamos.
+            onShare: { interactor.shareStory(store.storyImage) }
+        )
+        .transition(.opacity)
+        .onAppear {
+            interactor.loadSummary(
+                title: store.activityTitle,
+                subtitle: store.activitySubtitle,
+                description: store.activityDescription
+            )
+        }
+    }
 
     //CHANGE: remover quando todos os steps tiverem as suas views.
     @ViewBuilder
@@ -160,6 +185,18 @@ struct ActivityView: View {
             get: { store.isCameraPresented },
             set: { isPresented in
                 if !isPresented { interactor.closeCamera() }
+            }
+        )
+    }
+    
+    // MARK: - Share sheet
+
+    /// lê a Store e, se o usuário fechar o sheet arrastando para baixo, avisa o Interactor (que pede para limpar a Store).
+    private var shareItem: Binding<ShareItem?> {
+        Binding(
+            get: { store.shareItem },
+            set: { item in
+                if item == nil { interactor.didFinishSharing(completed: false) }
             }
         )
     }

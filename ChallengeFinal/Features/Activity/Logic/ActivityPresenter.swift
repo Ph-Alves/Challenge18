@@ -33,6 +33,11 @@ protocol ActivityPresenterProtocol: AnyObject {
     func presentError(_ error: Error)
     func presentAlertsDismissed()
     
+    // MARK: Step .summary (implementados em ActivityPresenter+Summary.swift)
+    func presentStory(_ result: ActivityResult, title: String?, subtitle: String?, description: String?)
+    func presentShareSheet(fileURL: URL)
+    func presentShareFinished(completed: Bool)
+    
     // MARK: Navigation
     func presentSummary()
     func presentFlowFinished()
@@ -127,6 +132,9 @@ final class ActivityPresenter: ActivityPresenterProtocol {
             message = "Não foi possível tirar a foto. Tente novamente."
         case PhotoLibraryError.loadFailed:
             message = "Não foi possível carregar a foto da galeria. Tente outra."
+        case ShareError.renderFailed,
+                     ShareError.encodingFailed:
+                    message = "Não foi possível preparar a imagem para compartilhar. Tente novamente."
         default:
             message = "Algo deu errado. Tente novamente."
         }

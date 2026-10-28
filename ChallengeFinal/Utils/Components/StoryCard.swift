@@ -13,9 +13,6 @@ struct StoryCard: View {
     
     // MARK: - Variables
     
-    //Nome do Desafio
-    let challengeName: String
-    
     //Título do Desafio
     let challengeTitle: String
     
@@ -91,15 +88,13 @@ struct StoryCard: View {
 
 #Preview("Story 1 - sem foto") {
     StoryCard(
-        challengeName: "faça o seu cárdio sem abrir redes sociais",
         challengeTitle: "menos distração, mais foco",
         challengeDescription: "sem redes sociais, seu cardio vira um momento para cuidar do corpo e desacelerar a mente."
     )
 }
 
 #Preview("Story 2 - com foto") {
-    StoryCard(
-        challengeName: "faça o seu cárdio sem abrir redes sociais",
+    StoryCard( 
         challengeTitle: "menos distração, mais foco",
         challengeDescription: "sem redes sociais, seu cardio vira um momento para cuidar do corpo e desacelerar a mente.",
         challengePhoto: UIImage(named: "test")

@@ -23,12 +23,19 @@ protocol ActivityStoreProtocol: AnyObject {
     func transitionToMood()
     func transitionToPhoto()
     
+    //MARK: Step .humor
+//    func displayHumor()
+    
     // MARK: Step .photo
     func displayPhoto(_ photo: Image?)
     func displayCamera(isPresented: Bool)
     func displayFlashIcon(_ icon: String)
     func displayPermissionAlert(_ message: String?)
     func displayError(_ message: String?)
+    
+    // MARK: Step .summary
+    func displayStoryImage(_ image: UIImage?)
+    func displayShareSheet(_ item: ShareItem?)
     
     // MARK: Transitions
     func transitionToInProgress()
@@ -69,6 +76,14 @@ final class ActivityStore: ActivityStoreProtocol {
     /// O usuário aceitou o desafio (o step `.challenge` mostra a tela de aceito).
     var isChallengeAccepted = false
     
+    
+    //MARK: Step .Humor
+    
+    /// Humor registrado
+    var humor: Humor = .chill
+    
+    // MARK: Step .photo
+    
     /// A foto escolhida. `nil` = card vazio (tela inicial).
     private(set) var photo: Image?
  
@@ -89,6 +104,15 @@ final class ActivityStore: ActivityStoreProtocol {
     var currentStep: ActivityStep {
         return self.coordinator.step
     }
+    
+    //MARK: Step .summary
+    
+    /// Imagem do story já renderizada, pronta para o "compartilhar".
+    /// `nil` = a renderização falhou; o Interactor trata ao tocar em compartilhar.
+    private(set) var storyImage: UIImage?
+    
+    /// Controla o `.sheet(item:)` do share sheet. `nil` = fechado.
+    private(set) var shareItem: ShareItem?
 
     // MARK: - Init
     
@@ -120,6 +144,18 @@ final class ActivityStore: ActivityStoreProtocol {
         errorMessage = message
     }
     
+    
+    // MARK: Step .summary
+    
+    func displayStoryImage(_ image: UIImage?) {
+        storyImage = image
+    }
+
+    func displayShareSheet(_ item: ShareItem?) {
+        shareItem = item
+    }
+    
+    
     // MARK: Transitions
     
     func transitionToInProgress() {
@@ -141,5 +177,4 @@ final class ActivityStore: ActivityStoreProtocol {
     func finishFlow() {
         self.coordinator.finishFlow()
     }
-    
 }

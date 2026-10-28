@@ -37,6 +37,11 @@ protocol ActivityInteractorProtocol: AnyObject {
     func continueFromPhoto()
     func dismissAlerts()
     
+    // MARK: Step .summary (implementados em ActivityInteractor+Summary.swift)
+    func loadSummary(title: String?, subtitle: String?, description: String?)
+    func shareStory(_ image: UIImage?)
+    func didFinishSharing(completed: Bool)
+    
     // MARK: Navigation
     func acceptActivity()
     func startActivity()
@@ -71,10 +76,12 @@ final class ActivityInteractor: ActivityInteractorProtocol {
     /// Para quem o Interactor manda os resultados. Pelo protocolo, para dar spy nos testes.
     let presenter: ActivityPresenterProtocol
     
-    /// A câmera. Pelo protocolo, para dar mock nos testes.
     let camera: CameraWorkerProtocol
     
     let activityRepository: GenericRepository<Activity>
+    
+    /// Grava a imagem do story em PNG para o share sheet.
+    let share: ShareWorkerProtocol
     
     var hapticWorker: HapticsWorkerProtocol
     
@@ -84,12 +91,24 @@ final class ActivityInteractor: ActivityInteractorProtocol {
     
     // MARK: - Dados do fluxo
     
+    /// Humor escolhido no step `.mood`.
+    /// TODO: preencher quando o `.mood` for implementado.
+    var selectedHumor: Humor?
+    
     /// Foto escolhida no step `.photo` (câmera ou galeria).
     /// `nil` = o usuário continuou sem foto. Vai para o `ActivityResult` no final.
     var selectedPhoto: Data?
     
     /// Se o flash está ligado na tela da câmera.
     var isFlashOn = false
+    
+    /// O resultado do desafio, montado ao chegar no `.summary`.
+    /// É dele que sai a foto do story, e é ele que deve ser salvo no banco.
+    var result: ActivityResult?
+    
+    /// Tempo gasto no desafio, em segundos.
+    /// TODO: preencher quando o cronômetro for implementado.
+    var elapsedTime: TimeInterval = 0
     
     // Estado do sorteio (usado em ActivityInteractor+Draw.swift)
     var shakeWasStrongEnough = false
@@ -104,13 +123,15 @@ final class ActivityInteractor: ActivityInteractorProtocol {
          hapticWorker: HapticsWorkerProtocol,
          coreMotionWorker: CoreMotionWorkerProtocol,
          foundationWorker: FoundationWorkerProtocol,
-         camera: CameraWorkerProtocol) {
+         camera: CameraWorkerProtocol,
+         share: ShareWorkerProtocol) {
         self.presenter = presenter
         self.activityRepository = activityRepository
         self.hapticWorker = hapticWorker
         self.coreMotionWorker = coreMotionWorker
         self.foundationWorker = foundationWorker
         self.camera = camera
+        self.share = share
     }
     
     // MARK: - Navigation
@@ -151,6 +172,7 @@ final class ActivityInteractor: ActivityInteractorProtocol {
     
     /// Termina o fluxo e volta para a Home.
     func finishActivityFlow() {
+        //CHANGE: salvar o `result` no banco antes de sair
         presenter.presentFlowFinished()
     }
 }

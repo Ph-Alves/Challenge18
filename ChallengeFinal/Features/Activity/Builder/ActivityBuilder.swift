@@ -30,13 +30,14 @@ enum ActivityBuilder {
             hapticWorker: HapticsWorker(),
             coreMotionWorker: CoreMotionWorker(),
             foundationWorker: FoundationWorker(),
-            camera: camera)
+            camera: camera,
+            share: ShareWorker())
         
         // A View segura a Store com força: o Presenter guarda a Store como `weak`.
         return ActivityView(
             interactor: interactor,
             store: store,
-            cameraPreview: CameraPreviewView(session: camera.session),
+            cameraPreview: CameraPreview(session: camera.session),
             currentCategory: currentCategory
         )
     }
