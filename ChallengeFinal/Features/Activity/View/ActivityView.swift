@@ -108,15 +108,16 @@ struct ActivityView: View {
         // "encerrar" para o cronômetro e segue para o humor; "cancelar" (já confirmado no alerta
         // da própria tela) sai do fluxo, e o `finishActivity` cancela o cronômetro antes.
         case .inProgress:
-            InProgressView(message: store.activityTitle ?? "", challengeSubTitle: store.activitySubtitle ?? "", challengeDescription: store.activityDescription ?? "", timeText: store.timeText, finishAction: {interactor.completeActivity()}, cancelAction: interactor.finishActivityFlow)
-            
+            if let title = store.activityTitle, let subtitle = store.activitySubtitle, let description = store.activityDescription {
+                InProgressView(message: store.activityTitle ?? "", challengeSubTitle: store.activitySubtitle ?? "", challengeDescription: store.activityDescription ?? "", timeText: store.timeText, finishAction: {interactor.completeActivity(currentCategory: currentCategory, title: title, subTitle: subtitle, Description: description)}, cancelAction: interactor.finishActivityFlow)
+            }
         // Humor: a roleta gira com swipe; "continuar" segue para a selfie.
         case .mood:
             MoodStepView(
                 humor: store.humor,
                 onNext: { interactor.nextHumor() },
                 onPrevious: { interactor.previousHumor() },
-                onContinue: { interactor.selectMood() }
+                onContinue: { interactor.selectMood(humor: store.humor) }
             )
             .transition(.opacity)
             

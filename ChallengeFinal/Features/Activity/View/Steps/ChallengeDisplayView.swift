@@ -33,6 +33,10 @@ struct ChallengeDisplayView: View {
     @State private var elevateCircle = false
     /// Mostra/esconde o diálogo e o botão de arquivar.
     @State private var showActions = false
+    /// Popup de confirmação antes de arquivar o desafio.
+    @State private var showArchiveConfirmation = false
+    /// Popup de aviso depois que o desafio foi arquivado.
+    @State private var showArchivedNotice = false
 
     var body: some View {
         VStack(alignment: .center) {
@@ -48,7 +52,9 @@ struct ChallengeDisplayView: View {
                     ActionDialogComponent(title: "Gostaria de iniciar esse desafio?", firstOptionText: "Outra opção", secondOptionText: "aceitar", firstAction: refuseAction, secondAction: acceptAction)
                         .padding(.horizontal)
                     
-                    CustomButtonComponent(title: "Arquivar desafio da lista", icon: "archivebox.fill", action: archiveAction)
+                    CustomButtonComponent(title: "Arquivar desafio da lista", icon: "archivebox.fill", action: {
+                        showArchiveConfirmation = true
+                    })
                         .padding(.horizontal, 70)
                 }
                 .padding(.top, 250)
@@ -74,6 +80,20 @@ struct ChallengeDisplayView: View {
                     showActions = true
                 }
             }
+        }
+        .alert("Deseja arquivar o desafio do grupo?", isPresented: $showArchiveConfirmation) {
+            Button("Cancelar", role: .cancel) {}
+            Button("Excluir") {
+                archiveAction()
+                showArchivedNotice = true
+            }
+        } message: {
+            Text("Depois de arquivado, você pode trazer de volta na tela de desafios.")
+        }
+        .alert("O desafio foi arquivado", isPresented: $showArchivedNotice) {
+            Button("Ok") {}
+        } message: {
+            Text("Sorteie um novo desafio :)")
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity) // centraliza na tela toda
         .overlay(alignment: .topLeading) {

@@ -47,6 +47,8 @@ final class ActivityPresenterSpy: ActivityPresenterProtocol {
     private(set) var presentedTimes: [TimeInterval] = []
     private(set) var inProgressCount = 0
     private(set) var moodCount = 0
+    private(set) var photoCount = 0
+    private(set) var summaryCount = 0
     private(set) var flowFinishedCount = 0
 
     func presentTime(_ elapsed: TimeInterval) { presentedTimes.append(elapsed) }
@@ -67,14 +69,14 @@ final class ActivityPresenterSpy: ActivityPresenterProtocol {
     func presentAcceptedActivity() {}
     func presentStartAgain() {}
     func presentMood() { moodCount += 1 }
-    func presentPhoto() {}
+    func presentPhoto() { photoCount += 1 }
     func presentCamera() {}
     func presentCameraClosed() {}
     func presentPermissionDenied() {}
     func presentCaptured(_ data: Data) {}
     func presentFlash(isOn: Bool) {}
     func presentAlertsDismissed() {}
-    func presentSummary() {}
+    func presentSummary() { summaryCount += 1 }
     func presentFlowFinished() { flowFinishedCount += 1 }
     func presentInProgress() { inProgressCount += 1 }
     func presentChallenge() {}
@@ -633,11 +635,77 @@ struct InteractorTests {
         let sut = makeActivitySUT()
         sut.interactor.timerStartDate = Date().addingTimeInterval(-10)
 
-        sut.interactor.completeActivity()
+        completeActivity(on: sut)
 
         #expect(sut.interactor.timerStartDate == nil)
         #expect(sut.interactor.timerElapsed >= 10)
         #expect(sut.presenter.moodCount == 1)
+    }
+
+    // MARK: ActivityInteractor (persistência ao longo do fluxo)
+
+    private func completeActivity(on sut: ActivitySUT,
+                                  category: ActivityCategory = .physical,
+                                  title: String = "Cardio sem fones",
+                                  subTitle: String = "Faça cardio",
+                                  description: String = "Porque faz bem") {
+        sut.interactor.completeActivity(currentCategory: category, title: title,
+                                        subTitle: subTitle, Description: description)
+    }
+
+    // Ao completar, a atividade já nasce no banco (não arquivada) e fica em `currentActivity`.
+    @Test func testingCompleteActivitySavesNonArchivedActivityInRepository() throws {
+        let sut = makeActivitySUT()
+
+        completeActivity(on: sut, category: .social)
+
+        let saved = try sut.repository.getAll()
+        #expect(saved.count == 1)
+        #expect(saved.first?.name == "Cardio sem fones")
+        #expect(saved.first?.activityDescription == "Faça cardio")
+        #expect(saved.first?.category == .social)
+        #expect(saved.first?.archived == false)
+        #expect(sut.interactor.currentActivity === saved.first)
+    }
+
+    @Test func testingSelectMoodUpdatesResultAndGoesToPhoto() {
+        let sut = makeActivitySUT()
+        completeActivity(on: sut)
+        let result = ActivityResult(time: 10, humor: .chill)
+        sut.interactor.result = result
+
+        sut.interactor.selectMood(humor: .frustrated)
+
+        #expect(result.humor == .frustrated)
+        #expect(sut.interactor.currentActivity?.result === result)
+        #expect(sut.presenter.photoCount == 1)
+    }
+
+    @Test func testingContinueFromPhotoStoresPhotoInResultAndGoesToSummary() {
+        let sut = makeActivitySUT()
+        completeActivity(on: sut)
+        let result = ActivityResult(time: 10, humor: .chill)
+        let photo = Data([0x01, 0x02])
+        sut.interactor.result = result
+        sut.interactor.selectedPhoto = photo
+
+        sut.interactor.continueFromPhoto()
+
+        #expect(result.photo == photo)
+        #expect(sut.interactor.currentActivity?.result === result)
+        #expect(sut.presenter.summaryCount == 1)
+    }
+
+    @Test func testingContinueFromPhotoWithoutPhotoKeepsResultPhotoNil() {
+        let sut = makeActivitySUT()
+        completeActivity(on: sut)
+        let result = ActivityResult(time: 10, humor: .chill)
+        sut.interactor.result = result
+
+        sut.interactor.continueFromPhoto()
+
+        #expect(result.photo == nil)
+        #expect(sut.presenter.summaryCount == 1)
     }
 
     // Sair do fluxo no meio (ou cancelar) descarta o tempo e não deixa o cronômetro rodando.
@@ -651,6 +719,19 @@ struct InteractorTests {
         #expect(sut.interactor.timerStartDate == nil)
         #expect(sut.interactor.timerElapsed == 0)
         #expect(sut.presenter.flowFinishedCount == 1)
+    }
+
+    // Ao finalizar, o estado do fluxo é limpo, mas o que já foi salvo continua no banco.
+    @Test func testingFinishActivityFlowClearsFlowStateAndKeepsSavedActivity() throws {
+        let sut = makeActivitySUT()
+        completeActivity(on: sut)
+        sut.interactor.result = ActivityResult(time: 10, humor: .chill)
+
+        sut.interactor.finishActivityFlow()
+
+        #expect(sut.interactor.currentActivity == nil)
+        #expect(sut.interactor.result == nil)
+        #expect(try sut.repository.getAll().count == 1)
     }
     
     
@@ -769,7 +850,7 @@ struct InteractorTests {
         let sut = makeActivitySUT()
         sut.interactor.timerStartDate = Date().addingTimeInterval(-10)
 
-        sut.interactor.completeActivity()
+        completeActivity(on: sut)
         await wait { sut.liveActivity.stopElapsed.count == 1 }
 
         #expect(sut.liveActivity.stopElapsed.count == 1)
