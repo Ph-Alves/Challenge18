@@ -7,6 +7,8 @@
 
 import Foundation
 import Testing
+import SwiftData
+import UIKit
 @testable import ChallengeFinal
 //
 //// MARK: - Spies (test doubles for the Interactor protocols the Presenters talk to)
@@ -91,6 +93,13 @@ struct PresenterTests {
         return (presenter, store)
     }
     
+    // SwiftData precisa de um container carregado para criar o `ActivityResult`.
+    let modelContainer: ModelContainer = {
+        let schema = Schema([Activity.self, ActivityResult.self, Profile.self])
+        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        return try! ModelContainer(for: schema, configurations: config)
+    }()
+    
     @Test func testingPresentSearchingMarksStoreAsSearching() {
         let (presenter, store) = createActivityPresenterAndStore()
         
@@ -170,6 +179,49 @@ struct PresenterTests {
         presenter.presentTime(0)
 
         #expect(store.timeText == "00:00:00")
+    }
+    
+    // MARK: ActivityPresenter (humor)
+
+    @Test func testingPresentHumorUpdatesStore() {
+        let (presenter, store) = createActivityPresenterAndStore()
+
+        presenter.presentHumor(.frustrated)
+
+        #expect(store.humor == .frustrated)
+    }
+
+    // MARK: ActivityPresenter (compartilhamento)
+
+    @Test func testingPresentStoryRendersStoryImage() throws {
+        let (presenter, store) = createActivityPresenterAndStore()
+        let result = ActivityResult(time: 0, humor: .chill)
+
+        presenter.presentStory(result, title: "faça o seu cardio", subtitle: "menos distração", description: "sem redes sociais")
+
+        // O story sai em 1080x1920 px (360x640 pt com scale 3).
+        let image = try #require(store.storyImage)
+        #expect(image.size.width * image.scale == 1080)
+        #expect(image.size.height * image.scale == 1920)
+    }
+
+    @Test func testingPresentShareSheetOpensAndCloses() {
+        let (presenter, store) = createActivityPresenterAndStore()
+        let url = URL(fileURLWithPath: "/tmp/Desafio-Concluído.png")
+
+        presenter.presentShareSheet(fileURL: url)
+        #expect(store.shareItem?.activityItems.first as? URL == url)
+
+        presenter.presentShareFinished(completed: true)
+        #expect(store.shareItem == nil)
+    }
+
+    @Test func testingPresentShareErrorShowsMessage() {
+        let (presenter, store) = createActivityPresenterAndStore()
+
+        presenter.presentError(ShareError.renderFailed)
+
+        #expect(store.errorMessage == "Não foi possível preparar a imagem para compartilhar. Tente novamente.")
     }
 //    // MARK: - ProfilePresenter
 //
