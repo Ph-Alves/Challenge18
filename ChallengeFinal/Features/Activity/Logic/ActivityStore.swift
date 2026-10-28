@@ -24,7 +24,7 @@ protocol ActivityStoreProtocol: AnyObject {
     func transitionToPhoto()
     
     //MARK: Step .humor
-//    func displayHumor()
+    func displayHumor(_ humor: Humor)
     
     // MARK: Step .photo
     func displayPhoto(_ photo: Image?)
@@ -80,7 +80,7 @@ final class ActivityStore: ActivityStoreProtocol {
     //MARK: Step .Humor
     
     /// Humor registrado
-    var humor: Humor = .chill
+    private(set) var humor: Humor = .chill
     
     // MARK: Step .photo
     
@@ -121,6 +121,12 @@ final class ActivityStore: ActivityStoreProtocol {
     }
     
     // MARK: - Functions
+    
+    // MARK: Step .humor
+    
+    func displayHumor(_ humor: Humor) {
+        self.humor = humor
+    }
     
     // MARK: Step .photo
  

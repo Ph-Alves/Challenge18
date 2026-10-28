@@ -24,6 +24,9 @@ protocol ActivityPresenterProtocol: AnyObject {
     func presentMood()
     func presentPhoto()
     
+    //MARK: Step .mood
+    func presentHumor(_ humor: Humor)
+    
     // MARK: Step .photo
     func presentCamera()
     func presentCameraClosed()
@@ -70,6 +73,12 @@ final class ActivityPresenter: ActivityPresenterProtocol {
     }
     
     // MARK: - Functions
+    
+    //MARK: Step .mood
+    /// O humor mudou na roleta: a Store atualiza e a roleta gira até ele.
+    func presentHumor(_ humor: Humor) {
+        store?.displayHumor(humor)
+    }
     
     // MARK: Step .photo
 

@@ -26,6 +26,10 @@ protocol ActivityInteractorProtocol: AnyObject {
     func reroll(for category: ActivityCategory)
     func raffle(for category: ActivityCategory)
     
+    // MARK: Step .mood (implementados em ActivityInteractor+Mood.swift)
+    func nextHumor()
+    func previousHumor()
+    
     // MARK: Step .photo (implementados em ActivityInteractor+Photo.swift)
     func openCamera()
     func retakePhoto()
