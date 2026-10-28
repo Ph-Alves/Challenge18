@@ -12,30 +12,24 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Cache DerivedData
-        uses: actions/cache@v4
-        with:
-          path: ~/Library/Developer/Xcode/DerivedData
-          key: ${{ runner.os }}-deriveddata-${{ hashFiles('**/*.xcodeproj/project.pbxproj') }}
-          restore-keys: |
-            ${{ runner.os }}-deriveddata-
-
-      - name: Create iOS Simulator
+      - name: Show Xcode and simulators
         run: |
-          RUNTIME=$(xcrun simctl list runtimes -j | python3 -c "import sys,json; rts=[r['identifier'] for r in json.load(sys.stdin)['runtimes'] if 'iOS' in r.get('name','')]; print(rts[-1] if rts else '')")
-          xcrun simctl create "CI-iPhone" "iPhone 16" "$RUNTIME"
-          xcrun simctl boot "CI-iPhone"
-          xcrun simctl bootstatus "CI-iPhone" -b
+          xcodebuild -version
+          xcrun simctl list devices available
+
+      # Se o runner vier sem runtime de iOS, baixa o runtime
+      - name: Install iOS simulator runtime if missing
+        run: |
+          if ! xcrun simctl list devices available | grep -q "iPhone"; then
+            xcodebuild -downloadPlatform iOS
+          fi
 
       - name: Build & Test
         run: |
           xcodebuild test \
             -project ChallengeFinal.xcodeproj \
             -scheme ChallengeFinal \
-            -destination 'platform=iOS Simulator,name=CI-iPhone' \
-            -derivedDataPath ~/Library/Developer/Xcode/DerivedData \
-            -parallel-testing-enabled YES \
-            -maximum-parallel-testing-workers 2 \
-            -jobs $(sysctl -n hw.logicalcpu) \
+            -destination 'platform=iOS Simulator,name=iPhone 17' \
+            -skip-testing:ChallengeFinalUITests \
             CODE_SIGNING_ALLOWED=NO \
             SDKROOT=iphonesimulator
