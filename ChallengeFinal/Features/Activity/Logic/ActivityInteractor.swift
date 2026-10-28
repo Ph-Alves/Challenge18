@@ -55,8 +55,8 @@ protocol ActivityInteractorProtocol: AnyObject {
     func startActivity()
     func goToActivityDetail()
     func returnToStart()
-    func completeActivity()
-    func selectMood()
+    func completeActivity(currentCategory: ActivityCategory, title: String, subTitle: String, Description: String)
+    func selectMood(humor: Humor)
     func finishActivityFlow()
 }
 
@@ -117,6 +117,10 @@ final class ActivityInteractor: ActivityInteractorProtocol {
     
     /// Se o flash está ligado na tela da câmera.
     var isFlashOn = false
+    
+    /// Instância da atividade criada (vai ser atualizada a partir de humor pra frente)
+    /// depois de ir atualizando, o banco responde a mudança.
+    var currentActivity: Activity?
     
     /// O resultado do desafio, montado ao chegar no `.summary`.
     /// É dele que sai a foto do story, e é ele que deve ser salvo no banco.
@@ -197,18 +201,40 @@ final class ActivityInteractor: ActivityInteractorProtocol {
     }
     
     /// Terminou o desafio: vai para o humor.
-    func completeActivity() {
+    func completeActivity(currentCategory: ActivityCategory, title: String, subTitle: String, Description: String) {
+        do {
+            self.currentActivity = Activity(category: currentCategory, result: nil, name: title, description: subTitle, archived: false)
+            if let currentActivity {
+                try activityRepository.add(currentActivity)
+            }
+        } catch {
+            print("Erro ao adicionar entidade: \(error.localizedDescription)")
+        }
         stopTimer()
         presenter.presentMood()
     }
     
     /// Escolheu o humor: vai para a foto.
-    func selectMood() {
+    func selectMood(humor: Humor) {
+        do {
+            self.result?.humor = humor
+            self.currentActivity?.result = self.result
+            try activityRepository.save()
+        } catch {
+            print("Erro ao salvar o banco: \(error.localizedDescription)")
+        }
         presenter.presentPhoto()
     }
     
     /// Termina o fluxo e volta para a Home.
     func finishActivityFlow() {
+        do {
+            self.currentActivity = nil
+            self.result = nil
+            try activityRepository.save()
+        } catch {
+            print("Erro ao salvar o banco: \(error.localizedDescription)")
+        }
         cancelTimer()
         presenter.presentFlowFinished()
     }

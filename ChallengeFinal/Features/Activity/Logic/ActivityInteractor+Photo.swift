@@ -144,7 +144,14 @@ extension ActivityInteractor {
     /// A foto (ou `nil`) fica guardada em `selectedPhoto` para o resumo
     /// e para o `ActivityResult` no final do fluxo.
     func continueFromPhoto() {
-        camera.stopSession()
+        do {
+            camera.stopSession()
+            self.result?.photo = selectedPhoto
+            self.currentActivity?.result = self.result
+            try activityRepository.save()
+        } catch {
+            print("Erro ao salvar o banco: \(error.localizedDescription)")
+        }
         presenter.presentSummary()
     }
 
