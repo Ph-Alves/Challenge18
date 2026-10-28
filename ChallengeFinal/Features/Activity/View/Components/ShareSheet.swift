@@ -21,7 +21,7 @@ struct ShareItem: Identifiable {
 
 // MARK: - Share sheet
 
-struct ActivityShareSheet: UIViewControllerRepresentable {
+struct ShareSheet: UIViewControllerRepresentable {
 
     let items: [Any]
 

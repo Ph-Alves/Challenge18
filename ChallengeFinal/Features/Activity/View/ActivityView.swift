@@ -64,6 +64,13 @@ struct ActivityView: View {
             .fullScreenCover(isPresented: isCameraPresented) {
                 CameraView(interactor: interactor, store: store, preview: cameraPreview)
             }
+            .sheet(item: shareItem) { item in
+                ShareSheet(items: item.activityItems) { completed in
+                    interactor.didFinishSharing(completed: completed)
+                }
+                .presentationDetents([.medium, .large])
+                .ignoresSafeArea()
+            }
     }
 
     // MARK: - Steps
@@ -103,8 +110,15 @@ struct ActivityView: View {
         case .inProgress:
             InProgressView(message: store.activityTitle ?? "", challengeSubTitle: store.activitySubtitle ?? "", challengeDescription: store.activityDescription ?? "", timeText: store.timeText, finishAction: {interactor.completeActivity()}, cancelAction: interactor.finishActivityFlow)
             
-        // Os outros steps continuam como placeholder até serem implementados
-        case .mood:       placeholder("Humor") { interactor.selectMood() }
+        // Humor: a roleta gira com swipe; "continuar" segue para a selfie.
+        case .mood:
+            MoodStepView(
+                humor: store.humor,
+                onNext: { interactor.nextHumor() },
+                onPrevious: { interactor.previousHumor() },
+                onContinue: { interactor.selectMood() }
+            )
+            .transition(.opacity)
             
         case .summary:
             summaryStepView
