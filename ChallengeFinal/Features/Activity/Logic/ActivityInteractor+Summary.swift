@@ -74,7 +74,7 @@ extension ActivityInteractor {
 
         let newResult = ActivityResult(
             photo: selectedPhoto,
-            time: elapsedTime,
+            time: timerElapsed,
             humor: selectedHumor ?? .chill
         )
 

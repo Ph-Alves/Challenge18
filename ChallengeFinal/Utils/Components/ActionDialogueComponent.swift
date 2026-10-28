@@ -8,8 +8,17 @@
 import Foundation
 import SwiftUI
 
+enum TitleStyle {
+    
+    case large
+    case title2
+    
+}
+
 struct ActionDialogComponent: View {
     var title: String
+    var titleStyle: TitleStyle = .title2
+
     var firstOptionText: String
     var secondOptionText: String
     
@@ -19,7 +28,7 @@ struct ActionDialogComponent: View {
     var body: some View {
         VStack(spacing: 20) {
             Text(title)
-                .font(.title2)
+                .font(titleStyle == .large ? .largeTitle : .title2)
                 .fontWeight(.bold)
                 .multilineTextAlignment(.center)
             
@@ -57,7 +66,7 @@ struct ActionDialogComponent: View {
 #Preview {
     ActionDialogComponent(
         title: "gostaria de iniciar esse desafio?",
-        firstOptionText: "Cancelar",
+        firstOptionText: "Cancelar desafio",
         secondOptionText: "Arquivar",
         firstAction: {
         },

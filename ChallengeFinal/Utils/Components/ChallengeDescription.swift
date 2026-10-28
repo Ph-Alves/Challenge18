@@ -27,7 +27,6 @@ struct ChallengeDescription: View {
         Text(challengeDescription)
             .multilineTextAlignment(.center)
             .padding(.horizontal, 42)
-            .padding(.bottom, 73)
     }
 }
 

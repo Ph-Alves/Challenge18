@@ -36,7 +36,7 @@ struct ChallengeAcceptedView: View {
             
             CustomButtonComponent(title: "iniciar", icon: nil, action: startAction)
                 .padding(.horizontal, 113)
-            CustomButtonComponent(title: "cancelar o desafio", icon: nil, action: cancelAction)
+            CustomButtonComponent(title: "cancelar desafio", icon: nil, type: .secondary, action: cancelAction)
                 .padding(.horizontal, 113)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)

@@ -13,6 +13,8 @@ import SwiftUI
 /// O que o Presenter enxerga da Store: métodos `display...` (dados prontos
 /// para a tela) e `transitionTo...` (mudança de step).
 protocol ActivityStoreProtocol: AnyObject {
+    // MARK: - Step do timer
+    func displayTimer(_ text: String)
     
     // MARK: Steps .draw e .challenge (implementados em ActivityStore+Draw.swift)
     func displayActivity(_ challenge: FrictionChallenge)
@@ -99,6 +101,10 @@ final class ActivityStore: ActivityStoreProtocol {
     /// Mensagem de erro (ex.: falha na captura). `nil` = sem erro.
     private(set) var errorMessage: String?
     
+    /// Tempo do cronômetro já formatado ("hh:mm:ss").
+    /// O Presenter escreve a cada tick; a View só lê.
+    private(set) var timeText: String = "00:00:00"
+    
     /// Step atual, vindo do Coordinator. Por ser @Observable, a View
     /// é redesenhada quando ele muda.
     var currentStep: ActivityStep {
@@ -161,6 +167,13 @@ final class ActivityStore: ActivityStoreProtocol {
         shareItem = item
     }
     
+    // MARK: Step .inProgress (cronômetro)
+
+    /// Guarda o texto do tempo já formatado pelo Presenter.
+    /// Como a Store é `@Observable`, a View que lê `timeText` se atualiza sozinha.
+    func displayTimer(_ text: String) {
+        timeText = text
+    }
     
     // MARK: Transitions
     
