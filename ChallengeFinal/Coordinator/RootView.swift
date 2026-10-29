@@ -19,7 +19,7 @@ struct RootView: View {
                 case .home:
                     coordinator.homeCoordinator.startHomeFlow(context: context)
                 case .activity(let flow):
-                    flow.startActivityView(context: context)
+                    flow.startActivityView(context: context).toolbarVisibility(.hidden, for: .tabBar)
                 }
             }
             Tab("Challenges", systemImage: "circle.fill", value: AppTab.challenges) {
