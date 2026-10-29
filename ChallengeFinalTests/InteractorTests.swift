@@ -124,12 +124,14 @@ final class HapticsWorkerMock: HapticsWorkerProtocol {
     private(set) var startLoopCount = 0
     private(set) var intensities: [Double] = []
     private(set) var stopLoopCount = 0
+    private(set) var selectionTickCount = 0
     
     func prepareHaptics() { prepareCount += 1 }
     func startShakeLoop() { startLoopCount += 1 }
     func updateShakeIntensity(_ magnitude: Double) { intensities.append(magnitude) }
     func stopShakeLoopIfIdle(timeout: TimeInterval) {}
     func stopShakeLoop() { stopLoopCount += 1 }
+    func playSelectionTick() { selectionTickCount += 1 }
 }
 
 final class CoreMotionWorkerMock: CoreMotionWorkerProtocol {
@@ -755,6 +757,16 @@ struct InteractorTests {
 
         #expect(sut.interactor.selectedHumor == .chill)
         #expect(sut.presenter.presentedHumors == [.chill])
+    }
+    
+    @Test func testingEachHumorChangePlaysOneSelectionTick() {
+        let sut = makeActivitySUT()
+ 
+        sut.interactor.nextHumor()
+        sut.interactor.nextHumor()
+        sut.interactor.previousHumor()
+ 
+        #expect(sut.haptics.selectionTickCount == 3)
     }
 
     // MARK: - ActivityInteractor (compartilhamento)
