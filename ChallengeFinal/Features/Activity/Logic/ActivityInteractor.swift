@@ -17,6 +17,7 @@ import SwiftUI
 /// Com o protocolo, a View não depende da classe concreta. Nos testes e nos
 /// `#Preview`, dá para passar um Interactor falso que só anota os toques.
 protocol ActivityInteractorProtocol: AnyObject {
+    
     // MARK: Step .inProgress (implementados em ActivityInteractor+Timer.swift)
     func startTimer()
     func stopTimer()
@@ -58,6 +59,7 @@ protocol ActivityInteractorProtocol: AnyObject {
     func completeActivity(currentCategory: ActivityCategory, title: String, subTitle: String, Description: String)
     func selectMood(humor: Humor)
     func finishActivityFlow()
+    func didTapBack(on step: ActivityStep)
 }
 
 // MARK: - Class
@@ -237,5 +239,19 @@ final class ActivityInteractor: ActivityInteractorProtocol {
         }
         cancelTimer()
         presenter.presentFlowFinished()
+    }
+    
+    /// Toque na seta. Aqui eu to definindo quem "deve voltar" pra quem.
+    func didTapBack(on step: ActivityStep) {
+        switch step {
+        case .draw:
+            finishActivityFlow()      // volta pra Home
+        case .photo:
+            presenter.presentMood()   // volta pro humor
+        case .summary:
+            presenter.presentPhoto()  // volta pra foto
+        case .challenge, .inProgress, .mood:
+            break  // esses steps não têm seta
+        }
     }
 }

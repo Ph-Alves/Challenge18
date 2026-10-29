@@ -19,8 +19,6 @@ struct ChallengeDisplayView: View {
     let challengeTitle: String
     /// Um novo desafio está sendo gerado por baixo dos panos (reroll).
     let isSearching: Bool
-    /// Seta de voltar: encerra o fluxo e devolve o usuário à Home.
-    let returnAction: () -> Void
     /// "Arquivar desafio da lista".
     let archiveAction: () -> Void
     /// "aceitar": segue para a tela de desafio aceito.
@@ -96,14 +94,10 @@ struct ChallengeDisplayView: View {
             Text("Sorteie um novo desafio :)")
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity) // centraliza na tela toda
-        .overlay(alignment: .topLeading) {
-            BackButton(action: returnAction)
-                .padding(.horizontal)
-        }
     }
 }
 
 // MARK: - Preview
 #Preview {
-    ChallengeDisplayView(challengeTitle: "teste", isSearching: false, returnAction: {}, archiveAction: {}, acceptAction: {}, refuseAction: {})
+    ChallengeDisplayView(challengeTitle: "teste", isSearching: false, archiveAction: {}, acceptAction: {}, refuseAction: {})
 }

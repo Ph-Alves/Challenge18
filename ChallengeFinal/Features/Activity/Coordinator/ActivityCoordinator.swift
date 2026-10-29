@@ -15,6 +15,19 @@ enum ActivityStep {
     case draw, challenge, inProgress, mood, photo, summary
 }
 
+/// Botão do canto superior esquerdo do fluxo.
+enum ActivityNavigationButton {
+    case back   // setinha
+    case close  // Xzinho de voltar
+
+    var icon: String {
+        switch self {
+        case .back:  "chevron.left"
+        case .close: "xmark"
+        }
+    }
+}
+
 /// Coordinator do fluxo de Activity: guarda em qual step estamos.
 /// É @Observable, então a View troca de tela sozinha quando `step` muda.
 @MainActor
@@ -56,4 +69,16 @@ extension ActivityCoordinator: ActivityRouting {
     func goToPhoto()      { step = .photo }
     func goToSummary()    { step = .summary }
     func finishFlow()     { onFinish() }
+}
+
+//Os botões variam conforme os steps, alguns exibem o X e outros exibem a setinha e tem um específico que não tem botão, por isso criei o enum e a variavel computada logo abaixo
+///essa variavel abaixo evita que o switch fique na view, simplificando o código na view.
+extension ActivityStep {
+    /// Qual botão cada step mostra. `nil` = sem botão.
+    var navigationButton: ActivityNavigationButton? {
+        switch self {
+        case .draw, .photo, .summary, .inProgress: .back
+        case .challenge, .mood: .close
+        }
+    }
 }

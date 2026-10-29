@@ -20,8 +20,6 @@ struct ChallengeAcceptedView: View {
     let challengeDescription: String
 
     // MARK: - Ações (closures)
-    /// Seta de voltar: encerra o fluxo e devolve o usuário à Home.
-    let returnAction: () -> Void
     /// "iniciar": segue para o step `.inProgress`.
     let startAction: () -> Void
     /// "cancelar o desafio": descarta este desafio e sorteia outro.
@@ -40,13 +38,9 @@ struct ChallengeAcceptedView: View {
                 .padding(.horizontal, 113)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .overlay(alignment: .topLeading) {
-            BackButton(action: returnAction)
-                .padding(.horizontal)
-        }
     }
 }
 
 #Preview {
-    ChallengeAcceptedView(challengeTitle: "você consegue :)", challengeSubTitle: "menos distração, mais foco", challengeDescription: "sem redes sociais, seu cardio vira um momento para cuidar do corpo e desacelerar a mente.", returnAction: {}, startAction: {}, cancelAction: {})
+    ChallengeAcceptedView(challengeTitle: "você consegue :)", challengeSubTitle: "menos distração, mais foco", challengeDescription: "sem redes sociais, seu cardio vira um momento para cuidar do corpo e desacelerar a mente.", startAction: {}, cancelAction: {})
 }
