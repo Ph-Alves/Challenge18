@@ -10,9 +10,9 @@ import Foundation
 enum FeelingsBuilder {
         
     @MainActor
-    static func build() {
+    static func build() -> FeelingsSummaryView {
         
         
-        return FeelingsSummaryView()
+        return FeelingsSummaryView(fraction: 0.0, icon: "", count: 0)
     }
 }
