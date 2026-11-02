@@ -8,7 +8,7 @@
 import Foundation
 
 protocol FeelingsInteractorProtocol: AnyObject {
-    
+    func loadFeelings()
 }
 
 @MainActor

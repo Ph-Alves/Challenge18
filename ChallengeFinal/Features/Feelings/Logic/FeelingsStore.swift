@@ -8,11 +8,11 @@
 import Foundation
 
 protocol FeelingsStoreProtocol: AnyObject {
-    
+    func presentFeelingsLoaded(feelings: [Humor: [Activity]])
 }
 
 @MainActor
 @Observable
 final class FeelingsStore: FeelingsStoreProtocol {
-    
+    var feelings: [Humor: [Activity]]?
 }

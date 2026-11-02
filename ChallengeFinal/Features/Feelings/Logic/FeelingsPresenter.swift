@@ -8,7 +8,7 @@
 import Foundation
 
 protocol FeelingsPresenterProtocol: AnyObject {
-    
+    func presentFeelingsLoaded(activities: [Activity])
 }
 
 @MainActor
