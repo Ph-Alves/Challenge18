@@ -6,3 +6,13 @@
 //
 
 import Foundation
+
+protocol FeelingsStoreProtocol {
+    
+}
+
+@MainActor
+@Observable
+final class FeelingsStore: FeelingsStoreProtocol {
+    
+}

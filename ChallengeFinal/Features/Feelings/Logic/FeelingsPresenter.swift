@@ -6,3 +6,12 @@
 //
 
 import Foundation
+
+protocol FeelingsPresenterProtocol {
+    
+}
+
+@MainActor
+final class FeelingsPresenter: FeelingsPresenterProtocol {
+    
+}

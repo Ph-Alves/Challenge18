@@ -6,3 +6,12 @@
 //
 
 import Foundation
+
+protocol FeelingsInteractorProtocol {
+    
+}
+
+@MainActor
+final class FeelingsInteractor: FeelingsInteractorProtocol {
+    
+}
