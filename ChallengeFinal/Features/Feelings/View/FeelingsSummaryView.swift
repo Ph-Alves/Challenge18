@@ -9,6 +9,9 @@ import SwiftUI
 
 struct FeelingsSummaryView: View {
     
+    let interactor: FeelingsInteractorProtocol
+    @State var store: FeelingsStore
+    
     var fill: Color = .gray
     var segments: [Double] = [1]
     let fraction: Double

@@ -7,7 +7,7 @@
 
 import Foundation
 
-protocol FeelingsStoreProtocol {
+protocol FeelingsStoreProtocol: AnyObject {
     
 }
 

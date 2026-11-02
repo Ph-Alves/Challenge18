@@ -6,13 +6,18 @@
 //
 
 import Foundation
+import SwiftData
 
 enum FeelingsBuilder {
-        
+    
     @MainActor
-    static func build() -> FeelingsSummaryView {
+    static func build(context: ModelContext) -> FeelingsSummaryView {
+        let store = FeelingsStore()
         
+        let presenter = FeelingsPresenter(store: store)
         
-        return FeelingsSummaryView(fraction: 0.0, icon: "", count: 0)
+        let interactor = FeelingsInteractor(presenter: presenter, activityRepository: GenericRepository(context: context))
+        
+        return FeelingsSummaryView(interactor: interactor, store: store, fraction: 0.0, icon: "", count: 0)
     }
 }

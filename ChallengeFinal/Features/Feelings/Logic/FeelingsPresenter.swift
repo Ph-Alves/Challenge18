@@ -7,11 +7,15 @@
 
 import Foundation
 
-protocol FeelingsPresenterProtocol {
+protocol FeelingsPresenterProtocol: AnyObject {
     
 }
 
 @MainActor
 final class FeelingsPresenter: FeelingsPresenterProtocol {
+    weak var store: FeelingsStoreProtocol?
     
+    init(store: FeelingsStoreProtocol) {
+        self.store = store
+    }
 }

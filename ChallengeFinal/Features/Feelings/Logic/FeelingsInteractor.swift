@@ -7,11 +7,17 @@
 
 import Foundation
 
-protocol FeelingsInteractorProtocol {
+protocol FeelingsInteractorProtocol: AnyObject {
     
 }
 
 @MainActor
 final class FeelingsInteractor: FeelingsInteractorProtocol {
+    let presenter: FeelingsPresenterProtocol
+    let activityRepository: GenericRepository<Activity>
     
+    init(presenter: FeelingsPresenterProtocol, activityRepository: GenericRepository<Activity>) {
+        self.presenter = presenter
+        self.activityRepository = activityRepository
+    }
 }
