@@ -14,5 +14,5 @@ protocol FeelingsStoreProtocol: AnyObject {
 @MainActor
 @Observable
 final class FeelingsStore: FeelingsStoreProtocol {
-    var feelings: [Humor: [Activity]]?
+    var feelings: [Humor: [Activity]] = [:]
 }

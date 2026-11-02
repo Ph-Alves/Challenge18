@@ -18,6 +18,6 @@ enum FeelingsBuilder {
         
         let interactor = FeelingsInteractor(presenter: presenter, activityRepository: GenericRepository(context: context))
         
-        return FeelingsSummaryView(interactor: interactor, store: store, fraction: 0.0, icon: "", count: 0)
+        return FeelingsSummaryView(interactor: interactor, store: store)
     }
 }

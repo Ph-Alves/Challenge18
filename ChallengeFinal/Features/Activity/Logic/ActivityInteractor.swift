@@ -217,8 +217,10 @@ final class ActivityInteractor: ActivityInteractorProtocol {
     /// Escolheu o humor: vai para a foto.
     func selectMood(humor: Humor) {
         do {
-            self.result?.humor = humor
-            self.currentActivity?.result = self.result
+            selectedHumor = humor
+            let result = makeResultIfNeeded()
+            result.humor = humor
+            currentActivity?.result = result
             try activityRepository.save()
         } catch {
             print("Erro ao salvar o banco: \(error.localizedDescription)")

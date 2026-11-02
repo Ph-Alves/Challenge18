@@ -22,7 +22,7 @@ final class FeelingsCoordinator: FeelingsRouting {
             return cached
         }
         
-        let view = FeelingsBuilder.build()
+        let view = FeelingsBuilder.build(context: context)
         cached = view
         return view
     }

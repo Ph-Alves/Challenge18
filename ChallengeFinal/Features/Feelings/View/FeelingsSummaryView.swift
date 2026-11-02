@@ -27,37 +27,31 @@ struct FeelingsSummaryView: View {
                     .font(.title2.bold())
                     .padding(.top, 24)
                     .contentTransition(.opacity)
-                
-                let maxCount = Double(emotions.map(\.count).max() ?? 1)
+                    
+                let totalCount = store.feelings.values.reduce(0) { $0 + $1.count }
+                    
                 HStack(alignment: .top, spacing: 16) {
-                    ForEach(Array(emotions.enumerated()), id: \.element.id) { index, emotion in
-
+                    ForEach(Humor.allCases, id: \.self) { emotion in
+                        let count = store.feelings[emotion]?.count ?? 0
+                        let fraction = Double(count) / Double(max(totalCount, 1))
+                        
                         VStack(spacing: 8) {
                             ZStack(alignment: .bottom) {
                                 let height = barHeight * fraction
-                                if segments.count > 1 {
-                                    // Barra empilhada em tons de cinza (visualização de grupos).
-                                    VStack(spacing: 0) {
-                                        ForEach(Array(segments.enumerated()), id: \.offset) { index, part in
-                                            Rectangle()
-                                                .fill(Color(white: 0.85 - 0.6 * Double(index) / Double(segments.count - 1)))
-                                                .frame(height: height * part)
-                                        }
-                                    }
+                                Capsule()
+                                    .fill(.gray)
                                     .frame(height: height)
-                                    .clipShape(Capsule())
-                                } else {
-                                    Capsule().fill(fill).frame(height: height)
-                                }
-                                Capsule().stroke(.black, lineWidth: 2)
+                                
+                                Capsule()
+                                    .stroke(.black, lineWidth: 2)
                             }
                             .frame(width: 48, height: barHeight)
-
-                            Image(icon)
+                            
+                            Image(emotion.icon)
                                 .resizable()
                                 .scaledToFit()
                                 .frame(width: 54, height: 54)
-
+                            
                             Text("(\(String(format: "%02d", count)))")
                                 .font(.caption)
                         }
@@ -69,15 +63,26 @@ struct FeelingsSummaryView: View {
                 Spacer()
             }
             .frame(maxWidth: .infinity)
-            .frame(height: 560)
+            .frame(minHeight: 560)
             .background(RoundedRectangle(cornerRadius: 28).fill(.background))
             .overlay(RoundedRectangle(cornerRadius: 28).stroke(.black, lineWidth: 2))
         }
         .padding(.horizontal, 24)
         .padding(.top, 24)
+        .onAppear {
+            interactor.loadFeelings()
+        }
     }
 }
 
+/// Interactor falso só para o preview: não busca nada.
+private final class FeelingsInteractorPreviewMock: FeelingsInteractorProtocol {
+    func loadFeelings() {}
+}
+
 #Preview {
-    FeelingsSummaryView()
+    FeelingsSummaryView(
+        interactor: FeelingsInteractorPreviewMock(),
+        store: FeelingsStore()
+    )
 }
