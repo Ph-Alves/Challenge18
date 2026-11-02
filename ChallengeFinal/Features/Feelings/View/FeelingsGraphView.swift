@@ -1,19 +1,18 @@
 //
-//  FeelingsSummaryView.swift
+//  FeelingsGraphView.swift
 //  ChallengeFinal
 //
-//  Tela de resumo: card central arrastável entre "top emoções" e "top grupos".
+//  Created by Paulo Henrique Costa Alves on 02/11/26.
 //
 
 import SwiftUI
 
-struct FeelingsSummaryView: View {
+struct FeelingsGraphView: View {
     
-    let interactor: FeelingsInteractorProtocol
-    @State var store: FeelingsStore
-
+    let feelings: [Humor: [Activity]]
+    let loadAction: () -> Void
     private let barHeight: CGFloat = 330
-
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 40) {
             VStack(alignment: .leading, spacing: 2) {
@@ -28,11 +27,11 @@ struct FeelingsSummaryView: View {
                     .padding(.top, 24)
                     .contentTransition(.opacity)
                     
-                let totalCount = store.feelings.values.reduce(0) { $0 + $1.count }
+                let totalCount = feelings.values.reduce(0) { $0 + $1.count }
                     
                 HStack(alignment: .top, spacing: 16) {
                     ForEach(Humor.allCases, id: \.self) { emotion in
-                        let count = store.feelings[emotion]?.count ?? 0
+                        let count = feelings[emotion]?.count ?? 0
                         let fraction = Double(count) / Double(max(totalCount, 1))
                         
                         VStack(spacing: 8) {
@@ -70,19 +69,11 @@ struct FeelingsSummaryView: View {
         .padding(.horizontal, 24)
         .padding(.top, 24)
         .onAppear {
-            interactor.loadFeelings()
+            loadAction()
         }
     }
 }
 
-/// Interactor falso só para o preview: não busca nada.
-private final class FeelingsInteractorPreviewMock: FeelingsInteractorProtocol {
-    func loadFeelings() {}
-}
-
 #Preview {
-    FeelingsSummaryView(
-        interactor: FeelingsInteractorPreviewMock(),
-        store: FeelingsStore()
-    )
+    FeelingsGraphView(feelings: [:], loadAction: {})
 }

@@ -11,13 +11,13 @@ import SwiftData
 enum FeelingsBuilder {
     
     @MainActor
-    static func build(context: ModelContext) -> FeelingsSummaryView {
+    static func build(context: ModelContext) -> FeelingsView {
         let store = FeelingsStore()
         
         let presenter = FeelingsPresenter(store: store)
         
         let interactor = FeelingsInteractor(presenter: presenter, activityRepository: GenericRepository(context: context))
         
-        return FeelingsSummaryView(interactor: interactor, store: store)
+        return FeelingsView(interactor: interactor, store: store)
     }
 }

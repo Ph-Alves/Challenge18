@@ -11,13 +11,13 @@ import SwiftData
 @MainActor
 final class FeelingsCoordinator: FeelingsRouting {
     
-    var cached: FeelingsSummaryView?
+    var cached: FeelingsView?
     
-    init(cached: FeelingsSummaryView? = nil) {
+    init(cached: FeelingsView? = nil) {
         self.cached = cached
     }
     
-    func startFeelingsView(context: ModelContext) -> FeelingsSummaryView {
+    func startFeelingsView(context: ModelContext) -> FeelingsView {
         if let cached {
             return cached
         }

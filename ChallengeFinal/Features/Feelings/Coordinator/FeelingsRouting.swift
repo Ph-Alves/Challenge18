@@ -9,7 +9,7 @@ import Foundation
 import SwiftData
 
 protocol FeelingsRouting {
-    var cached: FeelingsSummaryView? { get set }
+    var cached: FeelingsView? { get set }
     
-    func startFeelingsView(context: ModelContext) -> FeelingsSummaryView
+    func startFeelingsView(context: ModelContext) -> FeelingsView
 }
