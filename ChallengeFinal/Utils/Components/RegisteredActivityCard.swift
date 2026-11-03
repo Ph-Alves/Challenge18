@@ -10,7 +10,7 @@ import SwiftUI
 
 struct RegisteredActivityCard: View {
     var title: String
-    var humor: Humor
+    var humor: Humor?
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
             VStack(alignment: .leading, spacing: 11) {
@@ -37,11 +37,12 @@ struct RegisteredActivityCard: View {
                     .stroke(.black, lineWidth: 2)
             )
             
-            Image(humor.icon)
-                .resizable()
-                .frame(width: 44, height: 44)
-                
-                .offset(x: 8, y: 8)
+            if let humor {
+                Image(humor.icon)
+                    .resizable()
+                    .frame(width: 44, height: 44)
+                    .offset(x: 8, y: 8)
+            }
         }
     }
 }
