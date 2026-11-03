@@ -22,4 +22,16 @@ extension FeelingsInteractor {
             print("Erro ao buscar atividades: \(error.localizedDescription)")
         }
     }
+    
+    func selectActivity(activity: Activity) {
+        presenter.presentSelectedActivity(activity: activity)
+    }
+    
+    func deleteActivity(activity: Activity) {
+        do {
+            try activityRepository.delete(activity)
+        } catch {
+            print("Erro ao deletar atividade: \(error.localizedDescription)")
+        }
+    }
 }

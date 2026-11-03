@@ -16,4 +16,13 @@ extension FeelingsStore {
     func presentFeelingsLoaded(feelings: [Humor: [Activity]]) {
         self.feelings = feelings
     }
+    
+    func presentActivityDetails(activity: Activity) {
+        self.selectedActivity = activity
+        self.presentDetail = true
+    }
+    
+    func returnToFeelings() {
+        self.presentDetail = false
+    }
 }

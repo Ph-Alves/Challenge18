@@ -13,6 +13,8 @@ import Foundation
 protocol FeelingsStoreProtocol: AnyObject {
     // MARK: Carregamento (implementado em FeelingsStore+mood.swift)
     func presentFeelingsLoaded(feelings: [Humor: [Activity]])
+    func presentActivityDetails(activity: Activity)
+    func returnToFeelings()
 }
 
 // MARK: - Class
@@ -28,4 +30,8 @@ final class FeelingsStore: FeelingsStoreProtocol {
     /// Não é `private(set)` porque quem escreve é o `FeelingsStore+mood.swift`
     /// (extensions não podem ter propriedades armazenadas, por isso fica aqui).
     var feelings: [Humor: [Activity]] = [:]
+    
+    var presentDetail: Bool = false
+    
+    var selectedActivity: Activity? = nil
 }

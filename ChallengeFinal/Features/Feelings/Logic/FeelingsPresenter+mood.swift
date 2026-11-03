@@ -23,4 +23,8 @@ extension FeelingsPresenter {
         
         store?.presentFeelingsLoaded(feelings: grouped)
     }
+    
+    func presentSelectedActivity(activity: Activity) {
+        store?.presentActivityDetails(activity: activity)
+    }
 }

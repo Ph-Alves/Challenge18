@@ -16,6 +16,7 @@ import Foundation
 protocol FeelingsPresenterProtocol: AnyObject {
     // MARK: Carregamento (implementado em FeelingsPresenter+mood.swift)
     func presentFeelingsLoaded(activities: [Activity])
+    func presentSelectedActivity(activity: Activity)
 }
 
 // MARK: - Class

@@ -16,6 +16,8 @@ import Foundation
 protocol FeelingsInteractorProtocol: AnyObject {
     // MARK: Carregamento (implementado em FeelingsInteractor+mood.swift)
     func loadFeelings()
+    func selectActivity(activity: Activity)
+    func deleteActivity(activity: Activity)
 }
 
 // MARK: - Class
