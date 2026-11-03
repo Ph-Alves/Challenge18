@@ -16,6 +16,7 @@ protocol HapticsWorkerProtocol {
     func updateShakeIntensity(_ magnitude: Double)
     func stopShakeLoopIfIdle(timeout: TimeInterval)
     func stopShakeLoop()
+    func playSelectionTick()
 }
 
 final class HapticsWorker: HapticsWorkerProtocol {
@@ -90,5 +91,27 @@ final class HapticsWorker: HapticsWorkerProtocol {
         try? continuousPlayer?.stop(atTime: CHHapticTimeImmediate)
         continuousPlayer = nil
         lastMotionDate = nil
+    }
+    
+    // Tique curto e seco, tipo "catraca", para quando a roleta de humor
+    // passa de uma fatia para outra.
+    func playSelectionTick() {
+        // A engine pode ainda não existir (ex.: o step .mood é o primeiro a
+        // usar haptics). Prepara na primeira vez em vez de exigir uma chamada antes.
+        if engine == nil { prepareHaptics() }
+        // Sem engine = aparelho sem suporte a haptics.
+        guard let engine else { return }
+ 
+        let intensity = CHHapticEventParameter(parameterID: .hapticIntensity, value: 0.6)
+        let sharpness = CHHapticEventParameter(parameterID: .hapticSharpness, value: 0.8)
+        let event = CHHapticEvent(eventType: .hapticTransient, parameters: [intensity, sharpness], relativeTime: 0)
+ 
+        do {
+            let pattern = try CHHapticPattern(events: [event], parameters: [])
+            let player = try engine.makePlayer(with: pattern)
+            try player.start(atTime: CHHapticTimeImmediate)
+        } catch {
+            print("Failed to play selection tick: \(error.localizedDescription)")
+        }
     }
 }

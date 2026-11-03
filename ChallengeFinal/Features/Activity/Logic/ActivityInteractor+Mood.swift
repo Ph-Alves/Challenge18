@@ -38,5 +38,8 @@ extension ActivityInteractor {
 
         selectedHumor = humor
         presenter.presentHumor(humor)
+        
+        // Tique a cada fatia que passa pelo marcador.
+        hapticWorker.playSelectionTick()
     }
 }

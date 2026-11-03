@@ -47,6 +47,8 @@ final class ActivityPresenterSpy: ActivityPresenterProtocol {
     private(set) var presentedTimes: [TimeInterval] = []
     private(set) var inProgressCount = 0
     private(set) var moodCount = 0
+    private(set) var photoCount = 0
+    private(set) var summaryCount = 0
     private(set) var flowFinishedCount = 0
 
     func presentTime(_ elapsed: TimeInterval) { presentedTimes.append(elapsed) }
@@ -67,14 +69,14 @@ final class ActivityPresenterSpy: ActivityPresenterProtocol {
     func presentAcceptedActivity() {}
     func presentStartAgain() {}
     func presentMood() { moodCount += 1 }
-    func presentPhoto() {}
+    func presentPhoto() { photoCount += 1 }
     func presentCamera() {}
     func presentCameraClosed() {}
     func presentPermissionDenied() {}
     func presentCaptured(_ data: Data) {}
     func presentFlash(isOn: Bool) {}
     func presentAlertsDismissed() {}
-    func presentSummary() {}
+    func presentSummary() { summaryCount += 1 }
     func presentFlowFinished() { flowFinishedCount += 1 }
     func presentInProgress() { inProgressCount += 1 }
     func presentChallenge() {}
@@ -122,12 +124,14 @@ final class HapticsWorkerMock: HapticsWorkerProtocol {
     private(set) var startLoopCount = 0
     private(set) var intensities: [Double] = []
     private(set) var stopLoopCount = 0
+    private(set) var selectionTickCount = 0
     
     func prepareHaptics() { prepareCount += 1 }
     func startShakeLoop() { startLoopCount += 1 }
     func updateShakeIntensity(_ magnitude: Double) { intensities.append(magnitude) }
     func stopShakeLoopIfIdle(timeout: TimeInterval) {}
     func stopShakeLoop() { stopLoopCount += 1 }
+    func playSelectionTick() { selectionTickCount += 1 }
 }
 
 final class CoreMotionWorkerMock: CoreMotionWorkerProtocol {
@@ -203,6 +207,15 @@ final class WidgetWorkerMock: WidgetWorkerProtocol {
     func startLiveActivity(name: String, startDate: Date) async { startCalls.append((name, startDate)) }
     func stopLiveActivity(elapsed: TimeInterval) async { stopElapsed.append(elapsed) }
     func cancelLiveActivity() async { cancelCount += 1 }
+}
+
+/// Anota o que o Interactor de Feelings entregou ao Presenter, uma entrada por chamada.
+final class FeelingsPresenterSpy: FeelingsPresenterProtocol {
+    private(set) var presentedActivities: [[Activity]] = []
+
+    func presentFeelingsLoaded(activities: [Activity]) {
+        presentedActivities.append(activities)
+    }
 }
 
 //final class ProfilePresenterSpy: ProfilePresenterProtocol {
@@ -633,11 +646,77 @@ struct InteractorTests {
         let sut = makeActivitySUT()
         sut.interactor.timerStartDate = Date().addingTimeInterval(-10)
 
-        sut.interactor.completeActivity()
+        completeActivity(on: sut)
 
         #expect(sut.interactor.timerStartDate == nil)
         #expect(sut.interactor.timerElapsed >= 10)
         #expect(sut.presenter.moodCount == 1)
+    }
+
+    // MARK: ActivityInteractor (persistência ao longo do fluxo)
+
+    private func completeActivity(on sut: ActivitySUT,
+                                  category: ActivityCategory = .physical,
+                                  title: String = "Cardio sem fones",
+                                  subTitle: String = "Faça cardio",
+                                  description: String = "Porque faz bem") {
+        sut.interactor.completeActivity(currentCategory: category, title: title,
+                                        subTitle: subTitle, Description: description)
+    }
+
+    // Ao completar, a atividade já nasce no banco (não arquivada) e fica em `currentActivity`.
+    @Test func testingCompleteActivitySavesNonArchivedActivityInRepository() throws {
+        let sut = makeActivitySUT()
+
+        completeActivity(on: sut, category: .social)
+
+        let saved = try sut.repository.getAll()
+        #expect(saved.count == 1)
+        #expect(saved.first?.name == "Cardio sem fones")
+        #expect(saved.first?.activityDescription == "Faça cardio")
+        #expect(saved.first?.category == .social)
+        #expect(saved.first?.archived == false)
+        #expect(sut.interactor.currentActivity === saved.first)
+    }
+
+    @Test func testingSelectMoodUpdatesResultAndGoesToPhoto() {
+        let sut = makeActivitySUT()
+        completeActivity(on: sut)
+        let result = ActivityResult(time: 10, humor: .chill)
+        sut.interactor.result = result
+
+        sut.interactor.selectMood(humor: .frustrated)
+
+        #expect(result.humor == .frustrated)
+        #expect(sut.interactor.currentActivity?.result === result)
+        #expect(sut.presenter.photoCount == 1)
+    }
+
+    @Test func testingContinueFromPhotoStoresPhotoInResultAndGoesToSummary() {
+        let sut = makeActivitySUT()
+        completeActivity(on: sut)
+        let result = ActivityResult(time: 10, humor: .chill)
+        let photo = Data([0x01, 0x02])
+        sut.interactor.result = result
+        sut.interactor.selectedPhoto = photo
+
+        sut.interactor.continueFromPhoto()
+
+        #expect(result.photo == photo)
+        #expect(sut.interactor.currentActivity?.result === result)
+        #expect(sut.presenter.summaryCount == 1)
+    }
+
+    @Test func testingContinueFromPhotoWithoutPhotoKeepsResultPhotoNil() {
+        let sut = makeActivitySUT()
+        completeActivity(on: sut)
+        let result = ActivityResult(time: 10, humor: .chill)
+        sut.interactor.result = result
+
+        sut.interactor.continueFromPhoto()
+
+        #expect(result.photo == nil)
+        #expect(sut.presenter.summaryCount == 1)
     }
 
     // Sair do fluxo no meio (ou cancelar) descarta o tempo e não deixa o cronômetro rodando.
@@ -651,6 +730,19 @@ struct InteractorTests {
         #expect(sut.interactor.timerStartDate == nil)
         #expect(sut.interactor.timerElapsed == 0)
         #expect(sut.presenter.flowFinishedCount == 1)
+    }
+
+    // Ao finalizar, o estado do fluxo é limpo, mas o que já foi salvo continua no banco.
+    @Test func testingFinishActivityFlowClearsFlowStateAndKeepsSavedActivity() throws {
+        let sut = makeActivitySUT()
+        completeActivity(on: sut)
+        sut.interactor.result = ActivityResult(time: 10, humor: .chill)
+
+        sut.interactor.finishActivityFlow()
+
+        #expect(sut.interactor.currentActivity == nil)
+        #expect(sut.interactor.result == nil)
+        #expect(try sut.repository.getAll().count == 1)
     }
     
     
@@ -674,6 +766,16 @@ struct InteractorTests {
 
         #expect(sut.interactor.selectedHumor == .chill)
         #expect(sut.presenter.presentedHumors == [.chill])
+    }
+    
+    @Test func testingEachHumorChangePlaysOneSelectionTick() {
+        let sut = makeActivitySUT()
+ 
+        sut.interactor.nextHumor()
+        sut.interactor.nextHumor()
+        sut.interactor.previousHumor()
+ 
+        #expect(sut.haptics.selectionTickCount == 3)
     }
 
     // MARK: - ActivityInteractor (compartilhamento)
@@ -769,7 +871,7 @@ struct InteractorTests {
         let sut = makeActivitySUT()
         sut.interactor.timerStartDate = Date().addingTimeInterval(-10)
 
-        sut.interactor.completeActivity()
+        completeActivity(on: sut)
         await wait { sut.liveActivity.stopElapsed.count == 1 }
 
         #expect(sut.liveActivity.stopElapsed.count == 1)
@@ -786,6 +888,84 @@ struct InteractorTests {
 
         #expect(sut.liveActivity.cancelCount == 1)
         #expect(sut.liveActivity.stopElapsed.isEmpty)
+    }
+
+    // MARK: - FeelingsInteractor (carregar sentimentos)
+
+    private struct FeelingsSUT {
+        let interactor: FeelingsInteractor
+        let presenter: FeelingsPresenterSpy
+        let repository: GenericRepository<Activity>
+    }
+
+    private func makeFeelingsSUT() -> FeelingsSUT {
+        let presenter = FeelingsPresenterSpy()
+        let repository = makeActivityRepository()
+        let interactor = FeelingsInteractor(presenter: presenter, activityRepository: repository)
+        return FeelingsSUT(interactor: interactor, presenter: presenter, repository: repository)
+    }
+
+    /// `humor == nil` cria a atividade sem `ActivityResult`, como ela fica antes de o usuário escolher o humor.
+    private func makeFeelingActivity(named name: String, humor: Humor?, archived: Bool = false) -> Activity {
+        let result = humor.map { ActivityResult(time: 10, humor: $0) }
+        return Activity(category: .physical, result: result, name: name, description: "-", archived: archived)
+    }
+
+    @Test func testingLoadFeelingsWithEmptyDatabasePresentsEmptyList() {
+        let sut = makeFeelingsSUT()
+
+        sut.interactor.loadFeelings()
+
+        #expect(sut.presenter.presentedActivities.count == 1)
+        #expect(sut.presenter.presentedActivities.first?.isEmpty == true)
+    }
+
+    // Atividades sem resultado (em andamento, abandonadas ou arquivadas) não entram nos sentimentos.
+    @Test func testingLoadFeelingsPresentsOnlyActivitiesWithResult() throws {
+        let sut = makeFeelingsSUT()
+        try sut.repository.add(makeFeelingActivity(named: "Caminhada", humor: .calm))
+        try sut.repository.add(makeFeelingActivity(named: "Leitura", humor: .chill))
+        try sut.repository.add(makeFeelingActivity(named: "Sem resultado", humor: nil))
+        try sut.repository.add(makeFeelingActivity(named: "Arquivada", humor: nil, archived: true))
+
+        sut.interactor.loadFeelings()
+
+        let presented = try #require(sut.presenter.presentedActivities.first)
+        #expect(presented.map(\.name).sorted() == ["Caminhada", "Leitura"])
+    }
+
+    @Test func testingLoadFeelingsWithOnlyUnfinishedActivitiesPresentsEmptyList() throws {
+        let sut = makeFeelingsSUT()
+        try sut.repository.add(makeFeelingActivity(named: "Sem resultado", humor: nil))
+
+        sut.interactor.loadFeelings()
+
+        #expect(sut.presenter.presentedActivities.count == 1)
+        #expect(sut.presenter.presentedActivities.first?.isEmpty == true)
+    }
+
+    @Test func testingLoadFeelingsPresentsTheSameActivitiesStoredInRepository() throws {
+        let sut = makeFeelingsSUT()
+        let activity = makeFeelingActivity(named: "Caminhada", humor: .calm)
+        try sut.repository.add(activity)
+
+        sut.interactor.loadFeelings()
+
+        let presented = try #require(sut.presenter.presentedActivities.first)
+        #expect(presented.first === activity)
+        #expect(presented.first?.result?.humor == .calm)
+    }
+
+    // A tela chama `loadFeelings()` toda vez que aparece: cada chamada tem que refletir o banco naquele momento.
+    @Test func testingLoadFeelingsReflectsActivitiesAddedBetweenCalls() throws {
+        let sut = makeFeelingsSUT()
+        try sut.repository.add(makeFeelingActivity(named: "Caminhada", humor: .calm))
+        sut.interactor.loadFeelings()
+
+        try sut.repository.add(makeFeelingActivity(named: "Leitura", humor: .chill))
+        sut.interactor.loadFeelings()
+
+        #expect(sut.presenter.presentedActivities.map(\.count) == [1, 2])
     }
 
 //    // MARK: - ProfileInteractor (RF24/onboarding - perfil padrão)
