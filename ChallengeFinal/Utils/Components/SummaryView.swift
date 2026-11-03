@@ -7,7 +7,15 @@
 
 import SwiftUI
 
+enum SummaryStyle {
+    case activity
+    case display
+}
+
 struct SummaryView: View {
+    
+    /// Estilo do componente (para mudar com base no fluxo)
+    let style: SummaryStyle
     
     /// Título do desafio
     let title: String
@@ -19,7 +27,7 @@ struct SummaryView: View {
     var photo: Image? = nil
 
     /// Humor registrado
-    let humor: Humor
+    let humor: Humor?
 
     /// Toque em "finalizar".
     let onFinish: () -> Void
@@ -68,32 +76,47 @@ struct SummaryView: View {
         PhotoCard(photo: photo, height: 228)
             // O selo de humor fica "pendurado" no canto de cima, como no protótipo.
             .overlay(alignment: .topTrailing) {
-                EmojiLabelComponent(humor: humor, highlighted: true)
-                    .offset(x: 24, y: -28)
+                if let humor {
+                    EmojiLabelComponent(humor: humor, highlighted: true)
+                        .offset(x: 24, y: -28)
+                }
             }
     }
 
     // MARK: - Botões
 
     private var buttons: some View {
-        HStack(spacing: 12) {
-            CustomButtonComponent(
-                title: "finalizar",
-                icon: nil,
-                type: .secondary,
-                action: onFinish
-            )
-
+        VStack(spacing: 12) {
+            switch style {
+            case .activity:
+                CustomButtonComponent(
+                    title: "finalizar",
+                    icon: nil,
+                    type: .secondary,
+                    action: onFinish
+                )
+                .bold()
+            case .display:
+                CustomButtonComponent(
+                    title: "tirar outra foto",
+                    icon: "arrow.trianglehead.2.clockwise.rotate.90",
+                    type: .secondary,
+                    action: onFinish
+                )
+                .bold()
+            }
+            
             CustomButtonComponent(
                 title: "compartilhar",
                 icon: "square.and.arrow.up",
                 type: .secondary,
                 action: onShare
             )
+            .bold()
         }
     }
 }
 
 #Preview {
-    SummaryView(title: "", description: "", humor: .annoyed, onFinish: {}, onShare: {})
+    SummaryView(style: .activity,title: "testee", description: "teste", humor: .annoyed, onFinish: {}, onShare: {})
 }
