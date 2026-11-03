@@ -209,6 +209,15 @@ final class WidgetWorkerMock: WidgetWorkerProtocol {
     func cancelLiveActivity() async { cancelCount += 1 }
 }
 
+/// Anota o que o Interactor de Feelings entregou ao Presenter, uma entrada por chamada.
+final class FeelingsPresenterSpy: FeelingsPresenterProtocol {
+    private(set) var presentedActivities: [[Activity]] = []
+
+    func presentFeelingsLoaded(activities: [Activity]) {
+        presentedActivities.append(activities)
+    }
+}
+
 //final class ProfilePresenterSpy: ProfilePresenterProtocol {
 //    private(set) var presentedProfile: Profile?
 //    func presentProfile(_ profile: Profile) {
@@ -879,6 +888,84 @@ struct InteractorTests {
 
         #expect(sut.liveActivity.cancelCount == 1)
         #expect(sut.liveActivity.stopElapsed.isEmpty)
+    }
+
+    // MARK: - FeelingsInteractor (carregar sentimentos)
+
+    private struct FeelingsSUT {
+        let interactor: FeelingsInteractor
+        let presenter: FeelingsPresenterSpy
+        let repository: GenericRepository<Activity>
+    }
+
+    private func makeFeelingsSUT() -> FeelingsSUT {
+        let presenter = FeelingsPresenterSpy()
+        let repository = makeActivityRepository()
+        let interactor = FeelingsInteractor(presenter: presenter, activityRepository: repository)
+        return FeelingsSUT(interactor: interactor, presenter: presenter, repository: repository)
+    }
+
+    /// `humor == nil` cria a atividade sem `ActivityResult`, como ela fica antes de o usuário escolher o humor.
+    private func makeFeelingActivity(named name: String, humor: Humor?, archived: Bool = false) -> Activity {
+        let result = humor.map { ActivityResult(time: 10, humor: $0) }
+        return Activity(category: .physical, result: result, name: name, description: "-", archived: archived)
+    }
+
+    @Test func testingLoadFeelingsWithEmptyDatabasePresentsEmptyList() {
+        let sut = makeFeelingsSUT()
+
+        sut.interactor.loadFeelings()
+
+        #expect(sut.presenter.presentedActivities.count == 1)
+        #expect(sut.presenter.presentedActivities.first?.isEmpty == true)
+    }
+
+    // Atividades sem resultado (em andamento, abandonadas ou arquivadas) não entram nos sentimentos.
+    @Test func testingLoadFeelingsPresentsOnlyActivitiesWithResult() throws {
+        let sut = makeFeelingsSUT()
+        try sut.repository.add(makeFeelingActivity(named: "Caminhada", humor: .calm))
+        try sut.repository.add(makeFeelingActivity(named: "Leitura", humor: .chill))
+        try sut.repository.add(makeFeelingActivity(named: "Sem resultado", humor: nil))
+        try sut.repository.add(makeFeelingActivity(named: "Arquivada", humor: nil, archived: true))
+
+        sut.interactor.loadFeelings()
+
+        let presented = try #require(sut.presenter.presentedActivities.first)
+        #expect(presented.map(\.name).sorted() == ["Caminhada", "Leitura"])
+    }
+
+    @Test func testingLoadFeelingsWithOnlyUnfinishedActivitiesPresentsEmptyList() throws {
+        let sut = makeFeelingsSUT()
+        try sut.repository.add(makeFeelingActivity(named: "Sem resultado", humor: nil))
+
+        sut.interactor.loadFeelings()
+
+        #expect(sut.presenter.presentedActivities.count == 1)
+        #expect(sut.presenter.presentedActivities.first?.isEmpty == true)
+    }
+
+    @Test func testingLoadFeelingsPresentsTheSameActivitiesStoredInRepository() throws {
+        let sut = makeFeelingsSUT()
+        let activity = makeFeelingActivity(named: "Caminhada", humor: .calm)
+        try sut.repository.add(activity)
+
+        sut.interactor.loadFeelings()
+
+        let presented = try #require(sut.presenter.presentedActivities.first)
+        #expect(presented.first === activity)
+        #expect(presented.first?.result?.humor == .calm)
+    }
+
+    // A tela chama `loadFeelings()` toda vez que aparece: cada chamada tem que refletir o banco naquele momento.
+    @Test func testingLoadFeelingsReflectsActivitiesAddedBetweenCalls() throws {
+        let sut = makeFeelingsSUT()
+        try sut.repository.add(makeFeelingActivity(named: "Caminhada", humor: .calm))
+        sut.interactor.loadFeelings()
+
+        try sut.repository.add(makeFeelingActivity(named: "Leitura", humor: .chill))
+        sut.interactor.loadFeelings()
+
+        #expect(sut.presenter.presentedActivities.map(\.count) == [1, 2])
     }
 
 //    // MARK: - ProfileInteractor (RF24/onboarding - perfil padrão)

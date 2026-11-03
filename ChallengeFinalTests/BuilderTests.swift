@@ -69,6 +69,54 @@ struct BuilderTests {
     }
     
 
+    // MARK: - Feelings
+
+    @Test func testingFeelingsCoordinatorStartsWithoutCachedView() {
+        let coordinator = FeelingsCoordinator()
+        
+        #expect(coordinator.cached == nil)
+    }
+    
+    @Test func testingFeelingsBuilding() async {
+        let coordinator = FeelingsCoordinator()
+        _ = coordinator.startFeelingsView(context: modelContainer.mainContext)
+        
+        #expect(coordinator.cached != nil)
+    }
+    
+    @Test func testingFeelingsViewIsCachedAcrossCalls() async {
+        let coordinator = FeelingsCoordinator()
+        let first = coordinator.startFeelingsView(context: modelContainer.mainContext)
+        let second = coordinator.startFeelingsView(context: modelContainer.mainContext)
+        
+        // Mesma instância de store = a view não foi reconstruída.
+        #expect(first.store === second.store)
+    }
+    
+    @Test func testingFeelingsCoordinatorReusesInjectedView() async {
+        let context = modelContainer.mainContext
+        let view = FeelingsBuilder.build(context: context)
+        let coordinator = FeelingsCoordinator(cached: view)
+        
+        let started = coordinator.startFeelingsView(context: context)
+        
+        #expect(started.store === view.store)
+    }
+    
+    // O Builder liga Interactor -> Presenter -> Store: carregar pelo interactor da view enche a store da mesma view.
+    @Test func testingFeelingsBuilderWiresInteractorToStore() throws {
+        let context = modelContainer.mainContext
+        let result = ActivityResult(time: 5, humor: .calm)
+        let activity = Activity(category: .physical, result: result, name: "Caminhada", description: "-", archived: false)
+        try GenericRepository<Activity>(context: context).add(activity)
+        let view = FeelingsBuilder.build(context: context)
+        
+        view.interactor.loadFeelings()
+        
+        #expect(view.store.feelings[.calm]?.count == 1)
+        #expect(view.store.feelings[.calm]?.first === activity)
+    }
+
 //    @Test func testingProfileBuilding() async throws {
 //        let builder: ProfileBuilderProtocol = createProfileBuilder()
 //        let viewConfig = builder.buildConfig()

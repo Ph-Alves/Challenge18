@@ -7,6 +7,7 @@
 
 import Foundation
 import Testing
+import SwiftData
 @testable import ChallengeFinal
 
 @Suite("Tests for all stores in the project")
@@ -161,6 +162,57 @@ struct StoreTests {
 
         #expect(store.timeText == "00:00:00")
     }
+    // MARK: - FeelingsStore
+
+    // SwiftData precisa de um container carregado para criar `Activity` e `ActivityResult`.
+    let modelContainer: ModelContainer = {
+        let schema = Schema([Activity.self, ActivityResult.self, Profile.self])
+        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        return try! ModelContainer(for: schema, configurations: config)
+    }()
+
+    private func makeFeelingActivity(named name: String, humor: Humor) -> Activity {
+        let result = ActivityResult(time: 10, humor: humor)
+        return Activity(category: .physical, result: result, name: name, description: "-", archived: false)
+    }
+
+    @Test func testingFeelingsStoreStartsEmpty() {
+        let store = FeelingsStore()
+
+        #expect(store.feelings.isEmpty)
+    }
+
+    @Test func testingPresentFeelingsLoadedStoresFeelings() {
+        let store = FeelingsStore()
+        let walk = makeFeelingActivity(named: "Caminhada", humor: .calm)
+        let read = makeFeelingActivity(named: "Leitura", humor: .chill)
+
+        store.presentFeelingsLoaded(feelings: [.calm: [walk], .chill: [read]])
+
+        #expect(store.feelings.count == 2)
+        #expect(store.feelings[.calm]?.first === walk)
+        #expect(store.feelings[.chill]?.first === read)
+    }
+
+    @Test func testingPresentFeelingsLoadedReplacesPreviousFeelings() {
+        let store = FeelingsStore()
+        store.presentFeelingsLoaded(feelings: [.calm: [makeFeelingActivity(named: "Caminhada", humor: .calm)]])
+
+        store.presentFeelingsLoaded(feelings: [.chill: [makeFeelingActivity(named: "Leitura", humor: .chill)]])
+
+        #expect(store.feelings[.calm] == nil)
+        #expect(store.feelings[.chill]?.count == 1)
+    }
+
+    @Test func testingPresentFeelingsLoadedWithEmptyDictionaryClearsStore() {
+        let store = FeelingsStore()
+        store.presentFeelingsLoaded(feelings: [.calm: [makeFeelingActivity(named: "Caminhada", humor: .calm)]])
+
+        store.presentFeelingsLoaded(feelings: [:])
+
+        #expect(store.feelings.isEmpty)
+    }
+
 //    // MARK: - ProfileStore
 //
 //    @Test func testingProfileStoreStartsWithDefaultProfile() async throws {
