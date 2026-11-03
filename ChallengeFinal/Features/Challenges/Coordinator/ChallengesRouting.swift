@@ -16,16 +16,8 @@ import SwiftData
 protocol ChallengesRouting: AnyObject {
     // View já montada (evita recriar a lista a cada render da TabView)
     var cached: ChallengesView? { get set }
-    // Pilha de telas acima da listagem (hoje, só o resumo)
-    var path: [ChallengesRoute] { get }
 
     // Monta (ou devolve do cache) a view da listagem
     func startChallengesFlow(context: ModelContext) -> ChallengesView
-    
-    // Abre o resumo de um desafio concluído
-//    func showSummary()
-    
-    // Volta para a listagem
-    func popToList()
 }
 

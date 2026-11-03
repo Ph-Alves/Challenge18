@@ -14,7 +14,7 @@ protocol ChallengesStoreProtocol: AnyObject {
     func displayChallenges(_ challenges: [Activity], selectedCategory: ActivityCategory?, emptyState: ChallengesEmptyState?) //quem decide qual estado vazio mostrar é o Presenter, e a Store só guarda o que recebe, e um estado vazio pode ser ou de não ter nada ou de não ter achado nada na busca.
     func displayArchivedChallenges(_ challenges: [Activity], emptyState: ChallengesEmptyState?) //lista de conteúdos dentro da sheet
     func displayArchivedSheet(isPresented: Bool) //bool pra ativar a sheet.
-    func displaySummary(_ activity: Activity)
+    func displaySummary(_ activity: Activity?)
     func displayError(_ message: String?)
 }
 
@@ -42,6 +42,9 @@ final class ChallengesStore: ChallengesStoreProtocol {
     private(set) var archivedChallenges: [Activity] = []
     private(set) var archivedEmptyState: ChallengesEmptyState?
     private(set) var isArchivedPresented = false
+    
+    //Summary. Desafio aberto no resumo. `nil` = sheet fechada.
+    private(set) var selectedChallenge: Activity?
 
     // Erro. `nil` = sem alerta.
     private(set) var errorMessage: String?
@@ -67,15 +70,46 @@ final class ChallengesStore: ChallengesStoreProtocol {
     func displayArchivedSheet(isPresented: Bool) {
         self.isArchivedPresented = isPresented
     }
+    
+    
+    func displaySummary(_ activity: Activity?) {
+        selectedChallenge = activity
+    }
 
     func displayError(_ message: String?) {
         self.errorMessage = message
     }
-
-    // MARK: - Navigation
-
-    func displaySummary(_ activity: Activity) {
-        coordinator.showSummary(activity)
-    }
 }
 
+// MARK: - Estados vazios da aba Desafios
+// O Presenter decide QUAL estado mostrar; os textos ficam aqui.
+// Não é dado do banco: é só o que a tela mostra quando não há o que listar.
+enum ChallengesEmptyState: Equatable {
+    case noCompleted   // ainda não concluiu nenhum desafio
+    case noResults     // tem desafios, mas a busca/filtro não encontrou nenhum
+    case noArchived    // nenhum desafio arquivado
+
+    var icon: String {
+        switch self {
+        case .noCompleted: "flag.checkered"
+        case .noResults: "magnifyingglass"
+        case .noArchived: "archivebox"
+        }
+    }
+
+    var title: String {
+        switch self {
+        case .noCompleted: "nenhum desafio concluído ainda"
+        case .noResults: "nenhum desafio encontrado"
+        case .noArchived: "nada arquivado por aqui"
+        }
+    }
+
+    var message: String {
+        switch self {
+        case .noCompleted: "conclua um desafio na home e ele aparece aqui."
+        case .noResults: "tente buscar por outro título ou trocar a categoria."
+        case .noArchived: "quando você arquivar um desafio no sorteio, ele aparece nesta lista."
+        }
+    }
+}

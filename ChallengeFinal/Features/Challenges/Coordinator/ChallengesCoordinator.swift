@@ -27,12 +27,8 @@ enum ChallengesRoute: Hashable {
 @MainActor
 @Observable
 final class ChallengesCoordinator: ChallengesRouting {
-    
-    // Não é `private(set)` porque o NavigationStack precisa de binding:
-    // o gesto/botão de voltar do sistema remove o último item sozinho.
-    var path: [ChallengesRoute] = []
 
-    // Mesmo motivo da Home: a view não deve ser recriada a cada render.
+    //a view não deve ser recriada a cada render.
     @ObservationIgnored var cached: ChallengesView?
 
     func startChallengesFlow(context: ModelContext) -> ChallengesView {
@@ -43,13 +39,5 @@ final class ChallengesCoordinator: ChallengesRouting {
         let view = ChallengesBuilder.build(routing: self, context: context)
         cached = view
         return view
-    }
-
-//    func showSummary(_ summary: ChallengeSummaryViewModel) {
-//        path.append(.summary(summary))
-//    }
-
-    func popToList() {
-        path.removeAll()
     }
 }
