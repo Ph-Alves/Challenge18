@@ -166,7 +166,7 @@ struct ActivityView: View {
     /// Os dados já estão na Store desde os steps anteriores (desafio, foto, humor).
     /// Ao aparecer, pede ao Interactor para gerar a imagem do story.
     private var summaryStepView: some View {
-        SummaryStepView(
+        SummaryView(
             title: store.activitySubtitle ?? "",
             description: store.activityDescription ?? "",
             photo: store.photo,
