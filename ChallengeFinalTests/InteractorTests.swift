@@ -212,22 +212,67 @@ final class WidgetWorkerMock: WidgetWorkerProtocol {
 /// Anota o que o Interactor de Feelings entregou ao Presenter, uma entrada por chamada.
 final class FeelingsPresenterSpy: FeelingsPresenterProtocol {
     private(set) var presentedActivities: [[Activity]] = []
+    private(set) var selectedActivities: [Activity] = []
+    private(set) var cameraPresentedCount = 0
+    private(set) var cameraClosedCount = 0
+    private(set) var permissionDeniedCount = 0
+    private(set) var photoUpdates: [Data] = []
+    private(set) var flashStates: [Bool] = []
+    private(set) var presentedErrors: [Error] = []
+    private(set) var alertsDismissedCount = 0
+    private(set) var storyActivities: [Activity] = []
+    private(set) var shareSheetURL: URL?
+    private(set) var shareFinished: Bool?
 
     func presentFeelingsLoaded(activities: [Activity]) {
         presentedActivities.append(activities)
     }
 
-    func presentSelectedActivity(activity: Activity) {}
-    func presentCamera() {}
-    func presentCameraClosed() {}
-    func presentPermissionDenied() {}
-    func presentPhotoUpdated(_ data: Data) {}
-    func presentFlash(isOn: Bool) {}
-    func presentError(_ error: Error) {}
-    func presentAlertsDismissed() {}
-    func presentStory(for activity: Activity) {}
-    func presentShareSheet(fileURL: URL) {}
-    func presentShareFinished(completed: Bool) {}
+    func presentSelectedActivity(activity: Activity) { selectedActivities.append(activity) }
+    func presentCamera() { cameraPresentedCount += 1 }
+    func presentCameraClosed() { cameraClosedCount += 1 }
+    func presentPermissionDenied() { permissionDeniedCount += 1 }
+    func presentPhotoUpdated(_ data: Data) { photoUpdates.append(data) }
+    func presentFlash(isOn: Bool) { flashStates.append(isOn) }
+    func presentError(_ error: Error) { presentedErrors.append(error) }
+    func presentAlertsDismissed() { alertsDismissedCount += 1 }
+    func presentStory(for activity: Activity) { storyActivities.append(activity) }
+    func presentShareSheet(fileURL: URL) { shareSheetURL = fileURL }
+    func presentShareFinished(completed: Bool) { shareFinished = completed }
+}
+
+/// Câmera falsa configurável: o teste escolhe a permissão e o resultado de cada operação.
+/// Tudo responde na hora (sem fila), então o teste não precisa esperar.
+final class ConfigurableCameraWorkerMock: CameraWorkerProtocol {
+    var permission: CameraPermission = .authorized
+    var permissionGranted = true
+    var startResult: Result<Void, Error> = .success(())
+    var switchResult: Result<Void, Error> = .success(())
+    var captureResult: Result<Data, Error> = .success(Data([1, 2, 3]))
+    private(set) var requestPermissionCount = 0
+    private(set) var startCount = 0
+    private(set) var stopCount = 0
+    private(set) var switchCount = 0
+    private(set) var captureFlashValues: [Bool] = []
+
+    func permissionStatus() -> CameraPermission { permission }
+    func requestPermission(completion: @escaping (Bool) -> Void) {
+        requestPermissionCount += 1
+        completion(permissionGranted)
+    }
+    func startSession(completion: @escaping (Result<Void, Error>) -> Void) {
+        startCount += 1
+        completion(startResult)
+    }
+    func stopSession() { stopCount += 1 }
+    func switchCamera(completion: @escaping (Result<Void, Error>) -> Void) {
+        switchCount += 1
+        completion(switchResult)
+    }
+    func capturePhoto(flash: Bool, completion: @escaping (Result<Data, Error>) -> Void) {
+        captureFlashValues.append(flash)
+        completion(captureResult)
+    }
 }
 
 //final class ProfilePresenterSpy: ProfilePresenterProtocol {
@@ -908,13 +953,17 @@ struct InteractorTests {
         let interactor: FeelingsInteractor
         let presenter: FeelingsPresenterSpy
         let repository: GenericRepository<Activity>
+        let camera: ConfigurableCameraWorkerMock
+        let share: ShareWorkerMock
     }
 
     private func makeFeelingsSUT() -> FeelingsSUT {
         let presenter = FeelingsPresenterSpy()
         let repository = makeActivityRepository()
-        let interactor = FeelingsInteractor(presenter: presenter, activityRepository: repository)
-        return FeelingsSUT(interactor: interactor, presenter: presenter, repository: repository)
+        let camera = ConfigurableCameraWorkerMock()
+        let share = ShareWorkerMock()
+        let interactor = FeelingsInteractor(presenter: presenter, activityRepository: repository, camera: camera, share: share)
+        return FeelingsSUT(interactor: interactor, presenter: presenter, repository: repository, camera: camera, share: share)
     }
 
     /// `humor == nil` cria a atividade sem `ActivityResult`, como ela fica antes de o usuário escolher o humor.
@@ -978,6 +1027,271 @@ struct InteractorTests {
         sut.interactor.loadFeelings()
 
         #expect(sut.presenter.presentedActivities.map(\.count) == [1, 2])
+    }
+
+    // MARK: - FeelingsInteractor (selecionar e apagar)
+
+    @Test func testingSelectActivityPresentsTheSelectedActivity() throws {
+        let sut = makeFeelingsSUT()
+        let activity = makeFeelingActivity(named: "Caminhada", humor: .calm)
+        try sut.repository.add(activity)
+
+        sut.interactor.selectActivity(activity: activity)
+
+        #expect(sut.presenter.selectedActivities.count == 1)
+        #expect(sut.presenter.selectedActivities.first === activity)
+        #expect(sut.interactor.selectedActivity === activity)
+    }
+
+    // Depois de apagar, a lista é recarregada sem a atividade apagada.
+    @Test func testingDeleteActivityRemovesItAndReloadsFeelings() throws {
+        let sut = makeFeelingsSUT()
+        let walk = makeFeelingActivity(named: "Caminhada", humor: .calm)
+        let read = makeFeelingActivity(named: "Leitura", humor: .chill)
+        try sut.repository.add(walk)
+        try sut.repository.add(read)
+
+        sut.interactor.deleteActivity(activity: walk)
+
+        #expect(try sut.repository.getAll().map(\.name) == ["Leitura"])
+        #expect(sut.presenter.presentedActivities.last?.map(\.name) == ["Leitura"])
+    }
+
+    // MARK: - FeelingsInteractor (tirar outra foto)
+
+    @Test func testingRetakePhotoWithPermissionOpensCameraAndStartsSession() {
+        let sut = makeFeelingsSUT()
+
+        sut.interactor.retakePhoto()
+
+        #expect(sut.presenter.cameraPresentedCount == 1)
+        #expect(sut.camera.startCount == 1)
+        #expect(sut.presenter.permissionDeniedCount == 0)
+    }
+
+    // O flash atual é mostrado assim que a câmera abre.
+    @Test func testingRetakePhotoPresentsCurrentFlashState() {
+        let sut = makeFeelingsSUT()
+
+        sut.interactor.retakePhoto()
+
+        #expect(sut.presenter.flashStates == [false])
+    }
+
+    @Test func testingRetakePhotoWithDeniedPermissionPresentsDeniedAndKeepsCameraOff() {
+        let sut = makeFeelingsSUT()
+        sut.camera.permission = .denied
+
+        sut.interactor.retakePhoto()
+
+        #expect(sut.presenter.permissionDeniedCount == 1)
+        #expect(sut.presenter.cameraPresentedCount == 0)
+        #expect(sut.camera.startCount == 0)
+    }
+
+    @Test func testingRetakePhotoAsksPermissionWhenNotDeterminedAndGranted() {
+        let sut = makeFeelingsSUT()
+        sut.camera.permission = .notDetermined
+        sut.camera.permissionGranted = true
+
+        sut.interactor.retakePhoto()
+
+        #expect(sut.camera.requestPermissionCount == 1)
+        #expect(sut.presenter.cameraPresentedCount == 1)
+        #expect(sut.camera.startCount == 1)
+    }
+
+    @Test func testingRetakePhotoAsksPermissionWhenNotDeterminedAndRefused() {
+        let sut = makeFeelingsSUT()
+        sut.camera.permission = .notDetermined
+        sut.camera.permissionGranted = false
+
+        sut.interactor.retakePhoto()
+
+        #expect(sut.camera.requestPermissionCount == 1)
+        #expect(sut.presenter.permissionDeniedCount == 1)
+        #expect(sut.camera.startCount == 0)
+    }
+
+    // Se a sessão não liga, a tela fecha e o erro aparece.
+    @Test func testingRetakePhotoWhenSessionFailsClosesCameraAndPresentsError() {
+        let sut = makeFeelingsSUT()
+        sut.camera.startResult = .failure(CameraError.deviceUnavailable)
+
+        sut.interactor.retakePhoto()
+
+        #expect(sut.presenter.cameraClosedCount == 1)
+        #expect(sut.camera.stopCount == 1)
+        #expect(sut.presenter.presentedErrors.count == 1)
+    }
+
+    @Test func testingCloseCameraStopsSessionAndClosesScreen() {
+        let sut = makeFeelingsSUT()
+
+        sut.interactor.closeCamera()
+
+        #expect(sut.camera.stopCount == 1)
+        #expect(sut.presenter.cameraClosedCount == 1)
+    }
+
+    // Fechar sem fotografar não pode mexer na foto que a atividade já tinha.
+    @Test func testingCloseCameraKeepsTheCurrentPhoto() throws {
+        let sut = makeFeelingsSUT()
+        let activity = makeFeelingActivity(named: "Caminhada", humor: .calm)
+        activity.result?.photo = Data([9])
+        try sut.repository.add(activity)
+        sut.interactor.selectActivity(activity: activity)
+
+        sut.interactor.retakePhoto()
+        sut.interactor.closeCamera()
+
+        #expect(activity.result?.photo == Data([9]))
+        #expect(sut.presenter.photoUpdates.isEmpty)
+    }
+
+    @Test func testingToggleFlashAlternatesAndPresentsEachState() {
+        let sut = makeFeelingsSUT()
+
+        sut.interactor.toggleFlash()
+        sut.interactor.toggleFlash()
+
+        #expect(sut.presenter.flashStates == [true, false])
+    }
+
+    @Test func testingSwitchCameraFailurePresentsError() {
+        let sut = makeFeelingsSUT()
+        sut.camera.switchResult = .failure(CameraError.configurationFailed)
+
+        sut.interactor.switchCamera()
+
+        #expect(sut.camera.switchCount == 1)
+        #expect(sut.presenter.presentedErrors.count == 1)
+    }
+
+    @Test func testingSwitchCameraSuccessPresentsNothing() {
+        let sut = makeFeelingsSUT()
+
+        sut.interactor.switchCamera()
+
+        #expect(sut.presenter.presentedErrors.isEmpty)
+    }
+
+    // O ponto principal da feature: a foto nova substitui a antiga e vai para o banco.
+    @Test func testingTakePhotoReplacesActivityPhotoAndPresentsUpdate() throws {
+        let sut = makeFeelingsSUT()
+        let activity = makeFeelingActivity(named: "Caminhada", humor: .calm)
+        activity.result?.photo = Data([9])
+        try sut.repository.add(activity)
+        sut.interactor.selectActivity(activity: activity)
+        let newPhoto = Data([1, 2, 3])
+        sut.camera.captureResult = .success(newPhoto)
+
+        sut.interactor.takePhoto()
+
+        #expect(activity.result?.photo == newPhoto)
+        #expect(try sut.repository.getAll().first?.result?.photo == newPhoto)
+        #expect(sut.presenter.photoUpdates == [newPhoto])
+        #expect(sut.camera.stopCount == 1)
+    }
+
+    // O story usa a foto, então precisa ser gerado de novo com a nova.
+    @Test func testingTakePhotoRendersTheStoryAgain() throws {
+        let sut = makeFeelingsSUT()
+        let activity = makeFeelingActivity(named: "Caminhada", humor: .calm)
+        try sut.repository.add(activity)
+        sut.interactor.selectActivity(activity: activity)
+
+        sut.interactor.takePhoto()
+
+        #expect(sut.presenter.storyActivities.count == 1)
+        #expect(sut.presenter.storyActivities.first === activity)
+    }
+
+    @Test func testingTakePhotoUsesCurrentFlashState() {
+        let sut = makeFeelingsSUT()
+        sut.interactor.toggleFlash()
+
+        sut.interactor.takePhoto()
+
+        #expect(sut.camera.captureFlashValues == [true])
+    }
+
+    @Test func testingTakePhotoFailurePresentsErrorAndKeepsPhoto() throws {
+        let sut = makeFeelingsSUT()
+        let activity = makeFeelingActivity(named: "Caminhada", humor: .calm)
+        activity.result?.photo = Data([9])
+        try sut.repository.add(activity)
+        sut.interactor.selectActivity(activity: activity)
+        sut.camera.captureResult = .failure(CameraError.captureFailed)
+
+        sut.interactor.takePhoto()
+
+        #expect(sut.presenter.presentedErrors.count == 1)
+        #expect(sut.presenter.photoUpdates.isEmpty)
+        #expect(activity.result?.photo == Data([9]))
+    }
+
+    // Sem atividade selecionada não há onde guardar a foto: nada quebra.
+    @Test func testingTakePhotoWithoutSelectedActivityDoesNotCrash() {
+        let sut = makeFeelingsSUT()
+
+        sut.interactor.takePhoto()
+
+        #expect(sut.presenter.storyActivities.isEmpty)
+    }
+
+    @Test func testingDismissAlertsAsksPresenterToClearThem() {
+        let sut = makeFeelingsSUT()
+
+        sut.interactor.dismissAlerts()
+
+        #expect(sut.presenter.alertsDismissedCount == 1)
+    }
+
+    // MARK: - FeelingsInteractor (compartilhar)
+
+    private func makeStoryImage() -> UIImage {
+        UIGraphicsImageRenderer(size: CGSize(width: 4, height: 4)).image { _ in }
+    }
+
+    @Test func testingShareStoryWritesFileAndPresentsShareSheet() {
+        let sut = makeFeelingsSUT()
+        let image = makeStoryImage()
+
+        sut.interactor.shareStory(image)
+
+        #expect(sut.share.receivedImage === image)
+        #expect(sut.presenter.shareSheetURL == sut.share.url)
+        #expect(sut.presenter.presentedErrors.isEmpty)
+    }
+
+    // Imagem nula = a renderização falhou: mostra o erro em vez de abrir um sheet vazio.
+    @Test func testingShareStoryWithoutImagePresentsRenderError() {
+        let sut = makeFeelingsSUT()
+
+        sut.interactor.shareStory(nil)
+
+        #expect(sut.presenter.shareSheetURL == nil)
+        #expect(sut.presenter.presentedErrors.first as? ShareError == .renderFailed)
+    }
+
+    @Test func testingShareStoryWhenWorkerFailsPresentsErrorAndNoSheet() {
+        let sut = makeFeelingsSUT()
+        sut.share.errorToThrow = ShareError.encodingFailed
+
+        sut.interactor.shareStory(makeStoryImage())
+
+        #expect(sut.presenter.shareSheetURL == nil)
+        #expect(sut.presenter.presentedErrors.first as? ShareError == .encodingFailed)
+    }
+
+    @Test(arguments: [true, false])
+    func testingDidFinishSharingPresentsResult(completed: Bool) {
+        let sut = makeFeelingsSUT()
+
+        sut.interactor.didFinishSharing(completed: completed)
+
+        #expect(sut.presenter.shareFinished == completed)
     }
 
 //    // MARK: - ProfileInteractor (RF24/onboarding - perfil padrão)

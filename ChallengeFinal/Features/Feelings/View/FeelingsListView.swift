@@ -10,7 +10,7 @@ import SwiftUI
 struct FeelingsListView: View {
     
     /// Activities agrupadas por humor, vindas da Store.
-    let feelings: [Humor: [Activity]]
+    let feelings: [Humor: [(activity: Activity, image: Image?)]]
     let redirectAction: (Activity) -> Void
     
     var body: some View {
@@ -27,7 +27,7 @@ struct FeelingsListView: View {
     private struct listSection: View {
         
         var humor: Humor
-        var activities: [Activity]?
+        var activities: [(activity: Activity, image: Image?)]?
         var count: Int
         var redirectAction: (Activity) -> Void
         @State private var isSelected: Bool = false
@@ -64,14 +64,11 @@ struct FeelingsListView: View {
             if let activities, isSelected {
                 ScrollView([.horizontal]) {
                     HStack(spacing: 13) {
-                        ForEach(activities, id: \.self) { activity in
-                            RegisteredActivityCard(title: activity.name, image: activity.result?.photo
-                                .flatMap { UIImage(data: $0) }
-                                .map { Image(uiImage: $0) },
-                                humor: activity.result?.humor)
+                        ForEach(activities, id: \.activity) { entry in
+                            RegisteredActivityCard(title: entry.activity.name, image: entry.image, humor: entry.activity.result?.humor)
                                 .frame(width: 150)
                                 .onTapGesture {
-                                    redirectAction(activity)
+                                    redirectAction(entry.activity)
                                 }
                         }
                     }
@@ -84,5 +81,5 @@ struct FeelingsListView: View {
 }
 
 #Preview {
-    FeelingsListView(feelings: [.annoyed: [Activity(category: .cognitive, result: nil, name: "teste", description: "", archived: false)]], redirectAction: {_ in})
+    FeelingsListView(feelings: [.annoyed: [(activity: Activity(category: .cognitive, result: nil, name: "teste", description: "", archived: false), image: nil)]], redirectAction: {_ in})
 }

@@ -249,8 +249,8 @@ struct PresenterTests {
         presenter.presentFeelingsLoaded(activities: activities)
 
         // A ordem original é mantida dentro de cada grupo.
-        #expect(store.feelings[.calm]?.map(\.name) == ["A", "C"])
-        #expect(store.feelings[.chill]?.map(\.name) == ["B"])
+        #expect(store.feelings[.calm]?.map(\.activity.name) == ["A", "C"])
+        #expect(store.feelings[.chill]?.map(\.activity.name) == ["B"])
         #expect(store.feelings.count == 2)
     }
 
@@ -282,7 +282,7 @@ struct PresenterTests {
         presenter.presentFeelingsLoaded(activities: activities)
 
         #expect(store.feelings.count == 1)
-        #expect(store.feelings[.calm]?.map(\.name) == ["Caminhada"])
+        #expect(store.feelings[.calm]?.map(\.activity.name) == ["Caminhada"])
     }
 
     @Test func testingPresentFeelingsLoadedKeepsTheSameActivityInstances() {
@@ -291,7 +291,7 @@ struct PresenterTests {
 
         presenter.presentFeelingsLoaded(activities: [activity])
 
-        #expect(store.feelings[.calm]?.first === activity)
+        #expect(store.feelings[.calm]?.first?.activity === activity)
     }
 
     @Test(arguments: Humor.allCases)
@@ -311,7 +311,7 @@ struct PresenterTests {
         presenter.presentFeelingsLoaded(activities: [makeFeelingActivity(named: "B", humor: .chill)])
 
         #expect(store.feelings[.calm] == nil)
-        #expect(store.feelings[.chill]?.map(\.name) == ["B"])
+        #expect(store.feelings[.chill]?.map(\.activity.name) == ["B"])
     }
 
     // O store é weak: se a tela já foi embora, apresentar não pode quebrar.
@@ -325,6 +325,253 @@ struct PresenterTests {
         presenter.presentFeelingsLoaded(activities: [makeFeelingActivity(named: "A", humor: .calm)])
 
         #expect(presenter.store == nil)
+    }
+
+    // MARK: - FeelingsPresenter (foto de cada atividade)
+
+    /// Bytes de uma imagem válida (PNG 4x4), como a câmera entregaria.
+    private func makePhotoData() -> Data {
+        UIGraphicsImageRenderer(size: CGSize(width: 4, height: 4))
+            .image { context in
+                UIColor.red.setFill()
+                context.fill(CGRect(x: 0, y: 0, width: 4, height: 4))
+            }
+            .pngData()!
+    }
+
+    private func makeFeelingActivity(named name: String, humor: Humor, photo: Data?) -> Activity {
+        let activity = makeFeelingActivity(named: name, humor: humor)
+        activity.result?.photo = photo
+        return activity
+    }
+
+    // A conversão acontece aqui, uma vez, para a lista só mostrar.
+    @Test func testingPresentFeelingsLoadedConvertsPhotoDataToImage() {
+        let (presenter, store) = createFeelingsPresenterAndStore()
+        let activity = makeFeelingActivity(named: "Caminhada", humor: .calm, photo: makePhotoData())
+
+        presenter.presentFeelingsLoaded(activities: [activity])
+
+        #expect(store.feelings[.calm]?.first?.image != nil)
+    }
+
+    @Test func testingPresentFeelingsLoadedWithoutPhotoHasNoImage() {
+        let (presenter, store) = createFeelingsPresenterAndStore()
+
+        presenter.presentFeelingsLoaded(activities: [makeFeelingActivity(named: "Caminhada", humor: .calm)])
+
+        #expect(store.feelings[.calm]?.count == 1)
+        #expect(store.feelings[.calm]?.first?.image == nil)
+    }
+
+    // Bytes que não formam uma imagem não derrubam a lista: o card só fica sem foto.
+    @Test func testingPresentFeelingsLoadedWithInvalidPhotoDataHasNoImage() {
+        let (presenter, store) = createFeelingsPresenterAndStore()
+        let activity = makeFeelingActivity(named: "Caminhada", humor: .calm, photo: Data([1, 2, 3]))
+
+        presenter.presentFeelingsLoaded(activities: [activity])
+
+        #expect(store.feelings[.calm]?.first?.image == nil)
+    }
+
+    // Cada atividade fica com a sua própria foto.
+    @Test func testingPresentFeelingsLoadedKeepsEachImageWithItsActivity() {
+        let (presenter, store) = createFeelingsPresenterAndStore()
+        let withPhoto = makeFeelingActivity(named: "Com foto", humor: .calm, photo: makePhotoData())
+        let withoutPhoto = makeFeelingActivity(named: "Sem foto", humor: .calm)
+
+        presenter.presentFeelingsLoaded(activities: [withPhoto, withoutPhoto])
+
+        let entries = store.feelings[.calm] ?? []
+        #expect(entries.first(where: { $0.activity === withPhoto })?.image != nil)
+        #expect(entries.first(where: { $0.activity === withoutPhoto })?.image == nil)
+    }
+
+    @Test func testingImageFromValidDataIsNotNil() {
+        let (presenter, _) = createFeelingsPresenterAndStore()
+
+        #expect(presenter.image(from: makePhotoData()) != nil)
+    }
+
+    @Test func testingImageFromNilOrInvalidDataIsNil() {
+        let (presenter, _) = createFeelingsPresenterAndStore()
+
+        #expect(presenter.image(from: nil) == nil)
+        #expect(presenter.image(from: Data([1, 2, 3])) == nil)
+    }
+
+    // MARK: - FeelingsPresenter (detalhe)
+
+    @Test func testingPresentSelectedActivityOpensDetailWithPhotoAndStory() {
+        let (presenter, store) = createFeelingsPresenterAndStore()
+        let activity = makeFeelingActivity(named: "Caminhada", humor: .calm, photo: makePhotoData())
+
+        presenter.presentSelectedActivity(activity: activity)
+
+        #expect(store.presentDetail)
+        #expect(store.selectedActivity === activity)
+        #expect(store.selectedPhoto != nil)
+        #expect(store.storyImage != nil)
+    }
+
+    @Test func testingPresentSelectedActivityWithoutPhotoStillRendersStory() {
+        let (presenter, store) = createFeelingsPresenterAndStore()
+
+        presenter.presentSelectedActivity(activity: makeFeelingActivity(named: "Caminhada", humor: .calm))
+
+        #expect(store.selectedPhoto == nil)
+        #expect(store.storyImage != nil)
+    }
+
+    // MARK: - FeelingsPresenter (tirar outra foto)
+
+    @Test func testingPresentCameraOpensCameraAndClearsError() {
+        let (presenter, store) = createFeelingsPresenterAndStore()
+        store.presentError("antigo")
+
+        presenter.presentCamera()
+
+        #expect(store.isCameraPresented)
+        #expect(store.errorMessage == nil)
+    }
+
+    @Test func testingPresentCameraClosedClosesCamera() {
+        let (presenter, store) = createFeelingsPresenterAndStore()
+        presenter.presentCamera()
+
+        presenter.presentCameraClosed()
+
+        #expect(store.isCameraPresented == false)
+    }
+
+    @Test func testingPresentPermissionDeniedClosesCameraAndShowsMessage() {
+        let (presenter, store) = createFeelingsPresenterAndStore()
+        presenter.presentCamera()
+
+        presenter.presentPermissionDenied()
+
+        #expect(store.isCameraPresented == false)
+        #expect(store.errorMessage?.isEmpty == false)
+    }
+
+    @Test(arguments: [(true, "bolt.fill"), (false, "bolt.slash")])
+    func testingPresentFlashChoosesIcon(isOn: Bool, icon: String) {
+        let (presenter, store) = createFeelingsPresenterAndStore()
+
+        presenter.presentFlash(isOn: isOn)
+
+        #expect(store.cameraFlashIcon == icon)
+    }
+
+    @Test func testingPresentPhotoUpdatedShowsNewPhotoAndClosesCamera() {
+        let (presenter, store) = createFeelingsPresenterAndStore()
+        presenter.presentCamera()
+
+        presenter.presentPhotoUpdated(makePhotoData())
+
+        #expect(store.selectedPhoto != nil)
+        #expect(store.isCameraPresented == false)
+        #expect(store.errorMessage == nil)
+    }
+
+    @Test func testingPresentPhotoUpdatedWithInvalidDataShowsErrorAndKeepsOldPhoto() {
+        let (presenter, store) = createFeelingsPresenterAndStore()
+        let activity = makeFeelingActivity(named: "Caminhada", humor: .calm, photo: makePhotoData())
+        presenter.presentSelectedActivity(activity: activity)
+        presenter.presentCamera()
+
+        presenter.presentPhotoUpdated(Data([1, 2, 3]))
+
+        #expect(store.selectedPhoto != nil)
+        #expect(store.isCameraPresented == false)
+        #expect(store.errorMessage?.isEmpty == false)
+    }
+
+    // A foto trocada também aparece no card da lista, sem recarregar tudo.
+    @Test func testingPresentPhotoUpdatedRefreshesTheListCard() {
+        let (presenter, store) = createFeelingsPresenterAndStore()
+        let activity = makeFeelingActivity(named: "Caminhada", humor: .calm)
+        presenter.presentFeelingsLoaded(activities: [activity])
+        presenter.presentSelectedActivity(activity: activity)
+        #expect(store.feelings[.calm]?.first?.image == nil)
+
+        presenter.presentPhotoUpdated(makePhotoData())
+
+        #expect(store.feelings[.calm]?.first?.image != nil)
+    }
+
+    @Test(arguments: [
+        CameraError.deviceUnavailable,
+        CameraError.sessionNotRunning,
+        CameraError.configurationFailed,
+        CameraError.captureFailed
+    ])
+    func testingPresentErrorTranslatesCameraErrorsToMessage(error: CameraError) {
+        let (presenter, store) = createFeelingsPresenterAndStore()
+
+        presenter.presentError(error)
+
+        #expect(store.errorMessage?.isEmpty == false)
+    }
+
+    // Toque duplo no disparo não é problema do usuário: nenhum alerta.
+    @Test func testingPresentErrorIgnoresCaptureInProgress() {
+        let (presenter, store) = createFeelingsPresenterAndStore()
+
+        presenter.presentError(CameraError.captureInProgress)
+
+        #expect(store.errorMessage == nil)
+    }
+
+    @Test func testingPresentErrorTranslatesShareAndLibraryErrors() {
+        let (presenter, store) = createFeelingsPresenterAndStore()
+
+        presenter.presentError(ShareError.renderFailed)
+        let shareMessage = store.errorMessage
+        presenter.presentError(PhotoLibraryError.loadFailed)
+
+        #expect(shareMessage == "Não foi possível preparar a imagem para compartilhar. Tente novamente.")
+        #expect(store.errorMessage == "Não foi possível carregar a foto da galeria. Tente outra.")
+    }
+
+    @Test func testingPresentAlertsDismissedClearsError() {
+        let (presenter, store) = createFeelingsPresenterAndStore()
+        presenter.presentError(CameraError.captureFailed)
+
+        presenter.presentAlertsDismissed()
+
+        #expect(store.errorMessage == nil)
+    }
+
+    // MARK: - FeelingsPresenter (compartilhar)
+
+    @Test func testingPresentStoryRendersImageForActivity() {
+        let (presenter, store) = createFeelingsPresenterAndStore()
+
+        presenter.presentStory(for: makeFeelingActivity(named: "Caminhada", humor: .calm, photo: makePhotoData()))
+
+        #expect(store.storyImage != nil)
+    }
+
+    @Test func testingPresentShareSheetOpensSheetWithFileAndClearsError() {
+        let (presenter, store) = createFeelingsPresenterAndStore()
+        let url = URL(fileURLWithPath: "/tmp/story.png")
+        presenter.presentError(CameraError.captureFailed)
+
+        presenter.presentShareSheet(fileURL: url)
+
+        #expect(store.shareItem?.activityItems.first as? URL == url)
+        #expect(store.errorMessage == nil)
+    }
+
+    @Test(arguments: [true, false])
+    func testingPresentShareFinishedClosesSheet(completed: Bool) {
+        let (presenter, store) = createFeelingsPresenterAndStore()
+        presenter.presentShareSheet(fileURL: URL(fileURLWithPath: "/tmp/story.png"))
+
+        presenter.presentShareFinished(completed: completed)
+
+        #expect(store.shareItem == nil)
     }
 
 //    // MARK: - ProfilePresenter

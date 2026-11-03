@@ -14,7 +14,7 @@ struct FeelingsGraphView: View {
     // MARK: - Variables
     
     /// Activities agrupadas por humor, vindas da Store.
-    let feelings: [Humor: [Activity]]
+    let feelings: [Humor: [(activity: Activity, image: Image?)]]
     
     /// Pede os dados ao Interactor. Chamada quando a tela aparece.
     let loadAction: () -> Void

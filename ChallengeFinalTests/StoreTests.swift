@@ -8,6 +8,8 @@
 import Foundation
 import Testing
 import SwiftData
+import SwiftUI
+import UIKit
 @testable import ChallengeFinal
 
 @Suite("Tests for all stores in the project")
@@ -187,18 +189,18 @@ struct StoreTests {
         let walk = makeFeelingActivity(named: "Caminhada", humor: .calm)
         let read = makeFeelingActivity(named: "Leitura", humor: .chill)
 
-        store.presentFeelingsLoaded(feelings: [.calm: [walk], .chill: [read]])
+        store.presentFeelingsLoaded(feelings: [.calm: [(walk, nil)], .chill: [(read, nil)]])
 
         #expect(store.feelings.count == 2)
-        #expect(store.feelings[.calm]?.first === walk)
-        #expect(store.feelings[.chill]?.first === read)
+        #expect(store.feelings[.calm]?.first?.activity === walk)
+        #expect(store.feelings[.chill]?.first?.activity === read)
     }
 
     @Test func testingPresentFeelingsLoadedReplacesPreviousFeelings() {
         let store = FeelingsStore()
-        store.presentFeelingsLoaded(feelings: [.calm: [makeFeelingActivity(named: "Caminhada", humor: .calm)]])
+        store.presentFeelingsLoaded(feelings: [.calm: [(makeFeelingActivity(named: "Caminhada", humor: .calm), nil)]])
 
-        store.presentFeelingsLoaded(feelings: [.chill: [makeFeelingActivity(named: "Leitura", humor: .chill)]])
+        store.presentFeelingsLoaded(feelings: [.chill: [(makeFeelingActivity(named: "Leitura", humor: .chill), nil)]])
 
         #expect(store.feelings[.calm] == nil)
         #expect(store.feelings[.chill]?.count == 1)
@@ -206,11 +208,115 @@ struct StoreTests {
 
     @Test func testingPresentFeelingsLoadedWithEmptyDictionaryClearsStore() {
         let store = FeelingsStore()
-        store.presentFeelingsLoaded(feelings: [.calm: [makeFeelingActivity(named: "Caminhada", humor: .calm)]])
+        store.presentFeelingsLoaded(feelings: [.calm: [(makeFeelingActivity(named: "Caminhada", humor: .calm), nil)]])
 
         store.presentFeelingsLoaded(feelings: [:])
 
         #expect(store.feelings.isEmpty)
+    }
+
+    @Test func testingPresentFeelingsLoadedKeepsImageNextToActivity() {
+        let store = FeelingsStore()
+        let walk = makeFeelingActivity(named: "Caminhada", humor: .calm)
+        let image = Image(systemName: "photo")
+
+        store.presentFeelingsLoaded(feelings: [.calm: [(walk, image), (makeFeelingActivity(named: "Leitura", humor: .calm), nil)]])
+
+        #expect(store.feelings[.calm]?.first?.image != nil)
+        #expect(store.feelings[.calm]?.last?.image == nil)
+    }
+
+    @Test func testingFeelingsStoreStartsWithDetailAndCameraClosed() {
+        let store = FeelingsStore()
+
+        #expect(store.presentDetail == false)
+        #expect(store.selectedActivity == nil)
+        #expect(store.selectedPhoto == nil)
+        #expect(store.isCameraPresented == false)
+        #expect(store.cameraFlashIcon == "bolt.slash")
+        #expect(store.errorMessage == nil)
+        #expect(store.storyImage == nil)
+        #expect(store.shareItem == nil)
+    }
+
+    @Test func testingPresentActivityDetailsOpensDetail() {
+        let store = FeelingsStore()
+        let walk = makeFeelingActivity(named: "Caminhada", humor: .calm)
+
+        store.presentActivityDetails(activity: walk, photo: Image(systemName: "photo"))
+
+        #expect(store.presentDetail)
+        #expect(store.selectedActivity === walk)
+        #expect(store.selectedPhoto != nil)
+    }
+
+    @Test func testingReturnToFeelingsClosesDetail() {
+        let store = FeelingsStore()
+        store.presentActivityDetails(activity: makeFeelingActivity(named: "Caminhada", humor: .calm), photo: nil)
+
+        store.returnToFeelings()
+
+        #expect(store.presentDetail == false)
+    }
+
+    // A foto nova vale para o detalhe e para o card da mesma atividade na lista.
+    @Test func testingPresentPhotoUpdatesSelectedPhotoAndMatchingListEntry() {
+        let store = FeelingsStore()
+        let walk = makeFeelingActivity(named: "Caminhada", humor: .calm)
+        let read = makeFeelingActivity(named: "Leitura", humor: .chill)
+        store.presentFeelingsLoaded(feelings: [.calm: [(walk, nil)], .chill: [(read, nil)]])
+        store.presentActivityDetails(activity: walk, photo: nil)
+
+        store.presentPhoto(Image(systemName: "photo"))
+
+        #expect(store.selectedPhoto != nil)
+        #expect(store.feelings[.calm]?.first?.image != nil)
+        // As outras atividades não mudam.
+        #expect(store.feelings[.chill]?.first?.image == nil)
+    }
+
+    @Test func testingPresentPhotoWithoutSelectedActivityOnlySetsSelectedPhoto() {
+        let store = FeelingsStore()
+        let walk = makeFeelingActivity(named: "Caminhada", humor: .calm)
+        store.presentFeelingsLoaded(feelings: [.calm: [(walk, nil)]])
+
+        store.presentPhoto(Image(systemName: "photo"))
+
+        #expect(store.selectedPhoto != nil)
+        #expect(store.feelings[.calm]?.first?.image == nil)
+    }
+
+    @Test func testingFeelingsStoreCameraState() {
+        let store = FeelingsStore()
+
+        store.presentCamera(isPresented: true)
+        store.presentFlashIcon("bolt.fill")
+        store.presentError("Ops")
+
+        #expect(store.isCameraPresented)
+        #expect(store.cameraFlashIcon == "bolt.fill")
+        #expect(store.errorMessage == "Ops")
+
+        store.presentCamera(isPresented: false)
+        store.presentError(nil)
+
+        #expect(store.isCameraPresented == false)
+        #expect(store.errorMessage == nil)
+    }
+
+    @Test func testingFeelingsStoreShareState() {
+        let store = FeelingsStore()
+        let item = ShareItem(activityItems: [URL(fileURLWithPath: "/tmp/story.png")])
+
+        store.presentStoryImage(UIImage())
+        store.presentShareSheet(item)
+
+        #expect(store.storyImage != nil)
+        #expect(store.shareItem?.id == item.id)
+
+        store.presentShareSheet(nil)
+
+        #expect(store.shareItem == nil)
     }
 
 //    // MARK: - ProfileStore

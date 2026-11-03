@@ -58,15 +58,17 @@ final class FeelingsPresenter: FeelingsPresenterProtocol {
 
     // MARK: - Carregamento
 
-    /// Agrupa as Activities por humor (ex.: `.happy` -> [Activity, Activity]),
-    /// que é o formato que o gráfico precisa para contar cada barra.
+    /// Agrupa as Activities por humor (ex.: `.happy` -> [(Activity, Image?), ...]),
+    /// que é o formato que o gráfico precisa para contar cada barra. Cada atividade
+    /// já vai com a foto convertida, para a lista não processar nada.
     func presentFeelingsLoaded(activities: [Activity]) {
         // Descarta as que não têm humor registrado.
         let withHumor = activities.filter { $0.result?.humor != nil }
         // O `!` é seguro: o filtro acima garante que `result` existe.
         // Uso dicionário aqui por que consigo definir por chave valor e definir os labels
         // Não preciso de ordenação, então mais um motivo para se usar.
-        let grouped = Dictionary(grouping: withHumor) { $0.result!.humor }
+        let entries = withHumor.map { (activity: $0, image: image(from: $0.result?.photo)) }
+        let grouped = Dictionary(grouping: entries) { $0.activity.result!.humor }
         
         store?.presentFeelingsLoaded(feelings: grouped)
     }

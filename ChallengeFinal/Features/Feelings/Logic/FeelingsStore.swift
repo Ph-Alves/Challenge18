@@ -7,12 +7,13 @@
 
 import SwiftUI
 
+
 // MARK: - Protocol
 
 /// O que o Presenter enxerga da Store: dados prontos para a tela.
 protocol FeelingsStoreProtocol: AnyObject {
     // MARK: Carregamento
-    func presentFeelingsLoaded(feelings: [Humor: [Activity]])
+    func presentFeelingsLoaded(feelings: [Humor: [(activity: Activity, image: Image?)]])
     func presentActivityDetails(activity: Activity, photo: Image?)
     func returnToFeelings()
     // MARK: Câmera
@@ -34,9 +35,9 @@ final class FeelingsStore: FeelingsStoreProtocol {
     
     // MARK: - Variables
     
-    /// Activities agrupadas por humor. É daqui que o gráfico tira a altura de cada barra.
+    /// Activities (com a foto de cada uma) agrupadas por humor. É daqui que o gráfico tira a altura de cada barra.
     /// Não é `private(set)` porque a View também escreve nas propriedades que ligam a bindings (`$store.presentDetail`).
-    var feelings: [Humor: [Activity]] = [:]
+    var feelings: [Humor: [(activity: Activity, image: Image?)]] = [:]
     
     var presentDetail: Bool = false
     
@@ -66,7 +67,7 @@ final class FeelingsStore: FeelingsStoreProtocol {
 
     /// Guarda os sentimentos já agrupados. Como a Store é `@Observable`,
     /// o gráfico que lê `feelings` se atualiza sozinho.
-    func presentFeelingsLoaded(feelings: [Humor: [Activity]]) {
+    func presentFeelingsLoaded(feelings: [Humor: [(activity: Activity, image: Image?)]]) {
         self.feelings = feelings
     }
     
@@ -94,8 +95,16 @@ final class FeelingsStore: FeelingsStoreProtocol {
         errorMessage = message
     }
     
+    /// Troca a foto do detalhe e a do card da mesma atividade na lista.
     func presentPhoto(_ photo: Image?) {
         selectedPhoto = photo
+        
+        guard let selectedActivity else { return }
+        for (humor, entries) in feelings {
+            if let index = entries.firstIndex(where: { $0.activity === selectedActivity }) {
+                feelings[humor]?[index].image = photo
+            }
+        }
     }
 
     // MARK: - Compartilhar
