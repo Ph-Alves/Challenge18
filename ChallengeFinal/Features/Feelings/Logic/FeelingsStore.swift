@@ -5,16 +5,24 @@
 //  Created by Paulo Henrique Costa Alves on 02/11/26.
 //
 
-import Foundation
+import SwiftUI
 
 // MARK: - Protocol
 
 /// O que o Presenter enxerga da Store: dados prontos para a tela.
 protocol FeelingsStoreProtocol: AnyObject {
-    // MARK: Carregamento (implementado em FeelingsStore+mood.swift)
+    // MARK: Carregamento
     func presentFeelingsLoaded(feelings: [Humor: [Activity]])
-    func presentActivityDetails(activity: Activity)
+    func presentActivityDetails(activity: Activity, photo: Image?)
     func returnToFeelings()
+    // MARK: Câmera
+    func presentCamera(isPresented: Bool)
+    func presentFlashIcon(_ icon: String)
+    func presentError(_ message: String?)
+    func presentPhoto(_ photo: Image?)
+    // MARK: Compartilhar
+    func presentStoryImage(_ image: UIImage?)
+    func presentShareSheet(_ item: ShareItem?)
 }
 
 // MARK: - Class
@@ -27,11 +35,76 @@ final class FeelingsStore: FeelingsStoreProtocol {
     // MARK: - Variables
     
     /// Activities agrupadas por humor. É daqui que o gráfico tira a altura de cada barra.
-    /// Não é `private(set)` porque quem escreve é o `FeelingsStore+mood.swift`
-    /// (extensions não podem ter propriedades armazenadas, por isso fica aqui).
+    /// Não é `private(set)` porque a View também escreve nas propriedades que ligam a bindings (`$store.presentDetail`).
     var feelings: [Humor: [Activity]] = [:]
     
     var presentDetail: Bool = false
     
     var selectedActivity: Activity? = nil
+    
+    /// Foto da atividade selecionada, já pronta para exibir. `nil` = sem foto.
+    var selectedPhoto: Image? = nil
+    
+    // MARK: Câmera (a foto nova da atividade selecionada)
+    
+    var isCameraPresented: Bool = false
+    
+    var cameraFlashIcon: String = "bolt.slash"
+    
+    /// Mensagem do alerta de erro/permissão. `nil` = sem alerta.
+    var errorMessage: String? = nil
+    
+    // MARK: Compartilhar
+    
+    /// Imagem do story da atividade selecionada, já renderizada. `nil` = ainda não existe ou falhou.
+    var storyImage: UIImage? = nil
+    
+    /// Controla o `.sheet(item:)` do share sheet. `nil` = fechado.
+    var shareItem: ShareItem? = nil
+
+    // MARK: - Carregamento
+
+    /// Guarda os sentimentos já agrupados. Como a Store é `@Observable`,
+    /// o gráfico que lê `feelings` se atualiza sozinho.
+    func presentFeelingsLoaded(feelings: [Humor: [Activity]]) {
+        self.feelings = feelings
+    }
+    
+    func presentActivityDetails(activity: Activity, photo: Image?) {
+        self.selectedActivity = activity
+        self.selectedPhoto = photo
+        self.presentDetail = true
+    }
+    
+    func returnToFeelings() {
+        self.presentDetail = false
+    }
+
+    // MARK: - Câmera (tirar outra foto)
+
+    func presentCamera(isPresented: Bool) {
+        isCameraPresented = isPresented
+    }
+    
+    func presentFlashIcon(_ icon: String) {
+        cameraFlashIcon = icon
+    }
+    
+    func presentError(_ message: String?) {
+        errorMessage = message
+    }
+    
+    func presentPhoto(_ photo: Image?) {
+        selectedPhoto = photo
+    }
+
+    // MARK: - Compartilhar
+
+    func presentStoryImage(_ image: UIImage?) {
+        storyImage = image
+    }
+    
+    func presentShareSheet(_ item: ShareItem?) {
+        shareItem = item
+    }
 }
