@@ -65,7 +65,10 @@ struct FeelingsListView: View {
                 ScrollView([.horizontal]) {
                     HStack(spacing: 13) {
                         ForEach(activities, id: \.self) { activity in
-                            RegisteredActivityCard(title: activity.name, humor: activity.result?.humor)
+                            RegisteredActivityCard(title: activity.name, image: activity.result?.photo
+                                .flatMap { UIImage(data: $0) }
+                                .map { Image(uiImage: $0) },
+                                humor: activity.result?.humor)
                                 .frame(width: 150)
                                 .onTapGesture {
                                     redirectAction(activity)

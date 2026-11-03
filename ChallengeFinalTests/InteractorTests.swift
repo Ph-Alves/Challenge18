@@ -216,6 +216,18 @@ final class FeelingsPresenterSpy: FeelingsPresenterProtocol {
     func presentFeelingsLoaded(activities: [Activity]) {
         presentedActivities.append(activities)
     }
+
+    func presentSelectedActivity(activity: Activity) {}
+    func presentCamera() {}
+    func presentCameraClosed() {}
+    func presentPermissionDenied() {}
+    func presentPhotoUpdated(_ data: Data) {}
+    func presentFlash(isOn: Bool) {}
+    func presentError(_ error: Error) {}
+    func presentAlertsDismissed() {}
+    func presentStory(for activity: Activity) {}
+    func presentShareSheet(fileURL: URL) {}
+    func presentShareFinished(completed: Bool) {}
 }
 
 //final class ProfilePresenterSpy: ProfilePresenterProtocol {
