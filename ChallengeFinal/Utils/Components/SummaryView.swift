@@ -1,18 +1,14 @@
 //
-//  SummaryStepView.swift
+//  SummaryView.swift
 //  ChallengeFinal
 //
-//  Created by Raquel Souza on 27/10/26.
+//  Created by Paulo Henrique Costa Alves on 03/11/26.
 //
 
 import SwiftUI
 
-/// Step `.summary` do fluxo de Activity (tela "desafio finalizado" do protótipo).
-///
-struct SummaryStepView: View {
-
-    // MARK: - Variables
-
+struct SummaryView: View {
+    
     /// Título do desafio
     let title: String
 
@@ -30,9 +26,7 @@ struct SummaryStepView: View {
 
     /// Toque em "compartilhar".
     let onShare: () -> Void
-
-    // MARK: - View
-
+    
     var body: some View {
         VStack(spacing: 0) {
             header
@@ -50,9 +44,7 @@ struct SummaryStepView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.white)
     }
-
-    // MARK: - Título
-
+    
     private var header: some View {
         VStack(spacing: 0) {
             ChallengeCircle(text: "você conseguiu!", size: .small)
@@ -102,25 +94,6 @@ struct SummaryStepView: View {
     }
 }
 
-// MARK: - Previews
-
-#Preview("Sem foto") {
-    SummaryStepView(
-        title: "menos distração, mais foco",
-        description: "sem redes sociais, seu cardio vira um momento para cuidar do corpo e desacelerar a mente.",
-        humor: .frustrated,
-        onFinish: { print("finalizar") },
-        onShare: { print("compartilhar") }
-    )
-}
-
-#Preview("Com foto") {
-    SummaryStepView(
-        title: "menos distração, mais foco",
-        description: "sem redes sociais, seu cardio vira um momento para cuidar do corpo e desacelerar a mente.",
-        photo: Image(systemName: "person.crop.square.fill"), // só para visualizar
-        humor: .calm,
-        onFinish: { print("finalizar") },
-        onShare: { print("compartilhar") }
-    )
+#Preview {
+    SummaryView(title: "", description: "", humor: .annoyed, onFinish: {}, onShare: {})
 }
