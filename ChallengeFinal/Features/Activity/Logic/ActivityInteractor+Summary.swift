@@ -67,7 +67,7 @@ extension ActivityInteractor {
     ///
     /// Guardamos em `result` para que o story e o que for salvo no banco
     /// sejam sempre o MESMO objeto, mesmo se a tela aparecer de novo.
-    private func makeResultIfNeeded() -> ActivityResult {
+    func makeResultIfNeeded() -> ActivityResult {
         if let result {
             return result
         }

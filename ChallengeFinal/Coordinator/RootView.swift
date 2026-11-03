@@ -26,7 +26,7 @@ struct RootView: View {
                 // feature ainda não existe
             }
             Tab("Feelings", systemImage: "triangle.fill", value: AppTab.feelings) {
-                FeelingsSummaryView()
+                coordinator.feelingsCoordinator.startFeelingsView(context: context)
             }
             Tab("Profile", systemImage: "seal.fill", value: AppTab.profile) {
                 // feature ainda não existe
