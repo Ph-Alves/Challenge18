@@ -223,6 +223,110 @@ struct PresenterTests {
 
         #expect(store.errorMessage == "Não foi possível preparar a imagem para compartilhar. Tente novamente.")
     }
+    // MARK: - FeelingsPresenter (agrupar por humor)
+
+    // Mesmo cuidado dos outros: o presenter guarda o store como weak, então o teste segura o store.
+    private func createFeelingsPresenterAndStore() -> (presenter: FeelingsPresenter, store: FeelingsStore) {
+        let store = FeelingsStore()
+        let presenter = FeelingsPresenter(store: store)
+        return (presenter, store)
+    }
+
+    /// `humor == nil` cria a atividade sem `ActivityResult`.
+    private func makeFeelingActivity(named name: String, humor: Humor?) -> Activity {
+        let result = humor.map { ActivityResult(time: 10, humor: $0) }
+        return Activity(category: .physical, result: result, name: name, description: "-", archived: false)
+    }
+
+    @Test func testingPresentFeelingsLoadedGroupsActivitiesByHumor() {
+        let (presenter, store) = createFeelingsPresenterAndStore()
+        let activities = [
+            makeFeelingActivity(named: "A", humor: .calm),
+            makeFeelingActivity(named: "B", humor: .chill),
+            makeFeelingActivity(named: "C", humor: .calm)
+        ]
+
+        presenter.presentFeelingsLoaded(activities: activities)
+
+        // A ordem original é mantida dentro de cada grupo.
+        #expect(store.feelings[.calm]?.map(\.name) == ["A", "C"])
+        #expect(store.feelings[.chill]?.map(\.name) == ["B"])
+        #expect(store.feelings.count == 2)
+    }
+
+    @Test func testingPresentFeelingsLoadedLeavesOutHumorsWithoutActivities() {
+        let (presenter, store) = createFeelingsPresenterAndStore()
+
+        presenter.presentFeelingsLoaded(activities: [makeFeelingActivity(named: "A", humor: .calm)])
+
+        // A View usa `?? 0` para esses humores.
+        #expect(store.feelings[.locked] == nil)
+        #expect(store.feelings[.frustrated] == nil)
+    }
+
+    @Test func testingPresentFeelingsLoadedWithNoActivitiesLeavesStoreEmpty() {
+        let (presenter, store) = createFeelingsPresenterAndStore()
+
+        presenter.presentFeelingsLoaded(activities: [])
+
+        #expect(store.feelings.isEmpty)
+    }
+
+    @Test func testingPresentFeelingsLoadedIgnoresActivitiesWithoutResult() {
+        let (presenter, store) = createFeelingsPresenterAndStore()
+        let activities = [
+            makeFeelingActivity(named: "Sem resultado", humor: nil),
+            makeFeelingActivity(named: "Caminhada", humor: .calm)
+        ]
+
+        presenter.presentFeelingsLoaded(activities: activities)
+
+        #expect(store.feelings.count == 1)
+        #expect(store.feelings[.calm]?.map(\.name) == ["Caminhada"])
+    }
+
+    @Test func testingPresentFeelingsLoadedKeepsTheSameActivityInstances() {
+        let (presenter, store) = createFeelingsPresenterAndStore()
+        let activity = makeFeelingActivity(named: "Caminhada", humor: .calm)
+
+        presenter.presentFeelingsLoaded(activities: [activity])
+
+        #expect(store.feelings[.calm]?.first === activity)
+    }
+
+    @Test(arguments: Humor.allCases)
+    func testingPresentFeelingsLoadedUsesActivityHumorAsKey(humor: Humor) {
+        let (presenter, store) = createFeelingsPresenterAndStore()
+
+        presenter.presentFeelingsLoaded(activities: [makeFeelingActivity(named: "A", humor: humor)])
+
+        #expect(Array(store.feelings.keys) == [humor])
+    }
+
+    // Cada carga substitui a anterior, não soma.
+    @Test func testingPresentFeelingsLoadedReplacesPreviousFeelings() {
+        let (presenter, store) = createFeelingsPresenterAndStore()
+        presenter.presentFeelingsLoaded(activities: [makeFeelingActivity(named: "A", humor: .calm)])
+
+        presenter.presentFeelingsLoaded(activities: [makeFeelingActivity(named: "B", humor: .chill)])
+
+        #expect(store.feelings[.calm] == nil)
+        #expect(store.feelings[.chill]?.map(\.name) == ["B"])
+    }
+
+    // O store é weak: se a tela já foi embora, apresentar não pode quebrar.
+    @Test func testingPresentFeelingsLoadedWithoutStoreDoesNotCrash() {
+        let presenter: FeelingsPresenter
+        do {
+            let store = FeelingsStore()
+            presenter = FeelingsPresenter(store: store)
+        }
+
+        presenter.presentFeelingsLoaded(activities: [makeFeelingActivity(named: "A", humor: .calm)])
+
+        #expect(presenter.store == nil)
+    }
+
 //    // MARK: - ProfilePresenter
 //
 //    @Test func testingProfileFetchDataDelegatesToInteractor() async throws {

@@ -7,7 +7,12 @@
 
 import Foundation
 
+// MARK: - Carregamento
+
 extension FeelingsStore {
+    
+    /// Guarda os sentimentos já agrupados. Como a Store é `@Observable`,
+    /// o gráfico que lê `feelings` se atualiza sozinho.
     func presentFeelingsLoaded(feelings: [Humor: [Activity]]) {
         self.feelings = feelings
     }
