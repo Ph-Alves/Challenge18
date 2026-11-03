@@ -223,6 +223,7 @@ final class FeelingsPresenterSpy: FeelingsPresenterProtocol {
     private(set) var storyActivities: [Activity] = []
     private(set) var shareSheetURL: URL?
     private(set) var shareFinished: Bool?
+    private(set) var detailVisibilityChanges: [Bool] = []
 
     func presentFeelingsLoaded(activities: [Activity]) {
         presentedActivities.append(activities)
@@ -236,6 +237,7 @@ final class FeelingsPresenterSpy: FeelingsPresenterProtocol {
     func presentFlash(isOn: Bool) { flashStates.append(isOn) }
     func presentError(_ error: Error) { presentedErrors.append(error) }
     func presentAlertsDismissed() { alertsDismissedCount += 1 }
+    func presentDetailVisibility(isVisible: Bool) { detailVisibilityChanges.append(isVisible) }
     func presentStory(for activity: Activity) { storyActivities.append(activity) }
     func presentShareSheet(fileURL: URL) { shareSheetURL = fileURL }
     func presentShareFinished(completed: Bool) { shareFinished = completed }
@@ -1059,23 +1061,68 @@ struct InteractorTests {
 
     // MARK: - FeelingsInteractor (tirar outra foto)
 
-    @Test func testingRetakePhotoWithPermissionOpensCameraAndStartsSession() {
+    // Primeiro o detalhe fecha: a câmera só abre quando o sheet terminou de fechar.
+    @Test func testingRetakePhotoWithPermissionOnlyHidesDetailAtFirst() {
         let sut = makeFeelingsSUT()
 
         sut.interactor.retakePhoto()
 
-        #expect(sut.presenter.cameraPresentedCount == 1)
-        #expect(sut.camera.startCount == 1)
+        #expect(sut.presenter.detailVisibilityChanges == [false])
+        #expect(sut.interactor.isRetakingPhoto)
+        #expect(sut.presenter.cameraPresentedCount == 0)
+        #expect(sut.camera.startCount == 0)
         #expect(sut.presenter.permissionDeniedCount == 0)
     }
 
-    // O flash atual é mostrado assim que a câmera abre.
-    @Test func testingRetakePhotoPresentsCurrentFlashState() {
+    @Test func testingDetailDismissedWhileRetakingOpensCameraAndStartsSession() {
         let sut = makeFeelingsSUT()
-
         sut.interactor.retakePhoto()
 
+        sut.interactor.detailDismissed()
+
+        #expect(sut.presenter.cameraPresentedCount == 1)
+        #expect(sut.camera.startCount == 1)
+    }
+
+    // O sheet também fecha por conta própria (arrastando, ou no "xmark"): nada de câmera.
+    @Test func testingDetailDismissedWithoutRetakingDoesNotOpenCamera() {
+        let sut = makeFeelingsSUT()
+
+        sut.interactor.detailDismissed()
+
+        #expect(sut.presenter.cameraPresentedCount == 0)
+        #expect(sut.camera.startCount == 0)
+    }
+
+    // O flash atual é mostrado assim que a câmera abre.
+    @Test func testingDetailDismissedWhileRetakingPresentsCurrentFlashState() {
+        let sut = makeFeelingsSUT()
+        sut.interactor.retakePhoto()
+
+        sut.interactor.detailDismissed()
+
         #expect(sut.presenter.flashStates == [false])
+    }
+
+    // Câmera fechada (com foto ou sem): o detalhe volta, uma vez só.
+    @Test func testingCameraDismissedWhileRetakingBringsDetailBack() {
+        let sut = makeFeelingsSUT()
+        sut.interactor.retakePhoto()
+        sut.interactor.detailDismissed()
+
+        sut.interactor.cameraDismissed()
+        sut.interactor.cameraDismissed()
+
+        #expect(sut.presenter.detailVisibilityChanges == [false, true])
+        #expect(sut.interactor.isRetakingPhoto == false)
+    }
+
+    @Test func testingCameraDismissedWithoutRetakingKeepsDetailAsIs() {
+        let sut = makeFeelingsSUT()
+
+        sut.interactor.cameraDismissed()
+
+        #expect(sut.presenter.detailVisibilityChanges.isEmpty)
     }
 
     @Test func testingRetakePhotoWithDeniedPermissionPresentsDeniedAndKeepsCameraOff() {
@@ -1087,6 +1134,9 @@ struct InteractorTests {
         #expect(sut.presenter.permissionDeniedCount == 1)
         #expect(sut.presenter.cameraPresentedCount == 0)
         #expect(sut.camera.startCount == 0)
+        // O detalhe fica aberto para mostrar o alerta.
+        #expect(sut.presenter.detailVisibilityChanges.isEmpty)
+        #expect(sut.interactor.isRetakingPhoto == false)
     }
 
     @Test func testingRetakePhotoAsksPermissionWhenNotDeterminedAndGranted() {
@@ -1095,6 +1145,7 @@ struct InteractorTests {
         sut.camera.permissionGranted = true
 
         sut.interactor.retakePhoto()
+        sut.interactor.detailDismissed()
 
         #expect(sut.camera.requestPermissionCount == 1)
         #expect(sut.presenter.cameraPresentedCount == 1)
@@ -1111,6 +1162,7 @@ struct InteractorTests {
         #expect(sut.camera.requestPermissionCount == 1)
         #expect(sut.presenter.permissionDeniedCount == 1)
         #expect(sut.camera.startCount == 0)
+        #expect(sut.presenter.detailVisibilityChanges.isEmpty)
     }
 
     // Se a sessão não liga, a tela fecha e o erro aparece.
@@ -1119,6 +1171,7 @@ struct InteractorTests {
         sut.camera.startResult = .failure(CameraError.deviceUnavailable)
 
         sut.interactor.retakePhoto()
+        sut.interactor.detailDismissed()
 
         #expect(sut.presenter.cameraClosedCount == 1)
         #expect(sut.camera.stopCount == 1)

@@ -21,6 +21,7 @@ protocol FeelingsStoreProtocol: AnyObject {
     func presentFlashIcon(_ icon: String)
     func presentError(_ message: String?)
     func presentPhoto(_ photo: Image?)
+    func presentDetailVisibility(isVisible: Bool)
     // MARK: Compartilhar
     func presentStoryImage(_ image: UIImage?)
     func presentShareSheet(_ item: ShareItem?)
@@ -54,6 +55,12 @@ final class FeelingsStore: FeelingsStoreProtocol {
     
     /// Mensagem do alerta de erro/permissão. `nil` = sem alerta.
     var errorMessage: String? = nil
+    
+    /// Liga o `.alert` à mensagem: abre quando há mensagem e, ao fechar, limpa.
+    var isErrorPresented: Bool {
+        get { errorMessage != nil }
+        set { if !newValue { errorMessage = nil } }
+    }
     
     // MARK: Compartilhar
     
@@ -93,6 +100,11 @@ final class FeelingsStore: FeelingsStoreProtocol {
     
     func presentError(_ message: String?) {
         errorMessage = message
+    }
+    
+    /// Esconde ou volta com o sheet de detalhe, sem mexer na atividade selecionada.
+    func presentDetailVisibility(isVisible: Bool) {
+        presentDetail = isVisible
     }
     
     /// Troca a foto do detalhe e a do card da mesma atividade na lista.

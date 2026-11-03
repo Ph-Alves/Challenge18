@@ -25,6 +25,7 @@ protocol FeelingsPresenterProtocol: AnyObject {
     func presentFlash(isOn: Bool)
     func presentError(_ error: Error)
     func presentAlertsDismissed()
+    func presentDetailVisibility(isVisible: Bool)
     // MARK: Compartilhar
     func presentStory(for activity: Activity)
     func presentShareSheet(fileURL: URL)
@@ -150,6 +151,11 @@ final class FeelingsPresenter: FeelingsPresenterProtocol {
     /// O usuário fechou o alerta.
     func presentAlertsDismissed() {
         store?.presentError(nil)
+    }
+    
+    /// Esconde ou volta com o sheet de detalhe (ele sai para a câmera abrir e volta depois).
+    func presentDetailVisibility(isVisible: Bool) {
+        store?.presentDetailVisibility(isVisible: isVisible)
     }
 
     // MARK: - Compartilhar

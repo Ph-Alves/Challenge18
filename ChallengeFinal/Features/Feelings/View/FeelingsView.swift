@@ -37,7 +37,9 @@ struct FeelingsView: View {
             .padding(.horizontal, 32)
         }
         .scrollIndicators(.hidden)
-        .sheet(isPresented: $store.presentDetail) {
+        // O detalhe fecha antes de a câmera abrir e volta depois que ela fecha (`onDismiss`).
+        // Os dois ficam aqui, no mesmo nível, porque uma view só apresenta uma coisa por vez.
+        .sheet(isPresented: $store.presentDetail, onDismiss: interactor.detailDismissed) {
             if let activity = store.selectedActivity {
                 ActivityDetailView(
                     returnAction: store.returnToFeelings,
@@ -49,30 +51,15 @@ struct FeelingsView: View {
                 )
                 .presentationDetents([.large])
                 .presentationDragIndicator(.visible)
-                // A câmera sai daqui (e não da FeelingsView) porque a sheet já está aberta:
-                // uma view não consegue apresentar duas coisas ao mesmo tempo.
-                .fullScreenCover(isPresented: isCameraPresented) {
-                    CameraView(
-                        preview: cameraPreview,
-                        flashIcon: store.cameraFlashIcon,
-                        errorMessage: store.errorMessage,
-                        closeCamera: interactor.closeCamera,
-                        toggleFlash: interactor.toggleFlash,
-                        takePhoto: interactor.takePhoto,
-                        switchCamera: interactor.switchCamera,
-                        didSelectFromGallery: interactor.didSelectFromGallery,
-                        dismissAlerts: interactor.dismissAlerts
-                    )
-                }
                 // Erros com a câmera fechada (ex.: permissão negada).
-                .alert("Ops!", isPresented: isErrorAlertPresented) {
+                .alert("Ops!", isPresented: $store.isErrorPresented) {
                     Button("OK", role: .cancel) {
                         interactor.dismissAlerts()
                     }
                 } message: {
                     Text(store.errorMessage ?? "")
                 }
-                .sheet(item: shareItem) { item in
+                .sheet(item: $store.shareItem) { item in
                     ShareSheet(items: item.activityItems) { completed in
                         interactor.didFinishSharing(completed: completed)
                     }
@@ -81,43 +68,22 @@ struct FeelingsView: View {
                 }
             }
         }
+        .fullScreenCover(isPresented: $store.isCameraPresented, onDismiss: interactor.cameraDismissed) {
+            CameraView(
+                preview: cameraPreview,
+                flashIcon: store.cameraFlashIcon,
+                errorMessage: store.errorMessage,
+                closeCamera: interactor.closeCamera,
+                toggleFlash: interactor.toggleFlash,
+                takePhoto: interactor.takePhoto,
+                switchCamera: interactor.switchCamera,
+                didSelectFromGallery: interactor.didSelectFromGallery,
+                dismissAlerts: interactor.dismissAlerts
+            )
+        }
         .onAppear() {
             interactor.loadFeelings()
         }
-    }
-}
-
-// MARK: - Bindings
-
-extension FeelingsView {
-    
-    /// Lê a Store e, se a tela for fechada, avisa o Interactor (que para a sessão da câmera).
-    private var isCameraPresented: Binding<Bool> {
-        Binding(
-            get: { store.isCameraPresented },
-            set: { isPresented in
-                if !isPresented { interactor.closeCamera() }
-            }
-        )
-    }
-    
-    /// Lê a Store e, se o usuário fechar o sheet arrastando para baixo, avisa o Interactor (que pede para limpar a Store).
-    private var shareItem: Binding<ShareItem?> {
-        Binding(
-            get: { store.shareItem },
-            set: { item in
-                if item == nil { interactor.didFinishSharing(completed: false) }
-            }
-        )
-    }
-    
-    private var isErrorAlertPresented: Binding<Bool> {
-        Binding(
-            get: { store.errorMessage != nil },
-            set: { isPresented in
-                if !isPresented { interactor.dismissAlerts() }
-            }
-        )
     }
 }
 
@@ -136,6 +102,10 @@ private final class FeelingsInteractorPreviewMock: FeelingsInteractorProtocol {
     func didSelectFromGallery(_ item: PhotosPickerItem) {}
     
     func dismissAlerts() {}
+    
+    func detailDismissed() {}
+    
+    func cameraDismissed() {}
     
     func shareStory(_ image: UIImage?) {}
     

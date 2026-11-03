@@ -534,6 +534,18 @@ struct PresenterTests {
         #expect(store.errorMessage == "Não foi possível carregar a foto da galeria. Tente outra.")
     }
 
+    @Test(arguments: [true, false])
+    func testingPresentDetailVisibilityShowsOrHidesDetailKeepingActivity(isVisible: Bool) {
+        let (presenter, store) = createFeelingsPresenterAndStore()
+        let activity = makeFeelingActivity(named: "Caminhada", humor: .calm)
+        presenter.presentSelectedActivity(activity: activity)
+
+        presenter.presentDetailVisibility(isVisible: isVisible)
+
+        #expect(store.presentDetail == isVisible)
+        #expect(store.selectedActivity === activity)
+    }
+
     @Test func testingPresentAlertsDismissedClearsError() {
         let (presenter, store) = createFeelingsPresenterAndStore()
         presenter.presentError(CameraError.captureFailed)

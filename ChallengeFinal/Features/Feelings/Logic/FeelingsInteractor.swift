@@ -28,6 +28,8 @@ protocol FeelingsInteractorProtocol: AnyObject {
     func takePhoto()
     func didSelectFromGallery(_ item: PhotosPickerItem)
     func dismissAlerts()
+    func detailDismissed()
+    func cameraDismissed()
     // MARK: Compartilhar
     func shareStory(_ image: UIImage?)
     func didFinishSharing(completed: Bool)
@@ -66,6 +68,10 @@ final class FeelingsInteractor: FeelingsInteractorProtocol {
     
     /// Flash ligado ou não. Regra de negócio, por isso fica aqui e não na Store.
     var isFlashOn = false
+    
+    /// `true` do toque em "tirar outra foto" até a câmera fechar. Serve para
+    /// encadear sheet -> câmera -> sheet (a câmera só abre depois que o detalhe fecha).
+    var isRetakingPhoto = false
     
     // MARK: - Init
     
@@ -108,17 +114,21 @@ final class FeelingsInteractor: FeelingsInteractorProtocol {
 
     /// Toque em "tirar outra foto". Verifica a permissão toda vez, porque
     /// o usuário pode ter mudado nos Ajustes no meio do caminho.
+    ///
+    /// Com a permissão OK, só fecha o detalhe. A câmera abre em `detailDismissed()`,
+    /// quando o sheet terminou de fechar: apresentar as duas coisas ao mesmo tempo falha,
+    /// e a câmera sobre o sheet deixava um defeito visual no topo dele.
     func retakePhoto() {
         switch camera.permissionStatus() {
         case .authorized:
-            startCamera()
+            hideDetailForCamera()
             
         case .notDetermined:
             camera.requestPermission { [weak self] granted in
                 guard let self else { return }
                 
                 if granted {
-                    self.startCamera()
+                    self.hideDetailForCamera()
                 } else {
                     self.presenter.presentPermissionDenied()
                 }
@@ -127,6 +137,19 @@ final class FeelingsInteractor: FeelingsInteractorProtocol {
         case .denied:
             presenter.presentPermissionDenied()
         }
+    }
+    
+    /// O sheet de detalhe terminou de fechar. Se foi para tirar outra foto, agora a câmera abre.
+    func detailDismissed() {
+        guard isRetakingPhoto else { return }
+        startCamera()
+    }
+    
+    /// A câmera terminou de fechar (com foto nova ou sem): o detalhe volta.
+    func cameraDismissed() {
+        guard isRetakingPhoto else { return }
+        isRetakingPhoto = false
+        presenter.presentDetailVisibility(isVisible: true)
     }
     
     /// O usuário fechou a câmera sem tirar foto: a foto antiga continua.
@@ -190,6 +213,11 @@ final class FeelingsInteractor: FeelingsInteractorProtocol {
     
     // MARK: Auxiliares privados
 
+    private func hideDetailForCamera() {
+        isRetakingPhoto = true
+        presenter.presentDetailVisibility(isVisible: false)
+    }
+    
     private func startCamera() {
         presenter.presentFlash(isOn: isFlashOn)
         presenter.presentCamera()

@@ -286,6 +286,33 @@ struct StoreTests {
         #expect(store.feelings[.calm]?.first?.image == nil)
     }
 
+    @Test func testingPresentDetailVisibilityKeepsSelectedActivity() {
+        let store = FeelingsStore()
+        let walk = makeFeelingActivity(named: "Caminhada", humor: .calm)
+        store.presentActivityDetails(activity: walk, photo: nil)
+
+        store.presentDetailVisibility(isVisible: false)
+
+        #expect(store.presentDetail == false)
+        #expect(store.selectedActivity === walk)
+
+        store.presentDetailVisibility(isVisible: true)
+
+        #expect(store.presentDetail)
+    }
+
+    // O alerta abre com mensagem e, ao fechar, limpa a mensagem.
+    @Test func testingIsErrorPresentedFollowsMessage() {
+        let store = FeelingsStore()
+        #expect(store.isErrorPresented == false)
+
+        store.presentError("Ops")
+        #expect(store.isErrorPresented)
+
+        store.isErrorPresented = false
+        #expect(store.errorMessage == nil)
+    }
+
     @Test func testingFeelingsStoreCameraState() {
         let store = FeelingsStore()
 
