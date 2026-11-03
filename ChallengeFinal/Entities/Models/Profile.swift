@@ -15,7 +15,7 @@ final class Profile {
     @Attribute(.externalStorage) var profilePicture: Data?
     var name: String = ""
     var notifications: Bool = false
-    var theme: Theme = Theme.themeOne
+    var theme: Theme = Theme.sober
     var backgroundActivity: Bool = false
     var streak: Int = 0
     
