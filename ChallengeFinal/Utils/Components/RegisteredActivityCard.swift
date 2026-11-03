@@ -18,12 +18,15 @@ struct RegisteredActivityCard: View {
                 if let image {
                     image
                         .resizable()
-                        .frame(height: 114)
+                        .scaledToFill()
+                        .frame(height: 120)
+                        .frame(maxWidth: .infinity)
+                        .clipped()
                         .clipShape(RoundedRectangle(cornerRadius: 12))
                 } else {
                     RoundedRectangle(cornerRadius: 12)
                         .fill(.gray.opacity(0.2))
-                        .frame(height: 114)
+                        .frame(height: 120)
                 }
                 
                 Text(title)
