@@ -15,6 +15,6 @@ enum ChallengesBuilder {
         let presenter = ChallengesPresenter(store: store)
         let interactor = ChallengesInteractor(repository: GenericRepository<Activity>(context: context), presenter: presenter)
 
-        return ChallengesView()
+        return ChallengesView(interactor: interactor, store: store)
     }
 }
