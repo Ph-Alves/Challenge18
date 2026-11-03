@@ -5,25 +5,11 @@
 //  Created by Raquel Souza on 03/11/26.
 //
 
-/*
- /// Etapas do fluxo de Activity, em ordem:
- /// sortear -> ver desafio -> em andamento -> humor -> foto -> resumo.
- enum ActivityStep {
-     case draw, challenge, inProgress, mood, photo, summary
- }
- */
 
 import SwiftUI
 import SwiftData
 
-// MARK: - Enum
-// Telas que podem ser empilhadas sobre a listagem de desafios.
-// Os arquivados não estão aqui porque são um sheet (controlado pela Store)
-enum ChallengesRoute: Hashable {
-    case summary
-}
-
-
+//MARK: - Class
 @MainActor
 @Observable
 final class ChallengesCoordinator: ChallengesRouting {

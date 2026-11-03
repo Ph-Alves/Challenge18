@@ -11,9 +11,9 @@ import SwiftData
 enum ChallengesBuilder {
     @MainActor
     static func build(routing: ChallengesRouting, context: ModelContext) -> ChallengesView {
-//        let store = ChallengesStore(coordinator: routing)
-//        let presenter = ChallengesPresenter(store: store)
-//        let interactor = ChallengesInteractor(repository: GenericRepository<Activity>(context: context), presenter: presenter)
+        let store = ChallengesStore(coordinator: routing)
+        let presenter = ChallengesPresenter(store: store)
+        let interactor = ChallengesInteractor(repository: GenericRepository<Activity>(context: context), presenter: presenter)
 
         return ChallengesView()
     }
