@@ -84,10 +84,13 @@ final class ChallengesInteractor: ChallengesInteractorProtocol {
     }
     
     func openSummary(_ activity: Activity) {
+        // Guardado aqui porque o `shareStory()` gera a imagem a partir dele.
+        selectedActivity = activity
         presenter.presentSummary(activity)
     }
     
     func closeSummary() {
+        selectedActivity = nil
         presenter.presentSummary(nil)
     }
     
