@@ -36,10 +36,13 @@ struct ActivityView: View {
     let currentCategory: ActivityCategory
 
     var body: some View {
-        stepView
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .overlay(alignment: .topLeading) { navigationButton }
-            .animation(.easeInOut(duration: 0.4), value: store.currentStep)
+        NavigationStack {
+            stepView
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .animation(.easeInOut(duration: 0.4), value: store.currentStep)
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar { navigationToolbar }
+        }
             .onAppear {
                 interactor.prepare(for: currentCategory)
             }
@@ -70,7 +73,7 @@ struct ActivityView: View {
                 Button("continuar", role: .cancel) { }
                 Button("sair", role: .destructive) { interactor.finishActivityFlow() }
             } message: {
-                Text("Ao sair, todo o seu progresso será excluído.")
+                Text(store.currentStep.exitMessage ?? "")
             }
             // Tela da câmera: abre e fecha conforme `store.isCameraPresented`.
             .fullScreenCover(isPresented: isCameraPresented) {
@@ -207,17 +210,17 @@ struct ActivityView: View {
     
     // MARK: - Botão de navegação
     /// Seta ou X, conforme o step. A seta navega direto; o X só abre o alerta.
-    @ViewBuilder
-    private var navigationButton: some View {
-        if let kind = store.currentStep.navigationButton {
-            NavigationButton(kind: kind) {
-                switch kind {
-                case .close: isExitAlertPresented = true
-                case .back:  interactor.didTapBack(on: store.currentStep)
+    @ToolbarContentBuilder
+    private var navigationToolbar: some ToolbarContent {
+        ToolbarItem(placement: .topBarLeading) {
+            switch store.currentStep.navigationButton {
+            case .close:
+                Button(role: .close) { isExitAlertPresented = true }
+            case .back:
+                Button("voltar", systemImage: "chevron.left") {
+                    interactor.didTapBack(on: store.currentStep)
                 }
             }
-            .padding(.horizontal)
-            .transition(.opacity)
         }
     }
 
