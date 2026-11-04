@@ -5,7 +5,7 @@
 //  Created by Raquel Souza on 03/11/26.
 //
 
-import Foundation
+import SwiftUI
 
 // MARK: - Protocol
 // O que o Presenter enxerga da Store.
@@ -14,7 +14,8 @@ protocol ChallengesStoreProtocol: AnyObject {
     func displayChallenges(_ challenges: [Activity], selectedCategory: ActivityCategory?, emptyState: ChallengesEmptyState?) //quem decide qual estado vazio mostrar é o Presenter, e a Store só guarda o que recebe, e um estado vazio pode ser ou de não ter nada ou de não ter achado nada na busca.
     func displayArchivedChallenges(_ challenges: [Activity], emptyState: ChallengesEmptyState?) //lista de conteúdos dentro da sheet
     func displayArchivedSheet(isPresented: Bool) //bool pra ativar a sheet.
-    func displaySummary(_ activity: Activity?)
+    func displaySummary(_ activity: Activity?, photo: Image?)
+    func displayShareSheet(_ item: ShareItem?)
     func displayError(_ message: String?)
 }
 
@@ -44,6 +45,13 @@ final class ChallengesStore: ChallengesStoreProtocol {
     
     //Summary. Desafio aberto no resumo. `nil` = sheet fechada.
     private(set) var selectedChallenge: Activity?
+    
+    /// Foto do desafio aberto, já pronta para exibir. `nil` = card vazio.
+    private(set) var selectedPhoto: Image?
+    
+    // Compartilhar
+    /// Controla o `.sheet(item:)` do share sheet. `nil` = fechado.
+    private(set) var shareItem: ShareItem?
 
     // Erro. `nil` = sem alerta.
     private(set) var errorMessage: String?
@@ -66,8 +74,13 @@ final class ChallengesStore: ChallengesStoreProtocol {
     }
     
     
-    func displaySummary(_ activity: Activity?) {
+    func displaySummary(_ activity: Activity?, photo: Image?) {
         selectedChallenge = activity
+        selectedPhoto = photo
+    }
+    
+    func displayShareSheet(_ item: ShareItem?) {
+        shareItem = item
     }
 
     func displayError(_ message: String?) {

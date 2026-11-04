@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import SwiftUI
 
 protocol ChallengesInteractorProtocol: AnyObject {
     func loadChallenges()                             // tela apareceu: busca concluídos e arquivados
@@ -16,6 +17,8 @@ protocol ChallengesInteractorProtocol: AnyObject {
     func restoreChallenge(_ activity: Activity)       // devolver o arquivado ao grupo
     func openSummary(_ activity: Activity)            // tocou num card: abre o resumo
     func closeSummary()                               //fechou o sheet de summary
+    func shareStory()                                 // "compartilhar" no resumo
+    func didFinishSharing(completed: Bool)            // share sheet fechou (concluiu ou cancelou)
     func dismissError()                               // fechou o alerta de erro
 }
 
@@ -25,15 +28,20 @@ final class ChallengesInteractor: ChallengesInteractorProtocol {
     // MARK: - Variables
     private let repository: GenericRepository<Activity>
     private let presenter: ChallengesPresenterProtocol
+    private let share: ShareWorkerProtocol
     
     ///Estado dos filtros: guardado aqui para que, ao voltar para a tela (ou devolver um arquivado), a lista recalcule com os mesmos critérios.
     private(set) var searchText: String = ""
     private(set) var selectedCategory: ActivityCategory?
     
+    /// Desafio aberto no resumo. É dele que sai a imagem compartilhada.
+    private(set) var selectedActivity: Activity?
+    
     // MARK: - Init
-    init(repository: GenericRepository<Activity>, presenter: ChallengesPresenterProtocol) {
+    init(repository: GenericRepository<Activity>, presenter: ChallengesPresenterProtocol, share: ShareWorkerProtocol = ShareWorker()) {
         self.repository = repository
         self.presenter = presenter
+        self.share = share
     }
     
     //MARK: - Functions
@@ -83,11 +91,45 @@ final class ChallengesInteractor: ChallengesInteractorProtocol {
         presenter.presentSummary(nil)
     }
     
+    /// A imagem não aparece na tela: é só o arquivo que vai para o share sheet,
+    /// então é gerada aqui, na hora do toque, e não fica guardada na Store.
+    func shareStory() {
+        guard let selectedActivity, let image = makeStoryImage(for: selectedActivity) else {
+            presenter.presentError("não foi possível preparar a imagem para compartilhar.")
+            return
+        }
+        
+        do {
+            let fileURL = try share.makeShareFile(from: image)
+            presenter.presentShareSheet(fileURL: fileURL)
+        } catch {
+            presenter.presentError("não foi possível preparar a imagem para compartilhar.")
+        }
+    }
+    
+    func didFinishSharing(completed: Bool) {
+        presenter.presentShareFinished(completed: completed)
+    }
+    
     func dismissError() {
         presenter.presentError(nil)
     }
     
     //MARK: - Private Functions
+    
+    
+    /// Monta o StoryCard e transforma em UIImage. `nil` = a renderização falhou.
+    private func makeStoryImage(for activity: Activity) -> UIImage? {
+        let name = activity.name.trimmingCharacters(in: .whitespacesAndNewlines)
+        let photo = activity.result?.photo.flatMap { UIImage(data: $0) }
+ 
+        let story = StoryCard(
+            challengeTitle: name.isEmpty ? "desafio concluído" : name,
+            challengeDescription: activity.activityDescription.trimmingCharacters(in: .whitespacesAndNewlines),
+            challengePhoto: photo
+        )
+        return ShareImageRenderer.render(story)
+    }
     
     ///a primeira função será a de carregar os challenges já feitos.
     private func completedActivities() throws -> [Activity] {

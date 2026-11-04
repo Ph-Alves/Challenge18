@@ -17,7 +17,6 @@ struct RegisteredActivityCard: View {
         ZStack(alignment: .bottomTrailing) {
             VStack(alignment: .leading, spacing: 11) {
                 PhotoCard(photo: photo, height: 114, cornerRadius: 16)
-
                 
                 Text(title)
                     .lineLimit(1)

@@ -56,13 +56,32 @@ struct ChallengesView: View {
             ArchivedChallengesView(interactor: interactor, store: store)
                 .presentationDragIndicator(.visible)
         }
-        //CHANGE: Descomentar após implementação da task do Ph.
-//        .sheet(item: summaryBinding) { activity in
-//            Summary(activity: activity) {
-//                interactor.closeSummary()
-//            }
-//            .presentationDragIndicator(.visible)
-//        }
+        .sheet(item: summaryBinding) { activity in
+            SummaryView(
+                style: .activity,
+                title: activity.name,
+                description: activity.activityDescription,
+                photo: store.selectedPhoto,
+                humor: activity.result?.humor,
+                onFinish: { interactor.closeSummary() },
+                onShare: { interactor.shareStory() }
+            )
+            .presentationDragIndicator(.visible)
+            // Com o resumo aberto, o alerta e o share sheet precisam sair DESTE sheet
+            // (a tela de baixo não consegue apresentar nada por cima dele).
+            .alert("ops", isPresented: isErrorPresented) {
+                Button("ok", role: .cancel) { interactor.dismissError() }
+            } message: {
+                Text(store.errorMessage ?? "")
+            }
+            .sheet(item: shareBinding) { item in
+                ShareSheet(items: item.activityItems) { completed in
+                    interactor.didFinishSharing(completed: completed)
+                }
+                .presentationDetents([.medium, .large])
+                .ignoresSafeArea()
+            }
+        }
         .alert("ops", isPresented: isErrorPresented) {
             Button("ok", role: .cancel) { interactor.dismissError() }
         } message: {
@@ -147,11 +166,17 @@ struct ChallengesView: View {
         )
     }
     
-    //CHANGE: Descomentar após implementação da task do Ph.
-//    private var summaryBinding: Binding<Activity?> {
-//        Binding(
-//            get: { store.selectedChallenge },
-//            set: { if $0 == nil { interactor.closeSummary() } }
-//        )
-//    }
+    private var summaryBinding: Binding<Activity?> {
+        Binding(
+            get: { store.selectedChallenge },
+            set: { if $0 == nil { interactor.closeSummary() } }
+        )
+    }
+    
+    private var shareBinding: Binding<ShareItem?> {
+        Binding(
+            get: { store.shareItem },
+            set: { if $0 == nil { interactor.didFinishSharing(completed: false) } }
+        )
+    }
 }

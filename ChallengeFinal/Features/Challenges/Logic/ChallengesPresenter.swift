@@ -5,7 +5,7 @@
 //  Created by Raquel Souza on 03/11/26.
 //
 
-import Foundation
+import SwiftUI
 
 // MARK: - Protocol
 // O que o Interactor enxerga do Presenter.
@@ -15,6 +15,8 @@ protocol ChallengesPresenterProtocol: AnyObject {
     func presentArchivedChallenges(_ activities: [Activity])
     func presentArchivedSheet(isPresented: Bool)
     func presentSummary(_ activity: Activity?) // `nil` = fecha o sheet do resumo
+    func presentShareSheet(fileURL: URL)
+    func presentShareFinished(completed: Bool)
     func presentError(_ message: String?)
 }
 
@@ -58,10 +60,29 @@ final class ChallengesPresenter: ChallengesPresenterProtocol {
     // MARK: - Resumo
 
     func presentSummary(_ activity: Activity?) {
-        store?.displaySummary(activity)
+        guard let activity else {
+            store?.displaySummary(nil, photo: nil)
+            store?.displayShareSheet(nil)
+            return
+        }
+        // Bytes -> Image: a View recebe a foto pronta para exibir.
+        store?.displaySummary(activity, photo: Image(data: activity.result?.photo))
     }
 
+    // MARK: - Compartilhar
+ 
+    func presentShareSheet(fileURL: URL) {
+        store?.displayShareSheet(ShareItem(activityItems: [fileURL]))
+    }
+ 
+    func presentShareFinished(completed: Bool) {
+        store?.displayShareSheet(nil)
+    }
+    
+    //MARK: - Erros
+ 
     func presentError(_ message: String?) {
         store?.displayError(message)
     }
+    
 }
