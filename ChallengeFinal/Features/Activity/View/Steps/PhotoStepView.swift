@@ -65,7 +65,7 @@ struct PhotoStepView: View {
     var body: some View {
         VStack(spacing: 0) {
             header
-                .padding(.top, 72)
+                .padding(.top, 24)
 
             PhotoCard(photo: photo)
                 // O botão de câmera fica "encaixado" na borda de baixo do card.

@@ -23,7 +23,7 @@ struct RootView: View {
                 }
             }
             Tab("Challenges", systemImage: "circle.fill", value: AppTab.challenges) {
-                // feature ainda não existe
+                coordinator.challengesCoordinator.startChallengesFlow(context: context)
             }
             Tab("Feelings", systemImage: "triangle.fill", value: AppTab.feelings) {
                 coordinator.feelingsCoordinator.startFeelingsView(context: context)

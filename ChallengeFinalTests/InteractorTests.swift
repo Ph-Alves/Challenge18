@@ -277,6 +277,55 @@ final class ConfigurableCameraWorkerMock: CameraWorkerProtocol {
     }
 }
 
+/// Anota o que o Interactor de Desafios entregou ao Presenter, uma entrada por chamada.
+/// `@MainActor` porque o `ChallengesPresenterProtocol` também é.
+@MainActor
+final class ChallengesPresenterSpy: ChallengesPresenterProtocol {
+
+    /// Uma chamada de `presentChallenges`, com tudo que o Interactor mandou.
+    struct ChallengesCall {
+        let activities: [Activity]
+        let selectedCategory: ActivityCategory?
+        let hasCompletedChallenges: Bool
+    }
+
+    private(set) var challengesCalls: [ChallengesCall] = []
+    private(set) var archivedCalls: [[Activity]] = []
+    private(set) var archivedSheetStates: [Bool] = []
+    private(set) var summaries: [Activity?] = []
+    private(set) var shareSheetURL: URL?
+    private(set) var shareFinished: Bool?
+    private(set) var errors: [String?] = []
+    
+    // Câmera (tirar outra foto no resumo)
+    private(set) var cameraStates: [Bool] = []
+    private(set) var cameraClosedCount = 0
+    private(set) var permissionDeniedCount = 0
+    private(set) var flashStates: [Bool] = []
+    private(set) var cameraErrors: [Error] = []
+
+    func presentCamera(isPresented: Bool) { cameraStates.append(isPresented) }
+    func presentCameraClosed() { cameraClosedCount += 1 }
+    func presentPermissionDenied() { permissionDeniedCount += 1 }
+    func presentFlash(isOn: Bool) { flashStates.append(isOn) }
+    func presentCameraError(_ error: Error) { cameraErrors.append(error) }
+
+    /// Atalho para os nomes da última lista apresentada (ordenados, porque o banco não garante ordem).
+    var lastChallengeNames: [String]? { challengesCalls.last?.activities.map(\.name).sorted() }
+    var lastArchivedNames: [String]? { archivedCalls.last?.map(\.name).sorted() }
+
+    func presentChallenges(_ activities: [Activity], selectedCategory: ActivityCategory?, hasCompletedChallenges: Bool) {
+        challengesCalls.append(ChallengesCall(activities: activities, selectedCategory: selectedCategory,
+                                              hasCompletedChallenges: hasCompletedChallenges))
+    }
+    func presentArchivedChallenges(_ activities: [Activity]) { archivedCalls.append(activities) }
+    func presentArchivedSheet(isPresented: Bool) { archivedSheetStates.append(isPresented) }
+    func presentSummary(_ activity: Activity?) { summaries.append(activity) }
+    func presentShareSheet(fileURL: URL) { shareSheetURL = fileURL }
+    func presentShareFinished(completed: Bool) { shareFinished = completed }
+    func presentError(_ message: String?) { errors.append(message) }
+}
+
 //final class ProfilePresenterSpy: ProfilePresenterProtocol {
 //    private(set) var presentedProfile: Profile?
 //    func presentProfile(_ profile: Profile) {
@@ -777,6 +826,34 @@ struct InteractorTests {
         #expect(result.photo == nil)
         #expect(sut.presenter.summaryCount == 1)
     }
+    
+    // Ao completar, o resultado já nasce com o tempo (sem humor nem foto),
+    // para o tempo não se perder se o usuário sair na tela de humor.
+    @Test func testingCompleteActivitySavesResultWithTimeAndNoHumor() throws {
+        let sut = makeActivitySUT()
+        sut.interactor.timerStartDate = Date().addingTimeInterval(-10)
+
+        completeActivity(on: sut)
+
+        let saved = try #require(sut.repository.getAll().first)
+        let result = try #require(saved.result)
+        #expect(result.time >= 10)
+        #expect(result.humor == nil)
+        #expect(result.photo == nil)
+        #expect(sut.interactor.result === result)
+    }
+
+    // Sair na tela de humor mantém o tempo salvo (o `cancelTimer` só zera o valor em memória).
+    @Test func testingFinishFlowAfterCompletingKeepsSavedTime() throws {
+        let sut = makeActivitySUT()
+        sut.interactor.timerStartDate = Date().addingTimeInterval(-10)
+        completeActivity(on: sut)
+
+        sut.interactor.finishActivityFlow()
+
+        let saved = try #require(sut.repository.getAll().first)
+        #expect((saved.result?.time ?? 0) >= 10)
+    }
 
     // Sair do fluxo no meio (ou cancelar) descarta o tempo e não deixa o cronômetro rodando.
     @Test func testingFinishActivityFlowCancelsTimerAndFinishesFlow() {
@@ -947,6 +1024,528 @@ struct InteractorTests {
 
         #expect(sut.liveActivity.cancelCount == 1)
         #expect(sut.liveActivity.stopElapsed.isEmpty)
+    }
+    
+    // MARK: ActivityInteractor (seta de voltar)
+
+    @Test func testingBackOnDrawFinishesFlow() async {
+        let sut = makeActivitySUT()
+
+        sut.interactor.didTapBack(on: .draw)
+        await wait { sut.liveActivity.cancelCount == 1 }
+
+        #expect(sut.presenter.flowFinishedCount == 1)
+        #expect(sut.liveActivity.cancelCount == 1)
+    }
+
+    @Test func testingBackOnPhotoGoesToMood() {
+        let sut = makeActivitySUT()
+
+        sut.interactor.didTapBack(on: .photo)
+
+        #expect(sut.presenter.moodCount == 1)
+        #expect(sut.presenter.flowFinishedCount == 0)
+    }
+
+    @Test func testingBackOnSummaryGoesToPhoto() {
+        let sut = makeActivitySUT()
+
+        sut.interactor.didTapBack(on: .summary)
+
+        #expect(sut.presenter.photoCount == 1)
+        #expect(sut.presenter.flowFinishedCount == 0)
+    }
+
+    // Esses steps não usam a seta: a chamada não pode navegar nem encerrar o fluxo.
+    @Test(arguments: [ActivityStep.challenge, .inProgress, .mood])
+    func testingBackOnStepsWithoutBackActionDoesNothing(step: ActivityStep) {
+        let sut = makeActivitySUT()
+
+        sut.interactor.didTapBack(on: step)
+
+        #expect(sut.presenter.moodCount == 0)
+        #expect(sut.presenter.photoCount == 0)
+        #expect(sut.presenter.flowFinishedCount == 0)
+        #expect(sut.presenter.presentedTimes.isEmpty)
+    }
+
+    // MARK: - ChallengesInteractor (listagem)
+
+    private struct ChallengesSUT {
+        let interactor: ChallengesInteractor
+        let presenter: ChallengesPresenterSpy
+        let repository: GenericRepository<Activity>
+        let share: ShareWorkerMock
+        let camera: ConfigurableCameraWorkerMock
+    }
+
+    private func makeChallengesSUT() -> ChallengesSUT {
+        let presenter = ChallengesPresenterSpy()
+        let repository = makeActivityRepository()
+        let share = ShareWorkerMock()
+        let camera = ConfigurableCameraWorkerMock()
+        let interactor = ChallengesInteractor(repository: repository, presenter: presenter, share: share, camera: camera)
+        return ChallengesSUT(interactor: interactor, presenter: presenter, repository: repository, share: share, camera: camera)
+    }
+
+    /// Concluído = não arquivado e com `ActivityResult`. `humor == nil` cria sem resultado.
+    @discardableResult
+    private func addChallenge(_ name: String,
+                              category: ActivityCategory = .physical,
+                              humor: Humor? = .calm,
+                              archived: Bool = false,
+                              createdAt: Date = Date(),
+                              in repository: GenericRepository<Activity>) throws -> Activity {
+        let result = archived ? nil : ActivityResult(time: 10, humor: humor)
+        let activity = Activity(category: category, result: result, createdAt: createdAt,
+                                name: name, description: "-", archived: archived)
+        try repository.add(activity)
+        return activity
+    }
+
+    @Test func testingLoadChallengesWithEmptyDatabasePresentsEmptyLists() throws {
+        let sut = makeChallengesSUT()
+
+        sut.interactor.loadChallenges()
+
+        let call = try #require(sut.presenter.challengesCalls.last)
+        #expect(call.activities.isEmpty)
+        #expect(call.hasCompletedChallenges == false)
+        #expect(call.selectedCategory == nil)
+        #expect(sut.presenter.archivedCalls.last?.isEmpty == true)
+        #expect(sut.presenter.errors.isEmpty)
+    }
+
+    // Concluídos (com ou sem humor) e arquivados vão para listas diferentes.
+    @Test func testingLoadChallengesSplitsCompletedAndArchived() throws {
+        let sut = makeChallengesSUT()
+        try addChallenge("Caminhada", in: sut.repository)
+        try addChallenge("Leitura", category: .cognitive, humor: .chill, in: sut.repository)
+        try addChallenge("Sem humor", humor: nil, in: sut.repository)
+        try addChallenge("Arquivada", archived: true, in: sut.repository)
+
+        sut.interactor.loadChallenges()
+
+        #expect(sut.presenter.lastChallengeNames == ["Caminhada", "Leitura", "Sem humor"])
+        #expect(sut.presenter.challengesCalls.last?.hasCompletedChallenges == true)
+        #expect(sut.presenter.lastArchivedNames == ["Arquivada"])
+    }
+    
+    // Devolver = apagar a marca de arquivado: o sorteio volta a poder sugerir o desafio.
+    @Test func testingRestoreChallengeDeletesItAndRefreshesArchivedList() throws {
+        let sut = makeChallengesSUT()
+        let first = try addChallenge("Arquivada 1", archived: true, in: sut.repository)
+        try addChallenge("Arquivada 2", archived: true, in: sut.repository)
+
+        sut.interactor.restoreChallenge(first)
+
+        #expect(try sut.repository.getAll().map(\.name) == ["Arquivada 2"])
+        #expect(sut.presenter.lastArchivedNames == ["Arquivada 2"])
+        #expect(sut.presenter.errors.isEmpty)
+    }
+
+    // MARK: ChallengesInteractor (busca e filtro)
+
+    @Test func testingSearchIgnoresCaseAndAccents() throws {
+        let sut = makeChallengesSUT()
+        try addChallenge("Meditação guiada", in: sut.repository)
+        try addChallenge("Caminhada", in: sut.repository)
+
+        sut.interactor.search("MEDITACAO")
+
+        #expect(sut.presenter.lastChallengeNames == ["Meditação guiada"])
+        #expect(sut.interactor.searchText == "MEDITACAO")
+    }
+
+    @Test func testingSearchWithOnlySpacesShowsEverything() throws {
+        let sut = makeChallengesSUT()
+        try addChallenge("Caminhada", in: sut.repository)
+        try addChallenge("Leitura", in: sut.repository)
+
+        sut.interactor.search("   ")
+
+        #expect(sut.presenter.lastChallengeNames == ["Caminhada", "Leitura"])
+    }
+
+    // Lista vazia, mas existem concluídos: o Presenter precisa saber para mostrar "nenhum encontrado".
+    @Test func testingSearchWithoutMatchesStillReportsCompletedChallenges() throws {
+        let sut = makeChallengesSUT()
+        try addChallenge("Caminhada", in: sut.repository)
+
+        sut.interactor.search("xadrez")
+
+        let call = try #require(sut.presenter.challengesCalls.last)
+        #expect(call.activities.isEmpty)
+        #expect(call.hasCompletedChallenges)
+    }
+
+    @Test func testingToggleCategoryFiltersByCategory() throws {
+        let sut = makeChallengesSUT()
+        try addChallenge("Caminhada", category: .physical, in: sut.repository)
+        try addChallenge("Leitura", category: .cognitive, in: sut.repository)
+
+        sut.interactor.toggleCategory(.cognitive)
+
+        #expect(sut.presenter.lastChallengeNames == ["Leitura"])
+        #expect(sut.presenter.challengesCalls.last?.selectedCategory == .cognitive)
+    }
+
+    // Tocar de novo no mesmo filtro limpa.
+    @Test func testingToggleSameCategoryTwiceClearsFilter() throws {
+        let sut = makeChallengesSUT()
+        try addChallenge("Caminhada", category: .physical, in: sut.repository)
+        try addChallenge("Leitura", category: .cognitive, in: sut.repository)
+
+        sut.interactor.toggleCategory(.cognitive)
+        sut.interactor.toggleCategory(.cognitive)
+
+        #expect(sut.interactor.selectedCategory == nil)
+        #expect(sut.presenter.challengesCalls.last?.selectedCategory == nil)
+        #expect(sut.presenter.lastChallengeNames == ["Caminhada", "Leitura"])
+    }
+
+    @Test func testingToggleAnotherCategoryReplacesFilter() throws {
+        let sut = makeChallengesSUT()
+        try addChallenge("Caminhada", category: .physical, in: sut.repository)
+        try addChallenge("Leitura", category: .cognitive, in: sut.repository)
+
+        sut.interactor.toggleCategory(.cognitive)
+        sut.interactor.toggleCategory(.physical)
+
+        #expect(sut.interactor.selectedCategory == .physical)
+        #expect(sut.presenter.lastChallengeNames == ["Caminhada"])
+    }
+
+    // Busca e filtro valem juntos, e continuam valendo quando a tela recarrega.
+    @Test func testingSearchAndCategoryCombineAndSurviveReload() throws {
+        let sut = makeChallengesSUT()
+        try addChallenge("Caminhada no parque", category: .physical, in: sut.repository)
+        try addChallenge("Caminhada consciente", category: .sensorial, in: sut.repository)
+        try addChallenge("Alongamento", category: .physical, in: sut.repository)
+
+        sut.interactor.toggleCategory(.physical)
+        sut.interactor.search("caminhada")
+        sut.interactor.loadChallenges()
+
+        #expect(sut.presenter.lastChallengeNames == ["Caminhada no parque"])
+    }
+
+    // MARK: ChallengesInteractor (arquivados)
+
+    @Test func testingOpenArchivedRefreshesListAndOpensSheet() throws {
+        let sut = makeChallengesSUT()
+        try addChallenge("Arquivada", humor: nil, archived: true, in: sut.repository)
+
+        sut.interactor.openArchived()
+
+        #expect(sut.presenter.lastArchivedNames == ["Arquivada"])
+        #expect(sut.presenter.archivedSheetStates == [true])
+    }
+
+    @Test func testingCloseArchivedClosesSheet() {
+        let sut = makeChallengesSUT()
+
+        sut.interactor.closeArchived()
+
+        #expect(sut.presenter.archivedSheetStates == [false])
+    }
+    
+    // Devolvido ao grupo sem resultado: volta para o sorteio, não para a lista de concluídos.
+    @Test func testingRestoredChallengeWithoutResultDoesNotAppearAsCompleted() throws {
+        let sut = makeChallengesSUT()
+        let archived = try addChallenge("Arquivada", humor: nil, archived: true, in: sut.repository)
+
+        sut.interactor.restoreChallenge(archived)
+        sut.interactor.loadChallenges()
+
+        #expect(sut.presenter.lastChallengeNames == [])
+        #expect(sut.presenter.lastArchivedNames == [])
+    }
+
+    @Test func testingRestoreChallengeThatIsNotArchivedDoesNothing() throws {
+        let sut = makeChallengesSUT()
+        let completed = try addChallenge("Caminhada", in: sut.repository)
+
+        sut.interactor.restoreChallenge(completed)
+
+        #expect(completed.archived == false)
+        #expect(sut.presenter.archivedCalls.isEmpty)
+    }
+
+    // MARK: ChallengesInteractor (resumo)
+
+    @Test func testingOpenSummaryPresentsActivityAndRemembersIt() throws {
+        let sut = makeChallengesSUT()
+        let activity = try addChallenge("Caminhada", in: sut.repository)
+
+        sut.interactor.openSummary(activity)
+
+        #expect(sut.presenter.summaries.count == 1)
+        #expect(sut.presenter.summaries.first! === activity)
+        #expect(sut.interactor.selectedActivity === activity)
+    }
+
+    @Test func testingCloseSummaryPresentsNilAndForgetsActivity() throws {
+        let sut = makeChallengesSUT()
+        let activity = try addChallenge("Caminhada", in: sut.repository)
+        sut.interactor.openSummary(activity)
+
+        sut.interactor.closeSummary()
+
+        #expect(sut.presenter.summaries.count == 2)
+        #expect(sut.presenter.summaries.last! == nil)
+        #expect(sut.interactor.selectedActivity == nil)
+    }
+
+    // MARK: ChallengesInteractor (compartilhar)
+
+    @Test func testingChallengesShareStoryWithoutOpenSummaryPresentsError() {
+        let sut = makeChallengesSUT()
+
+        sut.interactor.shareStory()
+
+        #expect(sut.presenter.errors.count == 1)
+        #expect(sut.presenter.errors.first??.isEmpty == false)
+        #expect(sut.presenter.shareSheetURL == nil)
+        #expect(sut.share.receivedImage == nil)
+    }
+
+    @Test func testingChallengesShareStoryRendersImageAndOpensShareSheet() throws {
+        let sut = makeChallengesSUT()
+        let activity = try addChallenge("Caminhada", in: sut.repository)
+        sut.interactor.openSummary(activity)
+
+        sut.interactor.shareStory()
+
+        #expect(sut.share.receivedImage != nil)
+        #expect(sut.presenter.shareSheetURL == sut.share.url)
+        #expect(sut.presenter.errors.isEmpty)
+    }
+
+    @Test func testingChallengesShareStoryWorkerFailurePresentsError() throws {
+        let sut = makeChallengesSUT()
+        sut.share.errorToThrow = ShareError.encodingFailed
+        let activity = try addChallenge("Caminhada", in: sut.repository)
+        sut.interactor.openSummary(activity)
+
+        sut.interactor.shareStory()
+
+        #expect(sut.presenter.errors.count == 1)
+        #expect(sut.presenter.shareSheetURL == nil)
+    }
+
+    // Depois de fechar o resumo, não há mais o que compartilhar.
+    @Test func testingChallengesShareStoryAfterClosingSummaryPresentsError() throws {
+        let sut = makeChallengesSUT()
+        let activity = try addChallenge("Caminhada", in: sut.repository)
+        sut.interactor.openSummary(activity)
+        sut.interactor.closeSummary()
+
+        sut.interactor.shareStory()
+
+        #expect(sut.presenter.errors.count == 1)
+        #expect(sut.presenter.shareSheetURL == nil)
+    }
+
+    @Test(arguments: [true, false])
+    func testingChallengesDidFinishSharingPresentsResult(completed: Bool) {
+        let sut = makeChallengesSUT()
+
+        sut.interactor.didFinishSharing(completed: completed)
+
+        #expect(sut.presenter.shareFinished == completed)
+    }
+
+    @Test func testingDismissErrorClearsMessage() {
+        let sut = makeChallengesSUT()
+
+        sut.interactor.dismissError()
+
+        #expect(sut.presenter.errors.count == 1)
+        #expect(sut.presenter.errors.first! == nil)
+    }
+    
+    // MARK: ChallengesInteractor (ordenação)
+
+    // Mais recentes primeiro.
+    @Test func testingLoadChallengesSortsByMostRecent() throws {
+        let sut = makeChallengesSUT()
+        let now = Date()
+        try addChallenge("Antigo", createdAt: now.addingTimeInterval(-200), in: sut.repository)
+        try addChallenge("Novo", createdAt: now, in: sut.repository)
+        try addChallenge("Meio", createdAt: now.addingTimeInterval(-100), in: sut.repository)
+
+        sut.interactor.loadChallenges()
+
+        // Sem o `.sorted()` do atalho: aqui a ordem importa.
+        #expect(sut.presenter.challengesCalls.last?.activities.map(\.name) == ["Novo", "Meio", "Antigo"])
+    }
+
+    // MARK: ChallengesInteractor (tirar outra foto)
+
+    // Primeiro o resumo fecha: a câmera só abre quando o sheet terminou de fechar.
+    @Test func testingChallengesRetakePhotoOnlyHidesSummaryAtFirst() throws {
+        let sut = makeChallengesSUT()
+        let activity = try addChallenge("Caminhada", in: sut.repository)
+        sut.interactor.openSummary(activity)
+
+        sut.interactor.retakePhoto()
+
+        #expect(sut.interactor.isRetakingPhoto)
+        #expect(sut.presenter.summaries.last! == nil)
+        #expect(sut.presenter.cameraStates.isEmpty)
+        #expect(sut.camera.startCount == 0)
+        // Continua selecionado: é ele que recebe a foto nova.
+        #expect(sut.interactor.selectedActivity === activity)
+    }
+
+    @Test func testingChallengesSummaryDismissedWhileRetakingOpensCamera() throws {
+        let sut = makeChallengesSUT()
+        sut.interactor.openSummary(try addChallenge("Caminhada", in: sut.repository))
+        sut.interactor.retakePhoto()
+
+        sut.interactor.summaryDismissed()
+
+        #expect(sut.presenter.cameraStates == [true])
+        #expect(sut.presenter.flashStates == [false])
+        #expect(sut.camera.startCount == 1)
+    }
+
+    // O resumo também fecha arrastando: nada de câmera.
+    @Test func testingChallengesSummaryDismissedWithoutRetakingDoesNotOpenCamera() {
+        let sut = makeChallengesSUT()
+
+        sut.interactor.summaryDismissed()
+
+        #expect(sut.presenter.cameraStates.isEmpty)
+        #expect(sut.camera.startCount == 0)
+    }
+
+    // Câmera fechada: o mesmo desafio volta para o resumo, uma vez só.
+    @Test func testingChallengesCameraDismissedBringsSummaryBack() throws {
+        let sut = makeChallengesSUT()
+        let activity = try addChallenge("Caminhada", in: sut.repository)
+        sut.interactor.openSummary(activity)
+        sut.interactor.retakePhoto()
+        sut.interactor.summaryDismissed()
+
+        sut.interactor.cameraDismissed()
+        sut.interactor.cameraDismissed()
+
+        // abrir, esconder para a câmera, voltar
+        #expect(sut.presenter.summaries.count == 3)
+        #expect(sut.presenter.summaries.last! === activity)
+        #expect(sut.interactor.isRetakingPhoto == false)
+    }
+
+    @Test func testingChallengesRetakePhotoWithDeniedPermissionKeepsSummaryOpen() throws {
+        let sut = makeChallengesSUT()
+        sut.camera.permission = .denied
+        sut.interactor.openSummary(try addChallenge("Caminhada", in: sut.repository))
+
+        sut.interactor.retakePhoto()
+
+        #expect(sut.presenter.permissionDeniedCount == 1)
+        #expect(sut.interactor.isRetakingPhoto == false)
+        #expect(sut.presenter.summaries.count == 1)
+    }
+
+    @Test func testingChallengesRetakePhotoAsksPermissionWhenNotDetermined() throws {
+        let sut = makeChallengesSUT()
+        sut.camera.permission = .notDetermined
+        sut.camera.permissionGranted = false
+        sut.interactor.openSummary(try addChallenge("Caminhada", in: sut.repository))
+
+        sut.interactor.retakePhoto()
+
+        #expect(sut.camera.requestPermissionCount == 1)
+        #expect(sut.presenter.permissionDeniedCount == 1)
+    }
+
+    @Test func testingChallengesSessionFailureClosesCameraAndPresentsError() throws {
+        let sut = makeChallengesSUT()
+        sut.camera.startResult = .failure(CameraError.configurationFailed)
+        sut.interactor.openSummary(try addChallenge("Caminhada", in: sut.repository))
+        sut.interactor.retakePhoto()
+
+        sut.interactor.summaryDismissed()
+
+        #expect(sut.camera.stopCount == 1)
+        #expect(sut.presenter.cameraClosedCount == 1)
+        #expect(sut.presenter.cameraErrors.first as? CameraError == .configurationFailed)
+    }
+
+    // O ponto principal: a foto nova vai para o desafio e para o banco, e a grade recarrega.
+    @Test func testingChallengesTakePhotoSavesPhotoAndReloadsList() throws {
+        let sut = makeChallengesSUT()
+        let activity = try addChallenge("Caminhada", in: sut.repository)
+        activity.result?.photo = Data([9])
+        let newPhoto = Data([1, 2, 3])
+        sut.camera.captureResult = .success(newPhoto)
+        sut.interactor.openSummary(activity)
+
+        sut.interactor.takePhoto()
+
+        #expect(activity.result?.photo == newPhoto)
+        #expect(try sut.repository.getAll().first?.result?.photo == newPhoto)
+        #expect(sut.camera.stopCount == 1)
+        #expect(sut.presenter.cameraClosedCount == 1)
+        #expect(sut.presenter.lastChallengeNames == ["Caminhada"])
+    }
+
+    // Concluído sem humor também troca a foto; o humor continua `nil`.
+    @Test func testingChallengesTakePhotoOnChallengeWithoutHumor() throws {
+        let sut = makeChallengesSUT()
+        let activity = try addChallenge("Sem humor", humor: nil, in: sut.repository)
+        sut.camera.captureResult = .success(Data([1, 2, 3]))
+        sut.interactor.openSummary(activity)
+
+        sut.interactor.takePhoto()
+
+        #expect(activity.result?.photo == Data([1, 2, 3]))
+        #expect(activity.result?.humor == nil)
+    }
+
+    @Test func testingChallengesTakePhotoFailureKeepsOldPhoto() throws {
+        let sut = makeChallengesSUT()
+        let activity = try addChallenge("Caminhada", in: sut.repository)
+        activity.result?.photo = Data([9])
+        sut.camera.captureResult = .failure(CameraError.captureFailed)
+        sut.interactor.openSummary(activity)
+
+        sut.interactor.takePhoto()
+
+        #expect(activity.result?.photo == Data([9]))
+        #expect(sut.presenter.cameraErrors.first as? CameraError == .captureFailed)
+        #expect(sut.presenter.cameraClosedCount == 0)
+    }
+
+    @Test func testingChallengesTakePhotoUsesCurrentFlash() {
+        let sut = makeChallengesSUT()
+        sut.interactor.toggleFlash()
+
+        sut.interactor.takePhoto()
+
+        #expect(sut.camera.captureFlashValues == [true])
+    }
+
+    @Test func testingChallengesCloseCameraStopsSessionAndClosesScreen() {
+        let sut = makeChallengesSUT()
+
+        sut.interactor.closeCamera()
+
+        #expect(sut.camera.stopCount == 1)
+        #expect(sut.presenter.cameraClosedCount == 1)
+    }
+
+    @Test func testingChallengesSwitchCameraFailurePresentsError() {
+        let sut = makeChallengesSUT()
+        sut.camera.switchResult = .failure(CameraError.deviceUnavailable)
+
+        sut.interactor.switchCamera()
+
+        #expect(sut.camera.switchCount == 1)
+        #expect(sut.presenter.cameraErrors.first as? CameraError == .deviceUnavailable)
     }
 
     // MARK: - FeelingsInteractor (carregar sentimentos)

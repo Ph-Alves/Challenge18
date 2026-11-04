@@ -13,6 +13,32 @@ import SwiftData
 /// sortear -> ver desafio -> em andamento -> humor -> foto -> resumo.
 enum ActivityStep {
     case draw, challenge, inProgress, mood, photo, summary
+    
+    /// Qual botão cada step mostra 
+    var navigationButton: ActivityNavigationButton {
+        switch self {
+        case .draw, .photo, .summary, .inProgress: .back
+        case .challenge, .mood: .close
+        }
+    }
+    
+    /// Mensagem do alerta "deseja sair do desafio?" 
+    var exitMessage: String? {
+        switch self {
+        case .challenge:
+            "Ao sair, o desafio voltará para a lista para ser sorteado novamente em outro momento."
+        case .mood:
+            "Seu progresso será salvo. Acesse em \"Desafios\" para refletir sobre ele quando quiser."
+        case .draw, .inProgress, .photo, .summary:
+            nil
+        }
+    }
+}
+
+/// Botão do canto superior esquerdo do fluxo.
+enum ActivityNavigationButton {
+    case back   // setinha
+    case close  // Xzinho de voltar
 }
 
 /// Coordinator do fluxo de Activity: guarda em qual step estamos.
@@ -57,3 +83,4 @@ extension ActivityCoordinator: ActivityRouting {
     func goToSummary()    { step = .summary }
     func finishFlow()     { onFinish() }
 }
+
