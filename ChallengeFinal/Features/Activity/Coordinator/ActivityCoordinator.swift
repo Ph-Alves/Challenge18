@@ -21,6 +21,18 @@ enum ActivityStep {
         case .challenge, .mood: .close
         }
     }
+    
+    /// Mensagem do alerta "deseja sair do desafio?" 
+    var exitMessage: String? {
+        switch self {
+        case .challenge:
+            "Ao sair, o desafio voltará para a lista para ser sorteado novamente em outro momento."
+        case .mood:
+            "Seu progresso será salvo. Acesse em \"Desafios\" para refletir sobre ele quando quiser."
+        case .draw, .inProgress, .photo, .summary:
+            nil
+        }
+    }
 }
 
 /// Botão do canto superior esquerdo do fluxo.

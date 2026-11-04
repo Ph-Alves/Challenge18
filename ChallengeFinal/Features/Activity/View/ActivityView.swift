@@ -73,7 +73,7 @@ struct ActivityView: View {
                 Button("continuar", role: .cancel) { }
                 Button("sair", role: .destructive) { interactor.finishActivityFlow() }
             } message: {
-                Text("Ao sair, todo o seu progresso será excluído.")
+                Text(store.currentStep.exitMessage ?? "")
             }
             // Tela da câmera: abre e fecha conforme `store.isCameraPresented`.
             .fullScreenCover(isPresented: isCameraPresented) {
