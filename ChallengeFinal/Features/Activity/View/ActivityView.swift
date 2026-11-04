@@ -119,7 +119,15 @@ struct ActivityView: View {
         // da própria tela) sai do fluxo, e o `finishActivity` cancela o cronômetro antes.
         case .inProgress:
             if let title = store.activityTitle, let subtitle = store.activitySubtitle, let description = store.activityDescription {
-                InProgressView(message: store.activityTitle ?? "", challengeSubTitle: store.activitySubtitle ?? "", challengeDescription: store.activityDescription ?? "", timeText: store.timeText, finishAction: {interactor.completeActivity(currentCategory: currentCategory, title: title, subTitle: subtitle, Description: description)}, cancelAction: interactor.finishActivityFlow)
+                InProgressView(
+                    message: store.activityTitle ?? "",
+                    challengeSubTitle: store.activitySubtitle ?? "",
+                    challengeDescription: store.activityDescription ?? "",
+                    timeText: store.timeText,
+                    finishAction: {
+                        interactor.completeActivity(currentCategory: currentCategory, title: title, subTitle: subtitle, Description: description)
+                    },
+                    cancelAction: interactor.finishActivityFlow)
             }
         // Humor: a roleta gira com swipe; "continuar" segue para a selfie.
         case .mood:
@@ -173,13 +181,14 @@ struct ActivityView: View {
     }
     
     /// Step `.summary`: tela "desafio finalizado".
-    /// Os dados já estão na Store desde os steps anteriores (desafio, foto, humor).
+    /// Os dados já estão na Store desde os steps anteriores (foto, humor) e a conquista
+    /// (título e descrição) chega na transição para o summary.
     /// Ao aparecer, pede ao Interactor para gerar a imagem do story.
     private var summaryStepView: some View {
         SummaryView(
             style: .activity,
-            title: store.activitySubtitle ?? "",
-            description: store.activityDescription ?? "",
+            title: store.achievementTitle ?? "",
+            description: store.achievementDescription ?? "",
             photo: store.photo,
             humor: store.humor,
             onFinish: { interactor.finishActivityFlow() },

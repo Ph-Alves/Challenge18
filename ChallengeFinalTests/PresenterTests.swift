@@ -191,6 +191,19 @@ struct PresenterTests {
         #expect(store.humor == .frustrated)
     }
 
+    // MARK: ActivityPresenter (conquista)
+
+    // A conquista chega pronta do Interactor: o Presenter só a entrega à Store e abre o summary.
+    @Test func testingPresentSummaryPassesAchievementToStoreAndOpensSummary() {
+        let (presenter, store) = createActivityPresenterAndStore()
+
+        presenter.presentSummary(achievement: Achievement(title: "mestre offline", description: "você passou 1h offline"))
+
+        #expect(store.achievementTitle == "mestre offline")
+        #expect(store.achievementDescription == "você passou 1h offline")
+        #expect(store.currentStep == .summary)
+    }
+
     // MARK: ActivityPresenter (compartilhamento)
 
     @Test func testingPresentStoryRendersStoryImage() throws {

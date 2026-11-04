@@ -16,7 +16,7 @@ protocol ActivityStoreProtocol: AnyObject {
     // MARK: - Step do timer
     func displayTimer(_ text: String)
     
-    // MARK: Steps .draw e .challenge (implementados em ActivityStore+Draw.swift)
+    // MARK: Steps .draw e .challenge
     func displayActivity(_ challenge: FrictionChallenge)
     func displaySearching()
     func displaySearchFailed()
@@ -43,7 +43,7 @@ protocol ActivityStoreProtocol: AnyObject {
     func transitionToInProgress()
     func transitionToDraw()
     func transitionToActivity()
-    func transitionToSummary()
+    func transitionToSummary(achievement: Achievement)
     func finishFlow()
 }
 
@@ -61,9 +61,6 @@ final class ActivityStore: ActivityStoreProtocol {
     let coordinator: ActivityRouting
     
     // MARK: Steps .draw e .challenge
-    // Não são `private(set)` porque quem escreve é o `ActivityStore+Draw.swift`.
-    // Extensions não podem ter propriedades armazenadas, por isso ficam aqui.
-    
     /// Desafio sorteado (título, subtítulo e descrição). `nil` = ainda não sorteou.
     var activityTitle: String?
     var activitySubtitle: String?
@@ -112,6 +109,13 @@ final class ActivityStore: ActivityStoreProtocol {
     }
     
     //MARK: Step .summary
+    
+    /// Título da conquista (ex.: "mestre offline"). `nil` = o summary ainda não abriu.
+    /// Chega junto com a transição para o summary (`transitionToSummary`).
+    private(set) var achievementTitle: String?
+
+    /// Descrição da conquista, já citando o tempo da atividade. `nil` = o summary ainda não abriu.
+    private(set) var achievementDescription: String?
     
     /// Imagem do story já renderizada, pronta para o "compartilhar".
     /// `nil` = a renderização falhou; o Interactor trata ao tocar em compartilhar.
@@ -175,8 +179,51 @@ final class ActivityStore: ActivityStoreProtocol {
         timeText = text
     }
     
+    // MARK: Steps .draw e .challenge
+    // Os requisitos estão declarados no `ActivityStoreProtocol`.
+
+    /// Guarda o desafio sorteado e marca como pronto.
+    func displayActivity(_ challenge: FrictionChallenge) {
+        self.activityTitle = challenge.title
+        self.activitySubtitle = challenge.subTitle
+        self.activityDescription = challenge.rationale
+        self.isSearching = false
+        // A view anima a bola e só depois chama transitionToChallenge()
+        self.isChallengeReady = true
+    }
+
+    /// Também desfaz o "aceito": um novo sorteio (reroll) volta para a tela do desafio.
+    func displaySearching() {
+        self.isSearching = true
+        self.isChallengeAccepted = false
+    }
+
+    func displaySearchFailed() {
+        self.isSearching = false
+    }
+
+    func displayAcceptedActivity() {
+        self.isChallengeAccepted = true
+    }
+
     // MARK: Transitions
-    
+
+    /// Volta para o sorteio já com o estado limpo, para gerar um novo desafio.
+    func transitionToStart() {
+        self.isSearching = false
+        self.isChallengeReady = false
+        self.isChallengeAccepted = false
+        self.coordinator.goToChallenge()
+    }
+
+    func transitionToMood() {
+        self.coordinator.goToMood()
+    }
+
+    func transitionToPhoto() {
+        self.coordinator.goToPhoto()
+    }
+
     func transitionToInProgress() {
         self.coordinator.goToInProgress()
     }
@@ -189,7 +236,10 @@ final class ActivityStore: ActivityStoreProtocol {
         self.coordinator.goToChallenge()
     }
     
-    func transitionToSummary() {
+    /// Guarda a conquista e só então troca o step, para o summary já abrir com os textos.
+    func transitionToSummary(achievement: Achievement) {
+        self.achievementTitle = achievement.title
+        self.achievementDescription = achievement.description
         self.coordinator.goToSummary()
     }
     

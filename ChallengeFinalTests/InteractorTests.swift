@@ -49,6 +49,8 @@ final class ActivityPresenterSpy: ActivityPresenterProtocol {
     private(set) var moodCount = 0
     private(set) var photoCount = 0
     private(set) var summaryCount = 0
+    /// Conquistas que o Interactor mandou para o summary, em ordem.
+    private(set) var presentedAchievements: [Achievement] = []
     private(set) var flowFinishedCount = 0
 
     func presentTime(_ elapsed: TimeInterval) { presentedTimes.append(elapsed) }
@@ -76,7 +78,10 @@ final class ActivityPresenterSpy: ActivityPresenterProtocol {
     func presentCaptured(_ data: Data) {}
     func presentFlash(isOn: Bool) {}
     func presentAlertsDismissed() {}
-    func presentSummary() { summaryCount += 1 }
+    func presentSummary(achievement: Achievement) {
+        summaryCount += 1
+        presentedAchievements.append(achievement)
+    }
     func presentFlowFinished() { flowFinishedCount += 1 }
     func presentInProgress() { inProgressCount += 1 }
     func presentChallenge() {}
@@ -114,6 +119,14 @@ final class FoundationWorkerMock: FoundationWorkerProtocol {
     func generate(for category: ActivityCategory, archived: [Activity]) async {
         generateCalls.append((category, archived))
         state = stateAfterGenerate
+    }
+
+    var achievementToReturn = Achievement(title: "título da conquista", description: "descrição da conquista")
+    private(set) var achievementCalls: [(activity: Activity, elapsed: TimeInterval)] = []
+
+    func generateAchievement(for activity: Activity, elapsed: TimeInterval) async -> Achievement {
+        achievementCalls.append((activity, elapsed))
+        return achievementToReturn
     }
 }
 
@@ -758,6 +771,7 @@ struct InteractorTests {
         let photo = Data([0x01, 0x02])
         sut.interactor.result = result
         sut.interactor.selectedPhoto = photo
+        sut.interactor.achievement = Achievement(title: "mestre offline", description: "você passou 1h offline")
 
         sut.interactor.continueFromPhoto()
 
@@ -771,11 +785,128 @@ struct InteractorTests {
         completeActivity(on: sut)
         let result = ActivityResult(time: 10, humor: .chill)
         sut.interactor.result = result
+        sut.interactor.achievement = Achievement(title: "mestre offline", description: "você passou 1h offline")
 
         sut.interactor.continueFromPhoto()
 
         #expect(result.photo == nil)
         #expect(sut.presenter.summaryCount == 1)
+    }
+
+    // A conquista que o Interactor guardou é a que vai para o summary (e daí para a Store).
+    @Test func testingContinueFromPhotoPresentsTheStoredAchievement() {
+        let sut = makeActivitySUT()
+        completeActivity(on: sut)
+        sut.interactor.result = ActivityResult(time: 10, humor: .chill)
+        sut.interactor.achievement = Achievement(title: "mestre offline", description: "você passou 1h offline")
+
+        sut.interactor.continueFromPhoto()
+
+        #expect(sut.presenter.presentedAchievements.first?.title == "mestre offline")
+        #expect(sut.presenter.presentedAchievements.first?.description == "você passou 1h offline")
+    }
+
+    // MARK: ActivityInteractor (conquista)
+
+    // A conquista nasce ao parar o cronômetro, a partir da atividade já salva e do tempo final.
+    @Test func testingStopTimerGeneratesAchievementForCurrentActivity() async throws {
+        let sut = makeActivitySUT()
+        sut.interactor.timerStartDate = Date().addingTimeInterval(-30)
+
+        completeActivity(on: sut, title: "Cardio sem fones")
+        await sut.interactor.achievementTask?.value
+
+        let call = try #require(sut.foundation.achievementCalls.first)
+        #expect(sut.foundation.achievementCalls.count == 1)
+        #expect(call.activity === sut.interactor.currentActivity)
+        #expect(call.activity.name == "Cardio sem fones")
+        #expect(call.elapsed >= 30)
+        #expect(call.elapsed < 31)
+        #expect(sut.interactor.achievement?.title == "título da conquista")
+        #expect(sut.interactor.achievement?.description == "descrição da conquista")
+    }
+
+    // Sem atividade salva não há o que celebrar: nem chama o modelo.
+    @Test func testingStopTimerWithoutCurrentActivityDoesNotGenerateAchievement() {
+        let sut = makeActivitySUT()
+        sut.interactor.timerStartDate = Date().addingTimeInterval(-30)
+
+        sut.interactor.stopTimer()
+
+        #expect(sut.interactor.achievementTask == nil)
+        #expect(sut.interactor.achievement == nil)
+        #expect(sut.foundation.achievementCalls.isEmpty)
+    }
+
+    // Humor escolhido ANTES da conquista chegar: o result já existe e recebe os textos depois.
+    @Test func testingAchievementArrivingAfterResultIsWrittenInIt() async {
+        let sut = makeActivitySUT()
+        completeActivity(on: sut)
+        let result = ActivityResult(time: 10, humor: .chill)
+        sut.interactor.result = result
+
+        await sut.interactor.achievementTask?.value
+
+        #expect(result.achievementTitle == "título da conquista")
+        #expect(result.achievementDescription == "descrição da conquista")
+    }
+
+    // Conquista pronta ANTES do humor: o result criado depois já nasce com os textos.
+    @Test func testingResultCreatedAfterAchievementStartsWithItsTexts() async {
+        let sut = makeActivitySUT()
+        completeActivity(on: sut)
+        await sut.interactor.achievementTask?.value
+
+        let result = sut.interactor.makeResultIfNeeded()
+
+        #expect(result.achievementTitle == "título da conquista")
+        #expect(result.achievementDescription == "descrição da conquista")
+    }
+
+    @Test func testingResultCreatedBeforeAchievementStartsWithEmptyTexts() {
+        let sut = makeActivitySUT()
+
+        let result = sut.interactor.makeResultIfNeeded()
+
+        #expect(result.achievementTitle.isEmpty)
+        #expect(result.achievementDescription.isEmpty)
+    }
+
+    // Cancelar (ou sair do fluxo) antes de a conquista chegar não pode deixá-la vazar para o result.
+    @Test func testingCancelTimerDiscardsAchievementStillBeingGenerated() async {
+        let sut = makeActivitySUT()
+        completeActivity(on: sut)
+        let result = ActivityResult(time: 10, humor: .chill)
+        sut.interactor.result = result
+
+        sut.interactor.cancelTimer()
+        try? await Task.sleep(for: .milliseconds(100))
+
+        #expect(sut.interactor.achievementTask == nil)
+        #expect(sut.interactor.achievement == nil)
+        #expect(result.achievementTitle.isEmpty)
+    }
+
+    @Test func testingCancelTimerClearsAchievementAlreadyGenerated() async {
+        let sut = makeActivitySUT()
+        completeActivity(on: sut)
+        await sut.interactor.achievementTask?.value
+
+        sut.interactor.cancelTimer()
+
+        #expect(sut.interactor.achievement == nil)
+    }
+
+    // Terminar o fluxo passa por `cancelTimer`: a conquista de uma atividade não vai para a próxima.
+    @Test func testingFinishActivityFlowClearsAchievement() async {
+        let sut = makeActivitySUT()
+        completeActivity(on: sut)
+        await sut.interactor.achievementTask?.value
+
+        sut.interactor.finishActivityFlow()
+
+        #expect(sut.interactor.achievement == nil)
+        #expect(sut.interactor.achievementTask == nil)
     }
 
     // Sair do fluxo no meio (ou cancelar) descarta o tempo e não deixa o cronômetro rodando.

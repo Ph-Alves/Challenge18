@@ -29,6 +29,16 @@ struct ChallengeTitle: Sendable {
     var title: String
 }
 
+/// Usado quando o desafio foi completo, para gerar uma conquista
+@Generable
+struct Achievement: Sendable {
+    @Guide(description: "minúsculas e 2 a 3 palavras, como em mestre offline")
+    var title: String
+    
+    @Guide(description: "2ª pessoa e passado, como em você passou 1h se exercitando sem…")
+    var description: String
+}
+
 /// Desafio pré-pronto: já tem `subTitle` e `rationale`, falta o título.
 struct PresetChallenge: Hashable, Sendable {
     let subTitle: String
@@ -136,6 +146,17 @@ Regras:
 - Nunca repita nem se aproxime dos desafios que a pessoa já viu.
 """
 
+private let achievementInstructions = """
+Você escreve conquistas curtas para celebrar um desafio que a pessoa acabou de completar.
+
+Regras:
+- Responda sempre em português do Brasil, em minúsculas, com tom acolhedor e sem exagero.
+- O título tem de 2 a 3 palavras e funciona como um apelido para a pessoa. Exemplo: mestre offline
+- A descrição fala com a pessoa na 2ª pessoa e no passado, em uma frase. Exemplo: você passou 1h se exercitando sem entrar em nenhuma rede social
+- A descrição deve citar o tempo recebido exatamente como foi escrito, sem converter nem arredondar.
+- Use só o que foi informado sobre o desafio; não invente fatos.
+"""
+
 enum FoundationWorkerState {
     case idle
     case loading
@@ -152,6 +173,8 @@ protocol FoundationWorkerProtocol: AnyObject {
     
     func prewarm(for category: ActivityCategory)
     func generate(for category: ActivityCategory, archived: [Activity]) async
+    /// Escreve a conquista de uma atividade concluída. Nunca falha: sem o modelo, devolve um texto padrão.
+    func generateAchievement(for activity: Activity, elapsed: TimeInterval) async -> Achievement
 }
 
 /// Entrega um desafio para uma categoria, intercalando desafios 100% gerados pelo modelo
@@ -162,7 +185,8 @@ final class FoundationWorker: FoundationWorkerProtocol {
 
     private(set) var state: FoundationWorkerState = .idle
 
-    private var session: LanguageModelSession?
+    private var challengeSession: LanguageModelSession?
+    private var achievementSession: LanguageModelSession?
 
     /// Alterna entre desafio gerado (false) e preset (true). O primeiro é gerado.
     private var usesPresetNext = false
@@ -179,7 +203,7 @@ final class FoundationWorker: FoundationWorkerProtocol {
     func prewarm(for category: ActivityCategory) {
         guard availability == .available else { return }
         let activeSession = makeSession()
-        session = activeSession
+        challengeSession = activeSession
         activeSession.prewarm(promptPrefix: Prompt("categoria: \(category.focus)"))
     }
 
@@ -210,6 +234,36 @@ final class FoundationWorker: FoundationWorkerProtocol {
             } else {
                 state = .failed(Self.message(for: error))
             }
+        }
+    }
+
+    /// Conquista da atividade: título e descrição citando o tempo do cronômetro.
+    func generateAchievement(for activity: Activity, elapsed: TimeInterval) async -> Achievement {
+        let duration = Self.spokenDuration(elapsed)
+        let name = activity.name
+        let details = activity.activityDescription
+
+        do {
+            guard availability == .available else { throw EngineError.modelUnavailable }
+
+            var options = GenerationOptions()
+            options.temperature = Double.random(in: 0.4..<0.6)
+
+            let session = makeAchievementSession()
+            achievementSession = session
+            let response = try await session.respond(
+                to: achievementPrompt(name: name, details: details, category: activity.category, duration: duration),
+                generating: Achievement.self,
+                options: options
+            )
+
+            let title = response.content.title.trimmingCharacters(in: .whitespacesAndNewlines)
+            let description = response.content.description.trimmingCharacters(in: .whitespacesAndNewlines)
+            // Sem o tempo na descrição, o texto não cumpre o que a conquista promete.
+            guard !title.isEmpty, description.contains(duration) else { throw EngineError.incompleteResponse }
+            return Achievement(title: title, description: description)
+        } catch {
+            return Achievement(title: name, description: "você completou \(name) em \(duration)")
         }
     }
 
@@ -309,6 +363,30 @@ final class FoundationWorker: FoundationWorkerProtocol {
         """
     }
 
+    private func achievementPrompt(name: String, details: String, category: ActivityCategory, duration: String) -> String {
+        """
+        categoria: \(category.focus)
+        desafio: \(name)
+        detalhes: \(details)
+        tempo: \(duration)
+        Escreva a conquista dessa pessoa citando o tempo "\(duration)" na descrição.
+        """
+    }
+
+    /// Tempo para ler em voz alta: "1h", "1h 20 min", "20 min" ou "45 s".
+    private static func spokenDuration(_ interval: TimeInterval) -> String {
+        let total = max(0, Int(interval.rounded()))
+        let hours = total / 3600
+        let minutes = (total % 3600) / 60
+
+        switch (hours, minutes) {
+        case (0, 0): return "\(total) s"
+        case (0, _): return "\(minutes) min"
+        case (_, 0): return "\(hours)h"
+        default: return "\(hours)h \(minutes) min"
+        }
+    }
+
     /// Lista os desafios já vistos (arquivados e desta sessão), limitada para não estourar o contexto.
     private func avoidLines(for context: FrictionContext) -> [String] {
         let avoided = (context.archivedTitles + seenTitles).suffix(20)
@@ -320,12 +398,16 @@ final class FoundationWorker: FoundationWorkerProtocol {
 
     /// Usa a sessão aquecida, se houver. Cada desafio usa uma sessão nova para o histórico não crescer.
     private func takeSession() -> LanguageModelSession {
-        defer { session = nil }
-        return session ?? makeSession()
+        defer { challengeSession = nil }
+        return challengeSession ?? makeSession()
     }
 
     private func makeSession() -> LanguageModelSession {
         LanguageModelSession(model: .default, instructions: frictionInstructions)
+    }
+
+    private func makeAchievementSession() -> LanguageModelSession {
+        LanguageModelSession(model: .default, instructions: achievementInstructions)
     }
 
     private static func message(for error: Error) -> String {
