@@ -56,6 +56,13 @@ struct ChallengesView: View {
             ArchivedChallengesView(interactor: interactor, store: store)
                 .presentationDragIndicator(.visible)
         }
+        //CHANGE: Descomentar após implementação da task do Ph.
+//        .sheet(item: summaryBinding) { activity in
+//            Summary(activity: activity) {
+//                interactor.closeSummary()
+//            }
+//            .presentationDragIndicator(.visible)
+//        }
         .alert("ops", isPresented: isErrorPresented) {
             Button("ok", role: .cancel) { interactor.dismissError() }
         } message: {
@@ -139,4 +146,12 @@ struct ChallengesView: View {
             set: { if !$0 { interactor.dismissError() } }
         )
     }
+    
+    //CHANGE: Descomentar após implementação da task do Ph.
+//    private var summaryBinding: Binding<Activity?> {
+//        Binding(
+//            get: { store.selectedChallenge },
+//            set: { if $0 == nil { interactor.closeSummary() } }
+//        )
+//    }
 }
