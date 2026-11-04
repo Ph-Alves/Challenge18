@@ -11,16 +11,27 @@ import PhotosUI
 /// Tela da câmera em tela cheia (a tela preta do protótipo).
 ///
 /// - Mostra o vídeo ao vivo pela `CameraPreviewView`.
-/// - Lê da Store só o que muda de aparência (ícone do flash, mensagem de erro).
-/// - Repassa todos os toques para o Interactor. Não decide nada.
+/// - Recebe só dados prontos (ícone do flash, mensagem de erro) e closures.
+/// - Não conhece Store nem Interactor: repassa os toques por closures e não decide nada.
+///   Por isso serve para qualquer fluxo (Activity, Feelings...).
 ///
-/// Quem abre e fecha esta tela é a `ActivityView`, pela `.fullScreenCover`
-/// ligada a `store.isCameraPresented`.
+/// Quem abre e fecha esta tela é a view que a usa, pela `.fullScreenCover`.
 struct CameraView: View {
 
-    let interactor: any ActivityInteractorProtocol
-    let store: ActivityStore
     let preview: CameraPreview
+
+    /// Nome do SF Symbol do botão de flash.
+    let flashIcon: String
+
+    /// Mensagem do alerta de erro. `nil` = sem alerta.
+    let errorMessage: String?
+
+    let closeCamera: () -> Void
+    let toggleFlash: () -> Void
+    let takePhoto: () -> Void
+    let switchCamera: () -> Void
+    let didSelectFromGallery: (PhotosPickerItem) -> Void
+    let dismissAlerts: () -> Void
 
     /// Item escolhido no "da biblioteca". Estado só de UI:
     /// assim que chega, repassamos ao Interactor e limpamos.
@@ -52,7 +63,7 @@ struct CameraView: View {
         // Foto escolhida na biblioteca: segue o mesmo caminho da galeria da outra tela.
         .onChange(of: galleryItem) { _, newItem in
             guard let newItem else { return }
-            interactor.didSelectFromGallery(newItem)
+            didSelectFromGallery(newItem)
             galleryItem = nil
         }
         // Erros que acontecem COM a câmera aberta (ex.: falha na captura).
@@ -60,10 +71,10 @@ struct CameraView: View {
         // por baixo, não aparece enquanto esta tela cobre tudo.
         .alert("Ops!", isPresented: isErrorAlertPresented) {
             Button("OK", role: .cancel) {
-                interactor.dismissAlerts()
+                dismissAlerts()
             }
         } message: {
-            Text(store.errorMessage ?? "")
+            Text(errorMessage ?? "")
         }
         // A barra de status branca combina com o fundo preto.
         .preferredColorScheme(.dark)
@@ -77,7 +88,7 @@ struct CameraView: View {
     private var topBar: some View {
         HStack {
             Button {
-                interactor.closeCamera()
+                closeCamera()
             } label: {
                 Image(systemName: "xmark")
                     .font(.system(size: 18, weight: .semibold))
@@ -94,11 +105,11 @@ struct CameraView: View {
 
     private var controls: some View {
         HStack {
-            // Flash: o ícone vem da Store (o Presenter decide qual mostrar).
+            // Flash: o ícone vem pronto de fora (o Presenter decide qual mostrar).
             Button {
-                interactor.toggleFlash()
+                toggleFlash()
             } label: {
-                Image(systemName: store.cameraFlashIcon)
+                Image(systemName: flashIcon)
                     .font(.system(size: 24))
                     .foregroundStyle(.white)
                     .frame(width: 56, height: 56)
@@ -109,7 +120,7 @@ struct CameraView: View {
 
             // Disparo: círculo branco com um anel por dentro, como no protótipo.
             Button {
-                interactor.takePhoto()
+                takePhoto()
             } label: {
                 ZStack {
                     Circle()
@@ -126,7 +137,7 @@ struct CameraView: View {
 
             // Trocar câmera: ícone fixo, então nada na Store.
             Button {
-                interactor.switchCamera()
+                switchCamera()
             } label: {
                 Image(systemName: "arrow.triangle.2.circlepath")
                     .font(.system(size: 24))
@@ -154,12 +165,12 @@ struct CameraView: View {
 
     // MARK: - Alerta
 
-    /// Mesmo padrão da ActivityView: lê a Store e, ao fechar, avisa o Interactor.
+    /// Lê a mensagem e, ao fechar o alerta, avisa quem usa a tela.
     private var isErrorAlertPresented: Binding<Bool> {
         Binding(
-            get: { store.errorMessage != nil },
+            get: { errorMessage != nil },
             set: { isPresented in
-                if !isPresented { interactor.dismissAlerts() }
+                if !isPresented { dismissAlerts() }
             }
         )
     }

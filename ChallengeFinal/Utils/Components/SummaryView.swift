@@ -1,18 +1,22 @@
 //
-//  SummaryStepView.swift
+//  SummaryView.swift
 //  ChallengeFinal
 //
-//  Created by Raquel Souza on 27/10/26.
+//  Created by Paulo Henrique Costa Alves on 03/11/26.
 //
 
 import SwiftUI
 
-/// Step `.summary` do fluxo de Activity (tela "desafio finalizado" do protótipo).
-///
-struct SummaryStepView: View {
+enum SummaryStyle {
+    case activity
+    case display
+}
 
-    // MARK: - Variables
-
+struct SummaryView: View {
+    
+    /// Estilo do componente (para mudar com base no fluxo)
+    let style: SummaryStyle
+    
     /// Título do desafio
     let title: String
 
@@ -23,16 +27,14 @@ struct SummaryStepView: View {
     var photo: Image? = nil
 
     /// Humor registrado
-    let humor: Humor
+    let humor: Humor?
 
     /// Toque em "finalizar".
     let onFinish: () -> Void
 
     /// Toque em "compartilhar".
     let onShare: () -> Void
-
-    // MARK: - View
-
+    
     var body: some View {
         VStack(spacing: 0) {
             header
@@ -50,9 +52,7 @@ struct SummaryStepView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.white)
     }
-
-    // MARK: - Título
-
+    
     private var header: some View {
         VStack(spacing: 0) {
             ChallengeCircle(text: "você conseguiu!", size: .small)
@@ -76,51 +76,47 @@ struct SummaryStepView: View {
         PhotoCard(photo: photo, height: 228)
             // O selo de humor fica "pendurado" no canto de cima, como no protótipo.
             .overlay(alignment: .topTrailing) {
-                EmojiLabelComponent(humor: humor, highlighted: true)
-                    .offset(x: 24, y: -28)
+                if let humor {
+                    EmojiLabelComponent(humor: humor, highlighted: true)
+                        .offset(x: 24, y: -28)
+                }
             }
     }
 
     // MARK: - Botões
 
     private var buttons: some View {
-        HStack(spacing: 12) {
-            CustomButtonComponent(
-                title: "finalizar",
-                icon: nil,
-                type: .secondary,
-                action: onFinish
-            )
-
+        VStack(spacing: 12) {
+            switch style {
+            case .activity:
+                CustomButtonComponent(
+                    title: "finalizar",
+                    icon: nil,
+                    type: .secondary,
+                    action: onFinish
+                )
+                .bold()
+            case .display:
+                CustomButtonComponent(
+                    title: "tirar outra foto",
+                    icon: "arrow.trianglehead.2.clockwise.rotate.90",
+                    type: .secondary,
+                    action: onFinish
+                )
+                .bold()
+            }
+            
             CustomButtonComponent(
                 title: "compartilhar",
                 icon: "square.and.arrow.up",
                 type: .secondary,
                 action: onShare
             )
+            .bold()
         }
     }
 }
 
-// MARK: - Previews
-
-#Preview("Sem foto") {
-    SummaryStepView(
-        title: "menos distração, mais foco",
-        description: "sem redes sociais, seu cardio vira um momento para cuidar do corpo e desacelerar a mente.",
-        humor: .frustrated,
-        onFinish: { print("finalizar") },
-        onShare: { print("compartilhar") }
-    )
-}
-
-#Preview("Com foto") {
-    SummaryStepView(
-        title: "menos distração, mais foco",
-        description: "sem redes sociais, seu cardio vira um momento para cuidar do corpo e desacelerar a mente.",
-        photo: Image(systemName: "person.crop.square.fill"), // só para visualizar
-        humor: .calm,
-        onFinish: { print("finalizar") },
-        onShare: { print("compartilhar") }
-    )
+#Preview {
+    SummaryView(style: .activity,title: "testee", description: "teste", humor: .annoyed, onFinish: {}, onShare: {})
 }
