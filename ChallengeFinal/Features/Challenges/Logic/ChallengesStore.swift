@@ -17,6 +17,9 @@ protocol ChallengesStoreProtocol: AnyObject {
     func displaySummary(_ activity: Activity?, photo: Image?)
     func displayShareSheet(_ item: ShareItem?)
     func displayError(_ message: String?)
+    // MARK: Câmera
+    func displayCamera(isPresented: Bool)
+    func displayCameraFlashIcon(_ icon: String)
 }
 
 // MARK: - Class
@@ -55,6 +58,10 @@ final class ChallengesStore: ChallengesStoreProtocol {
 
     // Erro. `nil` = sem alerta.
     private(set) var errorMessage: String?
+    
+    // Câmera (tirar outra foto no resumo)
+    private(set) var isCameraPresented = false
+    private(set) var cameraFlashIcon = "bolt.slash"
 
     // MARK: - Funções do ciclo VIP
 
@@ -85,6 +92,14 @@ final class ChallengesStore: ChallengesStoreProtocol {
 
     func displayError(_ message: String?) {
         self.errorMessage = message
+    }
+    
+    func displayCamera(isPresented: Bool) {
+        isCameraPresented = isPresented
+    }
+    
+    func displayCameraFlashIcon(_ icon: String) {
+        cameraFlashIcon = icon
     }
 }
 

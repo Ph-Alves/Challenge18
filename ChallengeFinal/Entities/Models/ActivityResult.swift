@@ -13,11 +13,12 @@ final class ActivityResult {
     var resultID: UUID = UUID()
     @Attribute(.externalStorage) var photo: Data?
     var time: TimeInterval = 0
-    var humor: Humor = Humor.chill
+    var humor: Humor?
     var activity: Activity?
     
     /// `photo` é opcional porque o usuário pode "continuar sem foto"
-    init(photo: Data? = nil, time: TimeInterval, humor: Humor) {
+    /// `humor` é opcional porque o resultado pode existir antes de o humor ser escolhido.
+    init(photo: Data? = nil, time: TimeInterval, humor: Humor? = nil) {
         self.photo = photo
         self.time = time
         self.humor = humor

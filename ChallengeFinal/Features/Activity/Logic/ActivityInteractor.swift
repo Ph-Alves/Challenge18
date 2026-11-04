@@ -203,16 +203,20 @@ final class ActivityInteractor: ActivityInteractorProtocol {
     }
     
     /// Terminou o desafio: vai para o humor.
+    /// subir o timer pra ele ser salvo mesmo se o usuário sair na tela de humor.
     func completeActivity(currentCategory: ActivityCategory, title: String, subTitle: String, Description: String) {
+        // Para o cronômetro primeiro: é ele que fixa o `timerElapsed` que vai para o resultado.
+        stopTimer()
         do {
-            self.currentActivity = Activity(category: currentCategory, result: nil, name: title, description: subTitle, archived: false)
-            if let currentActivity {
-                try activityRepository.add(currentActivity)
-            }
+            let newResult = ActivityResult(time: timerElapsed)
+            self.result = newResult
+            
+            let activity = Activity(category: currentCategory, result: newResult, name: title, description: subTitle, archived: false)
+            self.currentActivity = activity
+            try activityRepository.add(activity)
         } catch {
             print("Erro ao adicionar entidade: \(error.localizedDescription)")
         }
-        stopTimer()
         presenter.presentMood()
     }
     

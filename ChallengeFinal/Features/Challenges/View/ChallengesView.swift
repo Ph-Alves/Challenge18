@@ -13,6 +13,8 @@ struct ChallengesView: View {
     // MARK: - Variables
     let interactor: ChallengesInteractorProtocol
     var store: ChallengesStore
+    
+    let cameraPreview: CameraPreview
 
     /// Texto digitado. Fica na View porque o TextField precisa de binding;
     /// a cada mudança, o Interactor recalcula a lista.
@@ -56,14 +58,14 @@ struct ChallengesView: View {
             ArchivedChallengesView(interactor: interactor, store: store)
                 .presentationDragIndicator(.visible)
         }
-        .sheet(item: summaryBinding) { activity in
+        .sheet(item: summaryBinding, onDismiss: interactor.summaryDismissed) { activity in
             SummaryView(
-                style: .activity,
+                style: .display,
                 title: activity.name,
                 description: activity.activityDescription,
                 photo: store.selectedPhoto,
                 humor: activity.result?.humor,
-                onFinish: { interactor.closeSummary() },
+                onFinish: { interactor.retakePhoto() },
                 onShare: { interactor.shareStory() }
             )
             .presentationDragIndicator(.visible)
@@ -81,6 +83,19 @@ struct ChallengesView: View {
                 .presentationDetents([.medium, .large])
                 .ignoresSafeArea()
             }
+        }
+        .fullScreenCover(isPresented: isCameraPresented, onDismiss: interactor.cameraDismissed) {
+            CameraView(
+                preview: cameraPreview,
+                flashIcon: store.cameraFlashIcon,
+                errorMessage: store.errorMessage,
+                closeCamera: interactor.closeCamera,
+                toggleFlash: interactor.toggleFlash,
+                takePhoto: interactor.takePhoto,
+                switchCamera: interactor.switchCamera,
+                didSelectFromGallery: interactor.didSelectFromGallery,
+                dismissAlerts: interactor.dismissError
+            )
         }
         .alert("ops", isPresented: isErrorPresented) {
             Button("ok", role: .cancel) { interactor.dismissError() }
@@ -177,6 +192,13 @@ struct ChallengesView: View {
         Binding(
             get: { store.shareItem },
             set: { if $0 == nil { interactor.didFinishSharing(completed: false) } }
+        )
+    }
+    
+    private var isCameraPresented: Binding<Bool> {
+        Binding(
+            get: { store.isCameraPresented },
+            set: { if !$0 { interactor.closeCamera() } }
         )
     }
 }

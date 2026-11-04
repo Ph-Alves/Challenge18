@@ -14,7 +14,8 @@ enum ChallengesBuilder {
         let store = ChallengesStore()
         let presenter = ChallengesPresenter(store: store)
         let interactor = ChallengesInteractor(repository: GenericRepository<Activity>(context: context), presenter: presenter)
-
-        return ChallengesView(interactor: interactor, store: store)
+        let camera = CameraWorker()
+        
+        return ChallengesView(interactor: interactor, store: store, cameraPreview: CameraPreview(session: camera.session))
     }
 }
