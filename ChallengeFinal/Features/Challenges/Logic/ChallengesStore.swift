@@ -96,17 +96,9 @@ enum ChallengesEmptyState: Equatable {
     case noResults     // tem desafios, mas a busca/filtro não encontrou nenhum
     case noArchived    // nenhum desafio arquivado
 
-    var icon: String {
-        switch self {
-        case .noCompleted: "flag.checkered"
-        case .noResults: "magnifyingglass"
-        case .noArchived: "archivebox"
-        }
-    }
-
     var title: String {
         switch self {
-        case .noCompleted: "nenhum desafio concluído ainda"
+        case .noCompleted: "nenhum desafio concluído"
         case .noResults: "nenhum desafio encontrado"
         case .noArchived: "nada arquivado por aqui"
         }
@@ -114,7 +106,7 @@ enum ChallengesEmptyState: Equatable {
 
     var message: String {
         switch self {
-        case .noCompleted: "conclua um desafio na home e ele aparece aqui."
+        case .noCompleted: "procure um novo desafio na home :)"
         case .noResults: "tente buscar por outro título ou trocar a categoria."
         case .noArchived: "quando você arquivar um desafio no sorteio, ele aparece nesta lista."
         }

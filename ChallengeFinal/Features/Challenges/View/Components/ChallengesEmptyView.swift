@@ -13,10 +13,6 @@ struct ChallengesEmptyView: View {
 
     var body: some View {
         VStack(spacing: 10) {
-            Image(systemName: state.icon)
-                .font(.system(size: 34))
-                .foregroundStyle(.gray)
-                .padding(.bottom, 4)
 
             Text(state.title)
                 .font(.headline)
