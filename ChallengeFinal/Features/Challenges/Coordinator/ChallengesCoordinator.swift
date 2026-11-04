@@ -11,19 +11,23 @@ import SwiftData
 
 //MARK: - Class
 @MainActor
-@Observable
 final class ChallengesCoordinator: ChallengesRouting {
-
-    //a view não deve ser recriada a cada render.
-    @ObservationIgnored var cached: ChallengesView?
+ 
+    /// Cache da view para não reconstruir a cena a cada render da TabView.
+    var cached: ChallengesView?
+    
+    init(cached: ChallengesView? = nil) {
+        self.cached = cached
+    }
 
     func startChallengesFlow(context: ModelContext) -> ChallengesView {
         if let cached {
             return cached
         }
 
-        let view = ChallengesBuilder.build(routing: self, context: context)
+        let view = ChallengesBuilder.build(context: context)
         cached = view
         return view
     }
 }
+

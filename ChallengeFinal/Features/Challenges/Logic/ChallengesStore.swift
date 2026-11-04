@@ -26,7 +26,6 @@ protocol ChallengesStoreProtocol: AnyObject {
 final class ChallengesStore: ChallengesStoreProtocol {
 
     // MARK: - Variables
-    let coordinator: ChallengesRouting
 
     // Listagem
     /// Desafios concluídos, já filtrados e ordenados pelo Interactor.
@@ -48,11 +47,6 @@ final class ChallengesStore: ChallengesStoreProtocol {
 
     // Erro. `nil` = sem alerta.
     private(set) var errorMessage: String?
-
-    // MARK: - Init
-    init(coordinator: ChallengesRouting) {
-        self.coordinator = coordinator
-    }
 
     // MARK: - Funções do ciclo VIP
 
