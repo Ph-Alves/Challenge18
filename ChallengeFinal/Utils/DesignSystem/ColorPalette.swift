@@ -9,14 +9,21 @@ import Foundation
 import SwiftUI
 
 struct ColorPalette {
-    let primary: Color
-    let secondary: Color
-    let accent: Color
-    let background: Color
-    let surface: Color
-    let lateralScroll: Color
+    let backgroundPrimary: Color
+    let fillPrimary: Color
+    let fillPlaceholder: Color
     let textPrimary: Color
     let textSecondary: Color
-    let success: Color
-    let error: Color
+    let textInverse: Color
+    let strokeDefault: Color
+    let strokeSecondary: Color
+    let strokeMuted: Color
+    let emotionOtimo: Color
+    let emotionAgradavel: Color
+    let emotionNeutro: Color
+    let emotionDesagradavel: Color
+    let emotionPessimo: Color
+    let emotionStroke: Color
+    let overlaySoft: Color
+    let overlayStrong: Color
 }

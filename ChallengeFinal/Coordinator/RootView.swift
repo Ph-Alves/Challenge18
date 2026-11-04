@@ -31,6 +31,10 @@ struct RootView: View {
             Tab("Profile", systemImage: "seal.fill", value: AppTab.profile) {
                 // feature ainda não existe
             }
+            
+            
+        }.onAppear {
+            print(UIFont.fontNames(forFamilyName: "Special Gothic"))
         }
     }
 }

@@ -6,18 +6,38 @@
 //
 
 import Foundation
-internal import SwiftUI
+import SwiftUI
 
 struct SoberStyle: ThemeStyleProtocol {
     let typography = Typography(
-        largeTitle: .custom("Bodoni 72", size: 32, relativeTo: .largeTitle),
-        title: .custom("Badoni 72", size: 28, relativeTo: .title),
-        subtitle: .custom("Badoni 72", size: 24, relativeTo: .title2),
-        header: .custom("Special Gothic", size: 20, relativeTo: .title3),
-        body: .custom("Special Gothic", size: 16, relativeTo: .body),
-        caption: .custom("Special Gothic", size: 12, relativeTo: .caption))
+        title1: .custom("Badoni 72", size: 36, relativeTo: .largeTitle),
+        title2: .custom("Badoni 72", size: 32, relativeTo: .title),
+        title3: .custom("Badoni 72", size: 24, relativeTo: .title3),
+        subtitle1:.custom("SpecialGothic-Bold", size: 22, relativeTo: .title2),
+        subtitle2: .custom("SpecialGothic-SemiBold", size: 18, relativeTo: .title3),
+        subtitle3: .custom("SpecialGothic-Bold", size: 14, relativeTo: .subheadline),
+        text1: .custom("SpecialGothic-Regular", size: 22, relativeTo: .title2),
+        text2: .custom("SpecialGothic-Regular", size: 16, relativeTo: .callout),
+        text3: .custom("SpecialGothic-Regular", size: 12, relativeTo: .caption))
     
-    let colors: ColorPalette
+    let colors = ColorPalette(
+        backgroundPrimary: .soberBackgroundPrimary,
+        fillPrimary: .soberFillPrimary,
+        fillPlaceholder: .soberFillPlaceholder,
+        textPrimary: .soberTextPrimary,
+        textSecondary: .soberTextSecondary,
+        textInverse: .soberTextInverse,
+        strokeDefault: .soberStrokeDefault,
+        strokeSecondary: .soberStrokeSecondary,
+        strokeMuted: .soberStrokeMuted,
+        emotionOtimo: .soberEmotionOtimo,
+        emotionAgradavel: .soberEmotionAgradavel,
+        emotionNeutro: .soberEmotionNeutro,
+        emotionDesagradavel: .soberEmotionDesagradavel,
+        emotionPessimo: .soberEmotionPessimo,
+        emotionStroke: .soberEmotionStroke,
+        overlaySoft: .soberOverlaySoft,
+        overlayStrong: .soberOverlayStrong)
     
     let icons: IconsSet
     

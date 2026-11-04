@@ -73,11 +73,21 @@
 			);
 			target = 4BC1A00A308BDD4B009D777C /* ChallengeFinalWidgetExtension */;
 		};
+		C282282A309BB61D005F7872 /* Exceptions for "ChallengeFinal" folder in "ChallengeFinal" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 000000000000000100000000 /* ChallengeFinal */;
+		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		000000000000000000000010 /* ChallengeFinal */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				C282282A309BB61D005F7872 /* Exceptions for "ChallengeFinal" folder in "ChallengeFinal" target */,
+			);
 			path = ChallengeFinal;
 			sourceTree = "<group>";
 		};
@@ -454,6 +464,7 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = ChallengeFinal/Info.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "Usamos a camera para registrar uma atividade.";
 				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
@@ -504,6 +515,7 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = ChallengeFinal/Info.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "Usamos a camera para registrar uma atividade.";
 				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;

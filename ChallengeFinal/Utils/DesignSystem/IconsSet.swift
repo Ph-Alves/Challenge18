@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import SwiftUI
 
 struct IconsSet {
     let activityIcons: [ActivityCategory: String]
@@ -15,6 +14,7 @@ struct IconsSet {
     let placeholderCheckIcon: String
     let photoPlaceholder: String
     let archivedChallengeIcon: String
+    let profilePlaceholder: String
 
 }
 
