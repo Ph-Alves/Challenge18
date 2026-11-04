@@ -10,14 +10,24 @@ import SwiftUI
 
 struct RegisteredActivityCard: View {
     var title: String
-    var humor: Humor
+    var image: Image?
+    var humor: Humor?
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
             VStack(alignment: .leading, spacing: 11) {
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(.gray.opacity(0.2))
-                    .frame(height: 114)
-                    
+                if let image {
+                    image
+                        .resizable()
+                        .scaledToFill()
+                        .frame(height: 120)
+                        .frame(maxWidth: .infinity)
+                        .clipped()
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                } else {
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(.gray.opacity(0.2))
+                        .frame(height: 120)
+                }
                 
                 Text(title)
                     .lineLimit(1)
@@ -37,11 +47,12 @@ struct RegisteredActivityCard: View {
                     .stroke(.black, lineWidth: 2)
             )
             
-            Image(humor.icon)
-                .resizable()
-                .frame(width: 44, height: 44)
-                
-                .offset(x: 8, y: 8)
+            if let humor {
+                Image(humor.icon)
+                    .resizable()
+                    .frame(width: 44, height: 44)
+                    .offset(x: 8, y: 8)
+            }
         }
     }
 }

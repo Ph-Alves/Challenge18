@@ -96,7 +96,8 @@ struct BuilderTests {
     @Test func testingFeelingsCoordinatorReusesInjectedView() async {
         let context = modelContainer.mainContext
         let view = FeelingsBuilder.build(context: context)
-        let coordinator = FeelingsCoordinator(cached: view)
+        let coordinator = FeelingsCoordinator()
+        coordinator.cached = view
         
         let started = coordinator.startFeelingsView(context: context)
         
@@ -114,7 +115,7 @@ struct BuilderTests {
         view.interactor.loadFeelings()
         
         #expect(view.store.feelings[.calm]?.count == 1)
-        #expect(view.store.feelings[.calm]?.first === activity)
+        #expect(view.store.feelings[.calm]?.first?.activity === activity)
     }
 
 //    @Test func testingProfileBuilding() async throws {

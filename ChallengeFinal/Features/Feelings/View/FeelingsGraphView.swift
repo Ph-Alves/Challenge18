@@ -14,7 +14,7 @@ struct FeelingsGraphView: View {
     // MARK: - Variables
     
     /// Activities agrupadas por humor, vindas da Store.
-    let feelings: [Humor: [Activity]]
+    let feelings: [Humor: [(activity: Activity, image: Image?)]]
     
     /// Pede os dados ao Interactor. Chamada quando a tela aparece.
     let loadAction: () -> Void
@@ -84,7 +84,6 @@ struct FeelingsGraphView: View {
             .background(RoundedRectangle(cornerRadius: 28).fill(.background))
             .overlay(RoundedRectangle(cornerRadius: 28).stroke(.black, lineWidth: 2))
         }
-        .padding(.horizontal, 24)
         .padding(.top, 24)
         // Recarrega toda vez que a tela aparece, para refletir novas Activities.
         .onAppear {

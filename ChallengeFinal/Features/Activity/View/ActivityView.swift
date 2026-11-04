@@ -62,7 +62,17 @@ struct ActivityView: View {
             }
             // Tela da câmera: abre e fecha conforme `store.isCameraPresented`.
             .fullScreenCover(isPresented: isCameraPresented) {
-                CameraView(interactor: interactor, store: store, preview: cameraPreview)
+                CameraView(
+                    preview: cameraPreview,
+                    flashIcon: store.cameraFlashIcon,
+                    errorMessage: store.errorMessage,
+                    closeCamera: { interactor.closeCamera() },
+                    toggleFlash: { interactor.toggleFlash() },
+                    takePhoto: { interactor.takePhoto() },
+                    switchCamera: { interactor.switchCamera() },
+                    didSelectFromGallery: { item in interactor.didSelectFromGallery(item) },
+                    dismissAlerts: { interactor.dismissAlerts() }
+                )
             }
             .sheet(item: shareItem) { item in
                 ShareSheet(items: item.activityItems) { completed in
@@ -166,7 +176,8 @@ struct ActivityView: View {
     /// Os dados já estão na Store desde os steps anteriores (desafio, foto, humor).
     /// Ao aparecer, pede ao Interactor para gerar a imagem do story.
     private var summaryStepView: some View {
-        SummaryStepView(
+        SummaryView(
+            style: .activity,
             title: store.activitySubtitle ?? "",
             description: store.activityDescription ?? "",
             photo: store.photo,
