@@ -61,7 +61,7 @@ struct MoodStepView: View {
         Color.clear
             .frame(height: 340)
             .overlay(alignment: .top) {
-                HumorWheel(selected: humor)
+                HumorWheel(selected: humor, onNext: onNext, onPrevious: onPrevious)
                     .padding(.top, 20) // espaço para o marcador
             }
             .overlay(alignment: .top) {
@@ -70,7 +70,6 @@ struct MoodStepView: View {
             }
             .clipped()
             .contentShape(Rectangle())
-            .gesture(swipe)
     }
 
     /// Emoji, nome e descrição do humor selecionado.
@@ -94,23 +93,6 @@ struct MoodStepView: View {
         .id(humor)
         .transition(.opacity)
         .animation(.easeInOut(duration: 0.2), value: humor)
-    }
-
-    /// Mesmo gesto da `HomeView` para trocar de categoria.
-    private var swipe: some Gesture {
-        DragGesture(minimumDistance: 20)
-            .onEnded { value in
-                // Se width > height, então é horizontal
-                let isHorizontalSwipe = abs(value.translation.width) > abs(value.translation.height)
-                guard isHorizontalSwipe else { return }
-
-                // Negativo: direita para esquerda (o humor da direita vem para o topo)
-                if value.translation.width < 0 {
-                    onNext()
-                } else {
-                    onPrevious()
-                }
-            }
     }
 
     // MARK: - Botão

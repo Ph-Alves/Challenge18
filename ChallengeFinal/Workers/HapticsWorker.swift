@@ -102,7 +102,7 @@ final class HapticsWorker: HapticsWorkerProtocol {
         // Sem engine = aparelho sem suporte a haptics.
         guard let engine else { return }
  
-        let intensity = CHHapticEventParameter(parameterID: .hapticIntensity, value: 0.6)
+        let intensity = CHHapticEventParameter(parameterID: .hapticIntensity, value: 0.8)
         let sharpness = CHHapticEventParameter(parameterID: .hapticSharpness, value: 0.8)
         let event = CHHapticEvent(eventType: .hapticTransient, parameters: [intensity, sharpness], relativeTime: 0)
  
