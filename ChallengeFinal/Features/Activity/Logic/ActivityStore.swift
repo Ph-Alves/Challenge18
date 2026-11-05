@@ -21,6 +21,7 @@ protocol ActivityStoreProtocol: AnyObject {
     func displaySearching()
     func displaySearchFailed()
     func displayAcceptedActivity()
+    func displayRestoredChallenge(title: String, subtitle: String, description: String)
     func transitionToStart()
     func transitionToMood()
     func transitionToPhoto()
@@ -204,6 +205,14 @@ final class ActivityStore: ActivityStoreProtocol {
 
     func displayAcceptedActivity() {
         self.isChallengeAccepted = true
+    }
+
+    /// Só guarda os textos do desafio (o app foi relançado depois do sorteio).
+    /// Não mexe em `isChallengeReady` nem em `isSearching`: a View não anima a bola de novo.
+    func displayRestoredChallenge(title: String, subtitle: String, description: String) {
+        self.activityTitle = title
+        self.activitySubtitle = subtitle
+        self.activityDescription = description
     }
 
     // MARK: Transitions

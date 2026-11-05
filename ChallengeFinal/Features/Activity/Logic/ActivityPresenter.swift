@@ -25,7 +25,8 @@ protocol ActivityPresenterProtocol: AnyObject {
     func presentStartAgain()
     func presentMood()
     func presentPhoto()
-    
+    func presentRestoredChallenge(title: String, subtitle: String, description: String)
+
     //MARK: Step .mood
     func presentHumor(_ humor: Humor)
     
@@ -266,6 +267,11 @@ final class ActivityPresenter: ActivityPresenterProtocol {
 
     func presentPhoto() {
         store?.transitionToPhoto()
+    }
+
+    /// O app foi relançado no meio do fluxo: devolve à Store os textos do desafio.
+    func presentRestoredChallenge(title: String, subtitle: String, description: String) {
+        store?.displayRestoredChallenge(title: title, subtitle: subtitle, description: description)
     }
 
     // MARK: - Textos (.summary)

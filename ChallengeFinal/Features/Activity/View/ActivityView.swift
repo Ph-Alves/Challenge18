@@ -41,6 +41,12 @@ struct ActivityView: View {
             // Permissão de câmera negada.
             .alert("Câmera bloqueada", isPresented: isPermissionAlertPresented) {
                 Button("Abrir Ajustes") {
+                    // O iOS pode encerrar o app ao mudar a permissão: guarda o estado antes de sair.
+                    interactor.cacheData(
+                        title: store.activityTitle ?? "",
+                        subtitle: store.activitySubtitle ?? "",
+                        description: store.activityDescription ?? ""
+                    )
                     if let url = URL(string: UIApplication.openSettingsURLString) {
                         openURL(url)
                     }

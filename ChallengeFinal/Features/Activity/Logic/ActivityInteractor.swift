@@ -10,6 +10,53 @@ import FoundationModels
 import PhotosUI
 import SwiftUI
 
+// MARK: - Snapshot
+/// Struct para salvar o estado temporário
+struct TemporaryData: Codable {
+    var step: ActivityStep
+    var category: ActivityCategory
+    var activityID: UUID
+    var resultID: UUID
+    var title: String
+    var subtitle: String
+    var description: String
+    var achievementTitle: String
+    var achievementDescription: String
+    var savedAt: Date
+    
+    init(step: ActivityStep, category: ActivityCategory, activityID: UUID, resultID: UUID, title: String, subtitle: String, description: String, achievementTitle: String, achievementDescription: String, savedAt: Date) {
+        self.step = step
+        self.category = category
+        self.activityID = activityID
+        self.resultID = resultID
+        self.title = title
+        self.subtitle = subtitle
+        self.description = description
+        self.achievementTitle = achievementTitle
+        self.achievementDescription = achievementDescription
+        self.savedAt = savedAt
+    }
+}
+
+extension TemporaryData {
+    /// Chave do snapshot no `UserDefaults`.
+    static let key = "activity.temporaryData"
+
+    /// Quanto tempo o snapshot vale. Passou disso, é descartado.
+    static let lifetime: TimeInterval = 60 * 60
+
+    /// Devolve o snapshot se existir e ainda for válido. Não apaga nada:
+    /// a Home usa para decidir se reabre o fluxo, antes de o Interactor existir.
+    static func load(from defaults: UserDefaults = .standard) -> TemporaryData? {
+        guard let data = defaults.data(forKey: key),
+              let snapshot = try? JSONDecoder().decode(TemporaryData.self, from: data),
+              Date().timeIntervalSince(snapshot.savedAt) < lifetime else {
+            return nil
+        }
+        return snapshot
+    }
+}
+
 // MARK: - Protocol
 
 /// O que as Views enxergam do Interactor: só as AÇÕES que o usuário pode fazer.
@@ -44,6 +91,7 @@ protocol ActivityInteractorProtocol: AnyObject {
     func didSelectFromGallery(_ item: PhotosPickerItem)
     func continueFromPhoto()
     func dismissAlerts()
+    func cacheData(title: String, subtitle: String, description: String)
 
     // MARK: Step .summary
     func loadSummary(title: String?, subtitle: String?, description: String?)
@@ -180,6 +228,79 @@ final class ActivityInteractor: ActivityInteractorProtocol {
         self.liveActivity = liveActivity
         self.category = currentCategory
     }
+    
+    // MARK: - Restauração
+    //
+    // Ao mudar a permissão da câmera nos Ajustes, o iOS pode encerrar o app.
+    // Antes de sair, guardamos o necessário para voltar ao step `.photo`.
+
+    /// Onde o snapshot é guardado. Fica como variável para os testes usarem um `UserDefaults` isolado.
+    var defaults: UserDefaults = .standard
+
+    /// Guarda o estado do fluxo no `UserDefaults`. Chame ANTES de abrir os Ajustes.
+    ///
+    /// Os textos do desafio vêm da View porque só a Store os tem. O resto o Interactor já
+    /// conhece: a `Activity` e o `ActivityResult` estão no banco, então guardamos só os IDs.
+    func cacheData(title: String, subtitle: String, description: String) {
+        guard let currentActivity, let result else { return }
+
+        let snapshot = TemporaryData(
+            step: .photo,
+            category: category,
+            activityID: currentActivity.activityID,
+            resultID: result.resultID,
+            title: title,
+            subtitle: subtitle,
+            description: description,
+            achievementTitle: achievement?.title ?? result.achievementTitle,
+            achievementDescription: achievement?.description ?? result.achievementDescription,
+            savedAt: Date()
+        )
+
+        do {
+            let data = try JSONEncoder().encode(snapshot)
+            defaults.set(data, forKey: TemporaryData.key)
+        } catch {
+            print("Erro ao salvar o estado temporário: \(error.localizedDescription)")
+        }
+    }
+
+    /// Lê o snapshot, devolve o estado ao Interactor e o apaga (vale uma restauração só).
+    ///
+    /// O que não é do Interactor vai pelo Presenter: os textos do desafio (Store) e o
+    /// step `.photo` (Coordinator). Se não há snapshot, ele expirou ou a atividade
+    /// não existe mais, não faz nada.
+    func restoreData() {
+        defer { defaults.removeObject(forKey: TemporaryData.key) }
+
+        guard let snapshot = TemporaryData.load(from: defaults) else { return }
+
+        do {
+            guard let activity = try activityRepository.getAll().first(where: { $0.activityID == snapshot.activityID }),
+                  let restoredResult = activity.result,
+                  restoredResult.resultID == snapshot.resultID else {
+                return
+            }
+
+            currentActivity = activity
+            result = restoredResult
+            selectedHumor = restoredResult.humor
+            timerElapsed = restoredResult.time
+
+            // Sem isso o `continueFromPhoto()` não navega (ele exige `achievement`).
+            achievement = Achievement(title: snapshot.achievementTitle, description: snapshot.achievementDescription)
+
+            // Os textos entram na Store ANTES da troca de step, para o step já abrir completo.
+            presenter.presentHumor(restoredResult.humor)
+            presenter.presentRestoredChallenge(
+                title: snapshot.title,
+                subtitle: snapshot.subtitle,
+                description: snapshot.description)
+            presenter.presentPhoto()
+        } catch {
+            print("Erro ao restaurar o estado: \(error.localizedDescription)")
+        }
+    }
 
     // MARK: - Navigation
     //
@@ -246,6 +367,8 @@ final class ActivityInteractor: ActivityInteractorProtocol {
             print("Erro ao salvar o banco: \(error.localizedDescription)")
         }
         cancelTimer()
+        // O fluxo acabou: um snapshot que sobrou (voltou dos Ajustes sem o app morrer) não vale mais.
+        defaults.removeObject(forKey: TemporaryData.key)
         presenter.presentFlowFinished()
     }
 
@@ -620,9 +743,6 @@ final class ActivityInteractor: ActivityInteractorProtocol {
             print("Erro ao salvar o banco: \(error.localizedDescription)")
         }
         // O summary só abre com a conquista pronta: ela vai para a Store junto com a transição.
-        // TODO: se o modelo ainda estiver gerando (`achievement == nil`), o toque em "continuar"
-        // não faz nada e o usuário fica preso na foto. Esperar o `achievementTask` (ou abrir o
-        // summary com um texto provisório) antes de navegar.
         if let achievement {
             presenter.presentSummary(achievement: achievement)
         }

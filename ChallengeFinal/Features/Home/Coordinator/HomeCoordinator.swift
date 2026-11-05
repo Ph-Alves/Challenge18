@@ -31,12 +31,25 @@ final class HomeCoordinator: HomeRouting {
     // usa observationIgnored por que a view não deve renderizar 2x
     // ja que esse valor atualiza enquanto renderiza a view no startHome()
     @ObservationIgnored var cached: HomeView?
-    
+
+    // Se o app foi encerrado no meio do fluxo (ex.: ida aos Ajustes), já nasce na Activity.
+    // O fluxo já nasce no step salvo; o `restoreData()` do ActivityBuilder devolve os dados.
+    init(defaults: UserDefaults = .standard) {
+        if let snapshot = TemporaryData.load(from: defaults) {
+            resumeActivityFlow(category: snapshot.category, step: snapshot.step)
+        }
+    }
+
     // Começa o fluxo do challenge (pendente)
     func startActivityFlow(category: ActivityCategory) {
+        resumeActivityFlow(category: category, step: .draw)
+    }
+
+    // Abre o fluxo já num step do meio (app encerrado e reaberto). O `startActivityFlow` é o caso `.draw`.
+    func resumeActivityFlow(category: ActivityCategory, step initialStep: ActivityStep) {
         //ok, isso é uma closure para "quando o fluxo acabar, execute o onfinish).
         //o self aqui remete a HomeCoordinator, pois foi ele quem "escreveu o bilhete".
-        let flow = ActivityCoordinator(selectedCategory: category, onFinish: { [weak self] in
+        let flow = ActivityCoordinator(selectedCategory: category, initialStep: initialStep, onFinish: { [weak self] in
             self?.step = .home
         })
         step = .activity(flow)
