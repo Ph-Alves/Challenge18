@@ -106,6 +106,7 @@ protocol ActivityInteractorProtocol: AnyObject {
     func completeActivity(currentCategory: ActivityCategory, title: String, subTitle: String, Description: String)
     func selectMood(humor: Humor)
     func finishActivityFlow()
+    func didTapBack(on step: ActivityStep)
 }
 
 /// Erro ao carregar uma foto da galeria.
@@ -291,7 +292,9 @@ final class ActivityInteractor: ActivityInteractorProtocol {
             achievement = Achievement(title: snapshot.achievementTitle, description: snapshot.achievementDescription)
 
             // Os textos entram na Store ANTES da troca de step, para o step já abrir completo.
-            presenter.presentHumor(restoredResult.humor)
+            if let humor = restoredResult.humor {
+                presenter.presentHumor(humor)
+            }
             presenter.presentRestoredChallenge(
                 title: snapshot.title,
                 subtitle: snapshot.subtitle,
@@ -330,16 +333,22 @@ final class ActivityInteractor: ActivityInteractorProtocol {
     }
 
     /// Terminou o desafio: vai para o humor.
+    /// subir o timer pra ele ser salvo mesmo se o usuário sair na tela de humor.
     func completeActivity(currentCategory: ActivityCategory, title: String, subTitle: String, Description: String) {
+        // Para o cronômetro primeiro: é ele que fixa o `timerElapsed` que vai para o resultado.
+        stopTimer()
         do {
-            self.currentActivity = Activity(category: currentCategory, result: nil, name: title, description: subTitle, archived: false)
-            if let currentActivity {
-                try activityRepository.add(currentActivity)
-            }
+            let newResult = ActivityResult(time: timerElapsed)
+            self.result = newResult
+            
+            let activity = Activity(category: currentCategory, result: newResult, name: title, description: subTitle, archived: false)
+            self.currentActivity = activity
+            try activityRepository.add(activity)
         } catch {
             print("Erro ao adicionar entidade: \(error.localizedDescription)")
         }
-        stopTimer()
+        // O `stopTimer()` acima ainda não tinha atividade para gerar a conquista: agora tem.
+        generateAchievement()
         presenter.presentMood()
     }
 
@@ -827,6 +836,20 @@ final class ActivityInteractor: ActivityInteractorProtocol {
 
         result = newResult
         return newResult
+    }
+    
+    /// Toque na seta. Aqui eu to definindo quem "deve voltar" pra quem.
+    func didTapBack(on step: ActivityStep) {
+        switch step {
+        case .draw:
+            finishActivityFlow()      // volta pra Home
+        case .photo:
+            presenter.presentMood()   // volta pro humor
+        case .summary:
+            presenter.presentPhoto()  // volta pra foto
+        case .challenge, .inProgress, .mood:
+            break  // esses steps não têm seta
+        }
     }
 
     // MARK: - Auxiliares privados (.mood)

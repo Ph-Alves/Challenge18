@@ -29,12 +29,20 @@ struct ActivityView: View {
     @State var store: ActivityStore
     @State var cameraPreview: CameraPreview
     
+    /// Controla o alerta "deseja sair do desafio?" do X (steps .challenge e .mood).
+    @State private var isExitAlertPresented = false
+    
     /// Categoria escolhida na Home, usada no sorteio.
     let currentCategory: ActivityCategory
 
     var body: some View {
-        stepView
-            .animation(.easeInOut(duration: 0.4), value: store.currentStep)
+        NavigationStack {
+            stepView
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .animation(.easeInOut(duration: 0.4), value: store.currentStep)
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar { navigationToolbar }
+        }
             .onAppear {
                 interactor.prepare(for: currentCategory)
             }
@@ -65,6 +73,13 @@ struct ActivityView: View {
                 }
             } message: {
                 Text(store.errorMessage ?? "")
+            }
+            // Butão de X dos steps .challenge e .mood: só o "sair" avisa o Interactor.
+            .alert("deseja sair do desafio?", isPresented: $isExitAlertPresented) {
+                Button("continuar", role: .cancel) { }
+                Button("sair", role: .destructive) { interactor.finishActivityFlow() }
+            } message: {
+                Text(store.currentStep.exitMessage ?? "")
             }
             // Tela da câmera: abre e fecha conforme `store.isCameraPresented`.
             .fullScreenCover(isPresented: isCameraPresented) {
@@ -112,7 +127,6 @@ struct ActivityView: View {
                 swipeRaffle: { interactor.raffle(for: currentCategory) },
                 startDetection: { interactor.detectMotion(for: currentCategory) },
                 finishDetection: { interactor.finishDetection() },
-                returnAction: { interactor.finishActivityFlow() },
                 growFinished: { interactor.goToActivityDetail() }
             )
             .transition(.opacity)
@@ -163,7 +177,6 @@ struct ActivityView: View {
                 ChallengeDisplayView(
                     challengeTitle: title,
                     isSearching: store.isSearching,
-                    returnAction: { interactor.finishActivityFlow() },
                     archiveAction: {
                         interactor.archiveActivity(title: title, description: subtitle, in: currentCategory)
                         interactor.reroll(for: currentCategory)
@@ -178,7 +191,6 @@ struct ActivityView: View {
                     challengeTitle: title,
                     challengeSubTitle: subtitle,
                     challengeDescription: description,
-                    returnAction: { interactor.finishActivityFlow() },
                     startAction: { interactor.startActivity() },
                     cancelAction: { interactor.reroll(for: currentCategory) }
                 )
@@ -210,15 +222,20 @@ struct ActivityView: View {
             )
         }
     }
-
-    //CHANGE: remover quando todos os steps tiverem as suas views.
-    @ViewBuilder
-    private func placeholder(_ title: String, next: @escaping () -> Void) -> some View {
-        VStack(spacing: 24) {
-            Text(title)
-
-            Button("Próximo", action: next)
-                .buttonStyle(.borderedProminent)
+    
+    // MARK: - Botão de navegação
+    /// Seta ou X, conforme o step. A seta navega direto; o X só abre o alerta.
+    @ToolbarContentBuilder
+    private var navigationToolbar: some ToolbarContent {
+        ToolbarItem(placement: .topBarLeading) {
+            switch store.currentStep.navigationButton {
+            case .close:
+                Button(role: .close) { isExitAlertPresented = true }
+            case .back:
+                Button("voltar", systemImage: "chevron.left") {
+                    interactor.didTapBack(on: store.currentStep)
+                }
+            }
         }
     }
 

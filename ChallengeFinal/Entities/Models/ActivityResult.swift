@@ -15,12 +15,13 @@ final class ActivityResult {
     var achievementTitle: String
     var achievementDescription: String
     var time: TimeInterval = 0
-    var humor: Humor = Humor.chill
+    var humor: Humor?
     var activity: Activity?
     
     /// `photo` é opcional porque o usuário pode "continuar sem foto"
     /// A conquista é gerada em paralelo aos steps de humor e foto, por isso começa vazia.
-    init(photo: Data? = nil, achievementTitle: String = "", achievementDescription: String = "", time: TimeInterval, humor: Humor) {
+    /// `humor` é opcional porque o resultado pode existir antes de o humor ser escolhido.
+    init(photo: Data? = nil, achievementTitle: String = "", achievementDescription: String = "", time: TimeInterval, humor: Humor? = nil) {
         self.photo = photo
         self.achievementTitle = achievementTitle
         self.achievementDescription = achievementDescription

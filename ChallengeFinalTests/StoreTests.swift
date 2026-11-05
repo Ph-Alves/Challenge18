@@ -388,6 +388,99 @@ struct StoreTests {
         #expect(store.shareItem == nil)
     }
 
+    // MARK: - ChallengesStore
+
+    @Test func testingChallengesStoreStartsEmptyAndClosed() {
+        let store = ChallengesStore()
+
+        #expect(store.challenges.isEmpty)
+        #expect(store.selectedCategory == nil)
+        #expect(store.emptyState == nil)
+        #expect(store.archivedChallenges.isEmpty)
+        #expect(store.archivedEmptyState == nil)
+        #expect(store.isArchivedPresented == false)
+        #expect(store.selectedChallenge == nil)
+        #expect(store.selectedPhoto == nil)
+        #expect(store.shareItem == nil)
+        #expect(store.errorMessage == nil)
+    }
+
+    @Test func testingDisplayChallengesStoresListFilterAndEmptyState() {
+        let store = ChallengesStore()
+        let walk = makeFeelingActivity(named: "Caminhada", humor: .calm)
+
+        store.displayChallenges([walk], selectedCategory: .physical, emptyState: nil)
+
+        #expect(store.challenges.first === walk)
+        #expect(store.selectedCategory == .physical)
+        #expect(store.emptyState == nil)
+
+        store.displayChallenges([], selectedCategory: nil, emptyState: .noResults)
+
+        #expect(store.challenges.isEmpty)
+        #expect(store.selectedCategory == nil)
+        #expect(store.emptyState == .noResults)
+    }
+
+    @Test func testingDisplayArchivedChallengesAndSheet() {
+        let store = ChallengesStore()
+        let archived = makeFeelingActivity(named: "Arquivada", humor: .calm)
+
+        store.displayArchivedChallenges([archived], emptyState: nil)
+        store.displayArchivedSheet(isPresented: true)
+
+        #expect(store.archivedChallenges.first === archived)
+        #expect(store.archivedEmptyState == nil)
+        #expect(store.isArchivedPresented)
+
+        store.displayArchivedChallenges([], emptyState: .noArchived)
+        store.displayArchivedSheet(isPresented: false)
+
+        #expect(store.archivedChallenges.isEmpty)
+        #expect(store.archivedEmptyState == .noArchived)
+        #expect(store.isArchivedPresented == false)
+    }
+
+    @Test func testingDisplaySummaryOpensAndCloses() {
+        let store = ChallengesStore()
+        let walk = makeFeelingActivity(named: "Caminhada", humor: .calm)
+
+        store.displaySummary(walk, photo: Image(systemName: "photo"))
+
+        #expect(store.selectedChallenge === walk)
+        #expect(store.selectedPhoto != nil)
+
+        store.displaySummary(nil, photo: nil)
+
+        #expect(store.selectedChallenge == nil)
+        #expect(store.selectedPhoto == nil)
+    }
+
+    @Test func testingChallengesStoreShareAndErrorState() {
+        let store = ChallengesStore()
+        let item = ShareItem(activityItems: [URL(fileURLWithPath: "/tmp/story.png")])
+
+        store.displayShareSheet(item)
+        store.displayError("Ops")
+
+        #expect(store.shareItem?.id == item.id)
+        #expect(store.errorMessage == "Ops")
+
+        store.displayShareSheet(nil)
+        store.displayError(nil)
+
+        #expect(store.shareItem == nil)
+        #expect(store.errorMessage == nil)
+    }
+
+    // Cada estado vazio precisa de título e mensagem próprios (a View só mostra o que vem daqui).
+    @Test func testingChallengesEmptyStatesHaveDistinctTexts() {
+        let states: [ChallengesEmptyState] = [.noCompleted, .noResults, .noArchived]
+
+        #expect(states.allSatisfy { !$0.title.isEmpty && !$0.message.isEmpty })
+        #expect(Set(states.map(\.title)).count == states.count)
+        #expect(Set(states.map(\.message)).count == states.count)
+    }
 //    // MARK: - ProfileStore
 //
 //    @Test func testingProfileStoreStartsWithDefaultProfile() async throws {

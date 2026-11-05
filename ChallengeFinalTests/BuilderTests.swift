@@ -193,6 +193,81 @@ struct BuilderTests {
         #expect(view.store.feelings[.calm]?.count == 1)
         #expect(view.store.feelings[.calm]?.first?.activity === activity)
     }
+    
+    // MARK: - Challenges
+
+    @Test func testingChallengesCoordinatorStartsWithoutCachedView() {
+        let coordinator = ChallengesCoordinator()
+
+        #expect(coordinator.cached == nil)
+    }
+
+    @Test func testingChallengesBuilding() {
+        let coordinator = ChallengesCoordinator()
+        _ = coordinator.startChallengesFlow(context: modelContainer.mainContext)
+
+        #expect(coordinator.cached != nil)
+    }
+
+    @Test func testingChallengesViewIsCachedAcrossCalls() {
+        let coordinator = ChallengesCoordinator()
+        let first = coordinator.startChallengesFlow(context: modelContainer.mainContext)
+        let second = coordinator.startChallengesFlow(context: modelContainer.mainContext)
+
+        // Mesma instância de store = a view não foi reconstruída.
+        #expect(first.store === second.store)
+    }
+
+    @Test func testingChallengesCoordinatorReusesInjectedView() {
+        let context = modelContainer.mainContext
+        let view = ChallengesBuilder.build(context: context)
+        let coordinator = ChallengesCoordinator(cached: view)
+
+        let started = coordinator.startChallengesFlow(context: context)
+
+        #expect(started.store === view.store)
+    }
+
+    // O Builder liga Interactor -> Presenter -> Store: carregar pelo interactor da view enche a store da mesma view.
+    @Test func testingChallengesBuilderWiresInteractorToStore() throws {
+        let context = modelContainer.mainContext
+        let repository = GenericRepository<Activity>(context: context)
+        let completed = Activity(category: .physical, result: ActivityResult(time: 5, humor: .calm),
+                                 name: "Caminhada", description: "-", archived: false)
+        let archived = Activity(category: .social, result: nil, name: "Arquivada", description: "-", archived: true)
+        try repository.add(completed)
+        try repository.add(archived)
+        let view = ChallengesBuilder.build(context: context)
+
+        view.interactor.loadChallenges()
+
+        #expect(view.store.challenges.count == 1)
+        #expect(view.store.challenges.first === completed)
+        #expect(view.store.archivedChallenges.first === archived)
+    }
+
+    // MARK: - ActivityStep (botão de navegação e alerta de saída)
+
+    // Cada par é (step, botão esperado no canto superior esquerdo).
+    @Test(arguments: [
+        (ActivityStep.draw, ActivityNavigationButton.back),
+        (.challenge, .close),
+        (.inProgress, .back),
+        (.mood, .close),
+        (.photo, .back),
+        (.summary, .back)
+    ])
+    func testingNavigationButtonForEachStep(step: ActivityStep, expected: ActivityNavigationButton) {
+        #expect(step.navigationButton == expected)
+    }
+
+    // Só o X abre o alerta "deseja sair do desafio?", então só os steps com X têm mensagem.
+    @Test(arguments: [ActivityStep.draw, .challenge, .inProgress, .mood, .photo, .summary])
+    func testingExitMessageExistsOnlyForStepsWithCloseButton(step: ActivityStep) {
+        let hasMessage = step.exitMessage?.isEmpty == false
+
+        #expect(hasMessage == (step.navigationButton == .close))
+    }
 
 //    @Test func testingProfileBuilding() async throws {
 //        let builder: ProfileBuilderProtocol = createProfileBuilder()
