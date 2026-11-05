@@ -11,7 +11,7 @@ import SwiftData
 
 /// Etapas do fluxo de Activity, em ordem:
 /// sortear -> ver desafio -> em andamento -> humor -> foto -> resumo.
-enum ActivityStep {
+enum ActivityStep: Codable {
     case draw, challenge, inProgress, mood, photo, summary
     
     /// Qual botão cada step mostra 
@@ -56,8 +56,11 @@ final class ActivityCoordinator {
     /// Cache da view para não reconstruir o fluxo a cada render da Home.
     var cached: ActivityView?
 
-    init(selectedCategory: ActivityCategory, onFinish: @escaping () -> Void) {
+    /// `initialStep` só muda quando o fluxo é retomado no meio (ex.: app encerrado nos Ajustes):
+    /// assim ele já nasce no step certo, sem passar pelo `.draw`.
+    init(selectedCategory: ActivityCategory, initialStep: ActivityStep = .draw, onFinish: @escaping () -> Void) {
         self.selectedCategory = selectedCategory
+        self.step = initialStep
         self.onFinish = onFinish
     }
 

@@ -89,6 +89,19 @@ struct StoreTests {
         #expect(store.isSearching == false)
     }
     
+    @Test func testingDisplayRestoredChallengeStoresFieldsWithoutMarkingReady() {
+        let (store, _) = createActivityStore()
+
+        store.displayRestoredChallenge(title: "título", subtitle: "sub", description: "descrição")
+
+        #expect(store.activityTitle == "título")
+        #expect(store.activitySubtitle == "sub")
+        #expect(store.activityDescription == "descrição")
+        // Não é um sorteio novo: a View não deve animar a bola de novo.
+        #expect(store.isChallengeReady == false)
+        #expect(store.isSearching == false)
+    }
+
     @Test func testingDisplaySearchingAlsoUndoesAccepted() {
         let (store, _) = createActivityStore()
         store.displayAcceptedActivity()
@@ -138,6 +151,35 @@ struct StoreTests {
         
         store.transitionToDraw()
         #expect(store.currentStep == .draw)
+    }
+
+    // MARK: ActivityStore (conquista)
+
+    @Test func testingActivityStoreStartsWithoutAchievement() {
+        let (store, _) = createActivityStore()
+
+        #expect(store.achievementTitle == nil)
+        #expect(store.achievementDescription == nil)
+    }
+
+    @Test func testingTransitionToSummaryStoresAchievementAndGoesToSummary() {
+        let (store, coordinator) = createActivityStore()
+
+        store.transitionToSummary(achievement: Achievement(title: "mestre offline", description: "você passou 1h offline"))
+
+        #expect(store.achievementTitle == "mestre offline")
+        #expect(store.achievementDescription == "você passou 1h offline")
+        #expect(coordinator.step == .summary)
+    }
+
+    @Test func testingTransitionToSummaryReplacesPreviousAchievement() {
+        let (store, _) = createActivityStore()
+        store.transitionToSummary(achievement: Achievement(title: "mestre offline", description: "você passou 1h offline"))
+
+        store.transitionToSummary(achievement: Achievement(title: "olhar atento", description: "você passou 5 min observando"))
+
+        #expect(store.achievementTitle == "olhar atento")
+        #expect(store.achievementDescription == "você passou 5 min observando")
     }
 
     // MARK: ActivityStore (cronômetro)

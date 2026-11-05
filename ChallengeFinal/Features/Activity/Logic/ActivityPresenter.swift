@@ -17,7 +17,7 @@ protocol ActivityPresenterProtocol: AnyObject {
     // MARK: -  Step do cronometro
     func presentTime(_ elapsed: TimeInterval)
     
-    // MARK: Steps .draw e .challenge (implementados em ActivityPresenter+Draw.swift)
+    // MARK: Steps .draw e .challenge
     func presentActivity(_ challenge: FrictionChallenge)
     func presentSearching()
     func presentSearchFailed()
@@ -25,7 +25,8 @@ protocol ActivityPresenterProtocol: AnyObject {
     func presentStartAgain()
     func presentMood()
     func presentPhoto()
-    
+    func presentRestoredChallenge(title: String, subtitle: String, description: String)
+
     //MARK: Step .mood
     func presentHumor(_ humor: Humor)
     
@@ -38,13 +39,13 @@ protocol ActivityPresenterProtocol: AnyObject {
     func presentError(_ error: Error)
     func presentAlertsDismissed()
     
-    // MARK: Step .summary (implementados em ActivityPresenter+Summary.swift)
+    // MARK: Step .summary
     func presentStory(_ result: ActivityResult, title: String?, subtitle: String?, description: String?)
     func presentShareSheet(fileURL: URL)
     func presentShareFinished(completed: Bool)
     
     // MARK: Navigation
-    func presentSummary()
+    func presentSummary(achievement: Achievement)
     func presentFlowFinished()
     func presentInProgress()
     func presentActivityStep()
@@ -64,13 +65,8 @@ protocol ActivityPresenterProtocol: AnyObject {
 /// - Só conhece a Store pelo `ActivityStoreProtocol`.
 @MainActor
 final class ActivityPresenter: ActivityPresenterProtocol {
-   
-    
-    
-    
     
     // MARK: - Variables
-    /// Não é `private` porque `ActivityPresenter+Draw.swift` também usa.
     weak var store: ActivityStoreProtocol?
     
     // MARK: - Init
@@ -175,25 +171,119 @@ final class ActivityPresenter: ActivityPresenterProtocol {
         store?.displayTimer(String(format: "%02d:%02d:%02d", hours, minutes, seconds))
     }
     
+    // MARK: Steps .draw e .challenge
+    // Os requisitos estão declarados no `ActivityPresenterProtocol`.
+
+    /// O sorteio terminou: entrega o desafio para a Store mostrar.
+    func presentActivity(_ challenge: FrictionChallenge) {
+        store?.displayActivity(challenge)
+    }
+
+    /// Começou a procurar: a tela troca os textos para "procurando...".
+    func presentSearching() {
+        store?.displaySearching()
+    }
+
+    /// O sorteio falhou: a tela volta ao estado de espera para tentar de novo.
+    func presentSearchFailed() {
+        store?.displaySearchFailed()
+    }
+
+    /// O usuário aceitou: o step continua `.challenge`, mas passa a mostrar
+    /// a tela de desafio aceito (não é uma troca de step).
+    func presentAcceptedActivity() {
+        store?.displayAcceptedActivity()
+    }
+
+    // MARK: Step .summary
+    // Tela "desafio finalizado" e compartilhamento.
+    // Renderizar é papel do Presenter porque é transformar dados em algo "pronto para exibir"
+
+    /// Monta a imagem do story a partir do resultado.
+    ///
+    /// Funciona com um resultado recém-criado no fluxo OU com um já salvo
+    /// no banco (ex.: futura tela de histórico), porque só lê o `ActivityResult`.
+    func presentStory(_ result: ActivityResult, title: String?, subtitle: String?, description: String?) {
+        // TODO: o story ainda usa o nome e a descrição do DESAFIO (`activity.name`), enquanto o
+        // summary na tela mostra a CONQUISTA. Trocar por `result.achievementTitle` e
+        // `result.achievementDescription` para o story compartilhado ficar igual ao summary.
+        let title = Self.title(for: result)
+
+        // Bytes -> UIImage no tamanho original: é o fundo inteiro do story.
+        let photo = result.photo.flatMap { UIImage(data: $0) }
+
+        let story = StoryCard(
+            challengeTitle: title,
+            challengeDescription: Self.description(for: result),
+            challengePhoto: photo
+        )
+
+        store?.displayStoryImage(ShareImageRenderer.render(story))
+    }
+
+    /// O arquivo do story está pronto: abre o share sheet.
+    func presentShareSheet(fileURL: URL) {
+        store?.displayError(nil)
+        store?.displayShareSheet(ShareItem(activityItems: [fileURL]))
+    }
+
+    /// O share sheet fechou (concluiu ou cancelou).
+    func presentShareFinished(completed: Bool) {
+        store?.displayShareSheet(nil)
+    }
+
     // MARK: Navigation
     // Não há o que formatar: só traduz "apresentar X" em "transicionar para X" na Store.
-    func presentSummary() {
-        store?.transitionToSummary()
+
+    /// Abre o summary levando a conquista (título e descrição) para a Store, que a View lê.
+    func presentSummary(achievement: Achievement) {
+        store?.transitionToSummary(achievement: achievement)
     }
-    
+
     func presentFlowFinished() {
         store?.finishFlow()
     }
-    
+
     func presentInProgress() {
         store?.transitionToInProgress()
     }
-    
+
     func presentActivityStep() {
         store?.transitionToActivity()
     }
-    
+
     func presentDraw() {
         store?.transitionToDraw()
+    }
+
+    /// Volta para o sorteio limpando o desafio anterior.
+    func presentStartAgain() {
+        store?.transitionToStart()
+    }
+
+    func presentMood() {
+        store?.transitionToMood()
+    }
+
+    func presentPhoto() {
+        store?.transitionToPhoto()
+    }
+
+    /// O app foi relançado no meio do fluxo: devolve à Store os textos do desafio.
+    func presentRestoredChallenge(title: String, subtitle: String, description: String) {
+        store?.displayRestoredChallenge(title: title, subtitle: subtitle, description: description)
+    }
+
+    // MARK: - Textos (.summary)
+
+    /// Nome da atividade ou um texto padrão se a atividade não tiver nome.
+    private static func title(for result: ActivityResult) -> String {
+        let name = result.activity?.name.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return name.isEmpty ? "desafio concluído" : name
+    }
+
+    /// Descrição da atividade (vazia se não houver).
+    private static func description(for result: ActivityResult) -> String {
+        result.activity?.activityDescription.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
     }
 }

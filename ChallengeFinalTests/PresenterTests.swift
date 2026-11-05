@@ -100,6 +100,17 @@ struct PresenterTests {
         return try! ModelContainer(for: schema, configurations: config)
     }()
     
+    @Test func testingPresentRestoredChallengeFillsStoreWithoutMarkingReady() {
+        let (presenter, store) = createActivityPresenterAndStore()
+
+        presenter.presentRestoredChallenge(title: "respire fundo", subtitle: "Pausa", description: "Respire por um minuto.")
+
+        #expect(store.activityTitle == "respire fundo")
+        #expect(store.activitySubtitle == "Pausa")
+        #expect(store.activityDescription == "Respire por um minuto.")
+        #expect(store.isChallengeReady == false)
+    }
+
     @Test func testingPresentSearchingMarksStoreAsSearching() {
         let (presenter, store) = createActivityPresenterAndStore()
         
@@ -190,7 +201,20 @@ struct PresenterTests {
         
         #expect(store.humor == .frustrated)
     }
-    
+
+    // MARK: ActivityPresenter (conquista)
+
+    // A conquista chega pronta do Interactor: o Presenter só a entrega à Store e abre o summary.
+    @Test func testingPresentSummaryPassesAchievementToStoreAndOpensSummary() {
+        let (presenter, store) = createActivityPresenterAndStore()
+
+        presenter.presentSummary(achievement: Achievement(title: "mestre offline", description: "você passou 1h offline"))
+
+        #expect(store.achievementTitle == "mestre offline")
+        #expect(store.achievementDescription == "você passou 1h offline")
+        #expect(store.currentStep == .summary)
+    }
+
     // MARK: ActivityPresenter (compartilhamento)
     
     @Test func testingPresentStoryRendersStoryImage() throws {
