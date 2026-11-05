@@ -15,7 +15,7 @@ struct CategoryText: View {
     // MARK: - View
     var body: some View {
         HStack {
-            Image(systemName: category.icon)
+//            Image(category.closedIcon)
             Text(category.text)
         }
     }

@@ -1,7 +1,7 @@
 {
   "images" : [
     {
-      "filename" : "Subtract.svg",
+      "filename" : "base.svg",
       "idiom" : "universal"
     },
     {
@@ -11,7 +11,7 @@
           "value" : "light"
         }
       ],
-      "filename" : "Subtract 1.svg",
+      "filename" : "base 1.svg",
       "idiom" : "universal"
     },
     {
@@ -21,7 +21,7 @@
           "value" : "dark"
         }
       ],
-      "filename" : "Subtract-1.svg",
+      "filename" : "basel.svg",
       "idiom" : "universal"
     }
   ],

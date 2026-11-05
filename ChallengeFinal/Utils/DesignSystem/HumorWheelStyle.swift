@@ -9,11 +9,6 @@ import Foundation
 import SwiftUI
 
 struct HumorWheelStyle {
-    let selectedSliceColor: Color
-    let nextSliceColor: Color
-    let previousSliceColor: Color
-    let defaultSliceColor: Color
-
-    let pointerAsset: String
-    let backgroundAsset: String
+    let pointerAsset: String // foi
+    let backgroundAsset: String // foi
 }

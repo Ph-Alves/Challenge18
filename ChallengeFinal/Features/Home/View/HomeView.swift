@@ -19,6 +19,8 @@ struct HomeView: View {
     // Para observar
     var store: HomeStore
     
+    @Environment(DesignSystem.self) private var designSystem
+
     // MARK: - View
     var body: some View {
         VStack(spacing: 40) {
@@ -28,7 +30,7 @@ struct HomeView: View {
             
             // Titutlo
             Text("Oi, desafie-se!")
-                .font(.title.bold())
+                .font(designSystem.currentTheme.style.typography.title1)
 
             // Circulo de desafio
             ChallengeCircle(text: "Eu te ajudo no que fazer <3", size: .big)

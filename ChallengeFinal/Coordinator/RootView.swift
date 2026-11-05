@@ -33,8 +33,6 @@ struct RootView: View {
             }
             
             
-        }.onAppear {
-            print(UIFont.fontNames(forFamilyName: "Special Gothic"))
         }
     }
 }

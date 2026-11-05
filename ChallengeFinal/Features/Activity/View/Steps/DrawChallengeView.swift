@@ -29,6 +29,7 @@ struct DrawChallengeView: View {
     var returnAction: () -> Void
     /// Fim da animação da bola: avança para o step `.challenge`.
     var growFinished: () -> Void
+    @Environment(DesignSystem.self) private var designSystem
 
     // MARK: - View
     var body: some View {
@@ -40,7 +41,7 @@ struct DrawChallengeView: View {
                         .font(.title.bold())
                         .multilineTextAlignment(.center)
                         .contentTransition(.opacity)
-                    Text("chacoalhe seu iphone e desafie-se")
+                    Text("chacoalhe seu iphone e desafie-se").font(designSystem.currentTheme.style.typography.text2)
                 }
                 .padding(.horizontal, 40)
                 .animation(.easeInOut, value: isSearching)

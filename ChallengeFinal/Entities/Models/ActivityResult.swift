@@ -13,7 +13,7 @@ final class ActivityResult {
     var resultID: UUID = UUID()
     @Attribute(.externalStorage) var photo: Data?
     var time: TimeInterval = 0
-    var humor: Humor = Humor.chill
+    var humor: Humor = Humor.veryPleasant
     var activity: Activity?
     
     /// `photo` é opcional porque o usuário pode "continuar sem foto"

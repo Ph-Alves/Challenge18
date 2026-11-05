@@ -10,9 +10,9 @@ import SwiftUI
 
 struct SoberStyle: ThemeStyleProtocol {
     let typography = Typography(
-        title1: .custom("Badoni 72", size: 36, relativeTo: .largeTitle),
-        title2: .custom("Badoni 72", size: 32, relativeTo: .title),
-        title3: .custom("Badoni 72", size: 24, relativeTo: .title3),
+        title1: .custom("Bodoni 72", size: 36, relativeTo: .largeTitle),
+        title2: .custom("Bodoni 72", size: 32, relativeTo: .title),
+        title3: .custom("Bodoni 72", size: 24, relativeTo: .title3),
         subtitle1:.custom("SpecialGothic-Bold", size: 22, relativeTo: .title2),
         subtitle2: .custom("SpecialGothic-SemiBold", size: 18, relativeTo: .title3),
         subtitle3: .custom("SpecialGothic-Bold", size: 14, relativeTo: .subheadline),
@@ -39,8 +39,37 @@ struct SoberStyle: ThemeStyleProtocol {
         overlaySoft: .soberOverlaySoft,
         overlayStrong: .soberOverlayStrong)
     
-    let icons: IconsSet
+    let icons = IconsSet(
+        activityIcons: [
+            .cognitive: (closed: "eightBall", open: "eightBall"),
+            .physical:  (closed: "coffee",    open: "openCoffee"),
+            .sensorial: (closed: "coockie",   open: "openCookie"),
+            .social:    (closed: "telephone", open: "openPhone")
+        ],
+        
+        feelingIcons: [
+            .veryUnpleasant: (base: "veryUnpleasantBase", humor: "veryUnpleasantHumor"),
+            .unpleasant: (base: "unpleasantBase", humor: "unpleasantHumor"),
+            .neutral: (base: "neutralBase", humor: "neutralHumor"),
+            .pleasant: (base: "plesantBase", humor: "plesantHumor"),
+            .veryPleasant: (base: "veryPleasantBase", humor: "veryPleasantHumor")
+        ],
+        
+        challengeTabIcon: "challengeTabIcon",
+        homeTabIcon: "homeTabIcon",
+        feelingsTabIcon: "feelingsTabIcon",
+        profileTabIcon: "profileTabIcon",
+        placeholderCheckIcon: "placeholderCheckIcon",
+        photoPlaceholder: "photoPlaceholder",
+        archivedChallengeIcon: "archiveIcon",
+        profilePlaceholder: "profilePlaceholder",
+        camera: "camera",
+        cameraIcon: "cameraIcon",
+        nextIcon: "nextIcon",
+        pauseIcon: "pauseIcon")
     
-    let humorWheel: HumorWheelStyle
+    let humorWheel = HumorWheelStyle(
+        pointerAsset: "wheelArrow",
+        backgroundAsset: "wheelBackground")
     
 }

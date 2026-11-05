@@ -29,7 +29,7 @@ extension ActivityInteractor {
     /// (depois do último vem o primeiro, e vice-versa).
     private func moveHumor(by offset: Int) {
         let humors = Humor.allCases
-        let current = selectedHumor ?? .chill
+        let current = selectedHumor ?? .veryPleasant
 
         guard let index = humors.firstIndex(of: current) else { return }
 

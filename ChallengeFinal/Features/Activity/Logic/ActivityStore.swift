@@ -82,7 +82,7 @@ final class ActivityStore: ActivityStoreProtocol {
     //MARK: Step .Humor
     
     /// Humor registrado
-    private(set) var humor: Humor = .chill
+    private(set) var humor: Humor = .veryPleasant
     
     // MARK: Step .photo
     

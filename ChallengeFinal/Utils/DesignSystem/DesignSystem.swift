@@ -10,14 +10,16 @@ import SwiftUI
 @Observable
 final class DesignSystem {
     static let shared = DesignSystem()
-    
-    var currentTheme: Theme
-    
+
+    var currentTheme: Theme {
+        didSet { style = currentTheme.style }
+    }
+    private(set) var style: ThemeStyleProtocol
+
     private init(currentTheme: Theme = .sober) {
         self.currentTheme = currentTheme
+        self.style = currentTheme.style
     }
-    
-    var style: ThemeStyleProtocol { currentTheme.style }
 }
 
 extension Theme {

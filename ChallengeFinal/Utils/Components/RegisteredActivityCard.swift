@@ -47,5 +47,5 @@ struct RegisteredActivityCard: View {
 }
 
 #Preview {
-    RegisteredActivityCard(title: "Titulo do desafio", humor: .frustrated)
+    RegisteredActivityCard(title: "Titulo do desafio", humor: .veryUnpleasant)
 }

@@ -108,7 +108,7 @@ struct SummaryStepView: View {
     SummaryStepView(
         title: "menos distração, mais foco",
         description: "sem redes sociais, seu cardio vira um momento para cuidar do corpo e desacelerar a mente.",
-        humor: .frustrated,
+        humor: .veryUnpleasant,
         onFinish: { print("finalizar") },
         onShare: { print("compartilhar") }
     )
@@ -119,7 +119,7 @@ struct SummaryStepView: View {
         title: "menos distração, mais foco",
         description: "sem redes sociais, seu cardio vira um momento para cuidar do corpo e desacelerar a mente.",
         photo: Image(systemName: "person.crop.square.fill"), // só para visualizar
-        humor: .calm,
+        humor: .pleasant,
         onFinish: { print("finalizar") },
         onShare: { print("compartilhar") }
     )
