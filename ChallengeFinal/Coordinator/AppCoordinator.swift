@@ -20,5 +20,6 @@ final class AppCoordinator {
     var selectedTab: AppTab = .home
     let homeCoordinator = HomeCoordinator()
     let feelingsCoordinator = FeelingsCoordinator()
+    let challengesCoordinator = ChallengesCoordinator()
 }
 

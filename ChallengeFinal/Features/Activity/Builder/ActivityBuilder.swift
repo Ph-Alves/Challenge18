@@ -45,6 +45,8 @@ enum ActivityBuilder {
             currentCategory: currentCategory
         )
         
+        interactor.restoreData()
+        
         // A View segura a Store com força: o Presenter guarda a Store como `weak`.
         return ActivityView(
             interactor: interactor,

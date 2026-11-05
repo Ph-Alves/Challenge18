@@ -29,18 +29,32 @@ struct ActivityView: View {
     @State var store: ActivityStore
     @State var cameraPreview: CameraPreview
     
+    /// Controla o alerta "deseja sair do desafio?" do X (steps .challenge e .mood).
+    @State private var isExitAlertPresented = false
+    
     /// Categoria escolhida na Home, usada no sorteio.
     let currentCategory: ActivityCategory
 
     var body: some View {
-        stepView
-            .animation(.easeInOut(duration: 0.4), value: store.currentStep)
+        NavigationStack {
+            stepView
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .animation(.easeInOut(duration: 0.4), value: store.currentStep)
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar { navigationToolbar }
+        }
             .onAppear {
                 interactor.prepare(for: currentCategory)
             }
             // Permissão de câmera negada.
             .alert("Câmera bloqueada", isPresented: isPermissionAlertPresented) {
                 Button("Abrir Ajustes") {
+                    // O iOS pode encerrar o app ao mudar a permissão: guarda o estado antes de sair.
+                    interactor.cacheData(
+                        title: store.activityTitle ?? "",
+                        subtitle: store.activitySubtitle ?? "",
+                        description: store.activityDescription ?? ""
+                    )
                     if let url = URL(string: UIApplication.openSettingsURLString) {
                         openURL(url)
                     }
@@ -60,9 +74,26 @@ struct ActivityView: View {
             } message: {
                 Text(store.errorMessage ?? "")
             }
+            // Butão de X dos steps .challenge e .mood: só o "sair" avisa o Interactor.
+            .alert("deseja sair do desafio?", isPresented: $isExitAlertPresented) {
+                Button("continuar", role: .cancel) { }
+                Button("sair", role: .destructive) { interactor.finishActivityFlow() }
+            } message: {
+                Text(store.currentStep.exitMessage ?? "")
+            }
             // Tela da câmera: abre e fecha conforme `store.isCameraPresented`.
             .fullScreenCover(isPresented: isCameraPresented) {
-                CameraView(interactor: interactor, store: store, preview: cameraPreview)
+                CameraView(
+                    preview: cameraPreview,
+                    flashIcon: store.cameraFlashIcon,
+                    errorMessage: store.errorMessage,
+                    closeCamera: { interactor.closeCamera() },
+                    toggleFlash: { interactor.toggleFlash() },
+                    takePhoto: { interactor.takePhoto() },
+                    switchCamera: { interactor.switchCamera() },
+                    didSelectFromGallery: { item in interactor.didSelectFromGallery(item) },
+                    dismissAlerts: { interactor.dismissAlerts() }
+                )
             }
             .sheet(item: shareItem) { item in
                 ShareSheet(items: item.activityItems) { completed in
@@ -96,7 +127,6 @@ struct ActivityView: View {
                 swipeRaffle: { interactor.raffle(for: currentCategory) },
                 startDetection: { interactor.detectMotion(for: currentCategory) },
                 finishDetection: { interactor.finishDetection() },
-                returnAction: { interactor.finishActivityFlow() },
                 growFinished: { interactor.goToActivityDetail() }
             )
             .transition(.opacity)
@@ -109,7 +139,15 @@ struct ActivityView: View {
         // da própria tela) sai do fluxo, e o `finishActivity` cancela o cronômetro antes.
         case .inProgress:
             if let title = store.activityTitle, let subtitle = store.activitySubtitle, let description = store.activityDescription {
-                InProgressView(message: store.activityTitle ?? "", challengeSubTitle: store.activitySubtitle ?? "", challengeDescription: store.activityDescription ?? "", timeText: store.timeText, finishAction: {interactor.completeActivity(currentCategory: currentCategory, title: title, subTitle: subtitle, Description: description)}, cancelAction: interactor.finishActivityFlow)
+                InProgressView(
+                    message: store.activityTitle ?? "",
+                    challengeSubTitle: store.activitySubtitle ?? "",
+                    challengeDescription: store.activityDescription ?? "",
+                    timeText: store.timeText,
+                    finishAction: {
+                        interactor.completeActivity(currentCategory: currentCategory, title: title, subTitle: subtitle, Description: description)
+                    },
+                    cancelAction: interactor.finishActivityFlow)
             }
         // Humor: a roleta gira com swipe; "continuar" segue para a selfie.
         case .mood:
@@ -139,7 +177,6 @@ struct ActivityView: View {
                 ChallengeDisplayView(
                     challengeTitle: title,
                     isSearching: store.isSearching,
-                    returnAction: { interactor.finishActivityFlow() },
                     archiveAction: {
                         interactor.archiveActivity(title: title, description: subtitle, in: currentCategory)
                         interactor.reroll(for: currentCategory)
@@ -154,7 +191,6 @@ struct ActivityView: View {
                     challengeTitle: title,
                     challengeSubTitle: subtitle,
                     challengeDescription: description,
-                    returnAction: { interactor.finishActivityFlow() },
                     startAction: { interactor.startActivity() },
                     cancelAction: { interactor.reroll(for: currentCategory) }
                 )
@@ -163,12 +199,14 @@ struct ActivityView: View {
     }
     
     /// Step `.summary`: tela "desafio finalizado".
-    /// Os dados já estão na Store desde os steps anteriores (desafio, foto, humor).
+    /// Os dados já estão na Store desde os steps anteriores (foto, humor) e a conquista
+    /// (título e descrição) chega na transição para o summary.
     /// Ao aparecer, pede ao Interactor para gerar a imagem do story.
     private var summaryStepView: some View {
-        SummaryStepView(
-            title: store.activitySubtitle ?? "",
-            description: store.activityDescription ?? "",
+        SummaryView(
+            style: .activity,
+            title: store.achievementTitle ?? "",
+            description: store.achievementDescription ?? "",
             photo: store.photo,
             humor: store.humor,
             onFinish: { interactor.finishActivityFlow() },
@@ -184,15 +222,20 @@ struct ActivityView: View {
             )
         }
     }
-
-    //CHANGE: remover quando todos os steps tiverem as suas views.
-    @ViewBuilder
-    private func placeholder(_ title: String, next: @escaping () -> Void) -> some View {
-        VStack(spacing: 24) {
-            Text(title)
-
-            Button("Próximo", action: next)
-                .buttonStyle(.borderedProminent)
+    
+    // MARK: - Botão de navegação
+    /// Seta ou X, conforme o step. A seta navega direto; o X só abre o alerta.
+    @ToolbarContentBuilder
+    private var navigationToolbar: some ToolbarContent {
+        ToolbarItem(placement: .topBarLeading) {
+            switch store.currentStep.navigationButton {
+            case .close:
+                Button(role: .close) { isExitAlertPresented = true }
+            case .back:
+                Button("voltar", systemImage: "chevron.left") {
+                    interactor.didTapBack(on: store.currentStep)
+                }
+            }
         }
     }
 

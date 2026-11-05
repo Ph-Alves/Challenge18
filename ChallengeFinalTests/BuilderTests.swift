@@ -67,7 +67,83 @@ struct BuilderTests {
             Issue.record("Esperava o step .activity depois de iniciar o fluxo")
         }
     }
-    
+
+    // MARK: - Home reabre a Activity depois dos Ajustes
+
+    private func makeIsolatedDefaults() -> UserDefaults {
+        let name = "BuilderTests.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: name)!
+        defaults.removePersistentDomain(forName: name)
+        return defaults
+    }
+
+    private func saveSnapshot(in defaults: UserDefaults, savedAt: Date = Date()) throws {
+        let snapshot = TemporaryData(step: .photo, category: .sensorial, activityID: UUID(), resultID: UUID(),
+                                     title: "t", subtitle: "s", description: "d",
+                                     achievementTitle: "a", achievementDescription: "b", savedAt: savedAt)
+        defaults.set(try JSONEncoder().encode(snapshot), forKey: TemporaryData.key)
+    }
+
+    @Test func testingHomeCoordinatorStartsInActivityWhenThereIsASnapshot() throws {
+        let defaults = makeIsolatedDefaults()
+        try saveSnapshot(in: defaults)
+
+        let coordinator = HomeCoordinator(defaults: defaults)
+
+        guard case .activity(let flow) = coordinator.step else {
+            Issue.record("Esperava começar no step .activity com um snapshot válido")
+            return
+        }
+        // O fluxo já nasce no step salvo, sem passar pelo sorteio.
+        #expect(flow.step == .photo)
+        // A Home só espia: quem consome o snapshot é o `restoreData()` do Interactor.
+        #expect(defaults.data(forKey: TemporaryData.key) != nil)
+    }
+
+    @Test func testingActivityCoordinatorStartsInDrawByDefault() {
+        let coordinator = ActivityCoordinator(selectedCategory: .physical, onFinish: {})
+
+        #expect(coordinator.step == .draw)
+    }
+
+    @Test(arguments: [ActivityStep.challenge, .inProgress, .mood, .photo, .summary])
+    func testingActivityCoordinatorStartsInTheGivenStep(step: ActivityStep) {
+        let coordinator = ActivityCoordinator(selectedCategory: .physical, initialStep: step, onFinish: {})
+
+        #expect(coordinator.step == step)
+    }
+
+    @Test func testingStartActivityFlowWithoutStepStartsInDraw() {
+        let coordinator = makeHomeCoordinator()
+
+        coordinator.startActivityFlow(category: .cognitive)
+
+        guard case .activity(let flow) = coordinator.step else {
+            Issue.record("Esperava o step .activity depois de iniciar o fluxo")
+            return
+        }
+        #expect(flow.step == .draw)
+    }
+
+    @Test func testingHomeCoordinatorStartsInHomeWithoutASnapshot() {
+        let coordinator = HomeCoordinator(defaults: makeIsolatedDefaults())
+
+        if case .home = coordinator.step {} else {
+            Issue.record("Esperava começar no step .home sem snapshot")
+        }
+    }
+
+    @Test func testingHomeCoordinatorIgnoresAnExpiredSnapshot() throws {
+        let defaults = makeIsolatedDefaults()
+        try saveSnapshot(in: defaults, savedAt: Date().addingTimeInterval(-TemporaryData.lifetime - 1))
+
+        let coordinator = HomeCoordinator(defaults: defaults)
+
+        if case .home = coordinator.step {} else {
+            Issue.record("Esperava começar no step .home com o snapshot expirado")
+        }
+    }
+
 
     // MARK: - Feelings
 
@@ -96,7 +172,8 @@ struct BuilderTests {
     @Test func testingFeelingsCoordinatorReusesInjectedView() async {
         let context = modelContainer.mainContext
         let view = FeelingsBuilder.build(context: context)
-        let coordinator = FeelingsCoordinator(cached: view)
+        let coordinator = FeelingsCoordinator()
+        coordinator.cached = view
         
         let started = coordinator.startFeelingsView(context: context)
         
@@ -114,7 +191,82 @@ struct BuilderTests {
         view.interactor.loadFeelings()
         
         #expect(view.store.feelings[.pleasant]?.count == 1)
-        #expect(view.store.feelings[.pleasant]?.first === activity)
+        #expect(view.store.feelings[.pleasant]?.first?.activity === activity)
+    }
+    
+    // MARK: - Challenges
+
+    @Test func testingChallengesCoordinatorStartsWithoutCachedView() {
+        let coordinator = ChallengesCoordinator()
+
+        #expect(coordinator.cached == nil)
+    }
+
+    @Test func testingChallengesBuilding() {
+        let coordinator = ChallengesCoordinator()
+        _ = coordinator.startChallengesFlow(context: modelContainer.mainContext)
+
+        #expect(coordinator.cached != nil)
+    }
+
+    @Test func testingChallengesViewIsCachedAcrossCalls() {
+        let coordinator = ChallengesCoordinator()
+        let first = coordinator.startChallengesFlow(context: modelContainer.mainContext)
+        let second = coordinator.startChallengesFlow(context: modelContainer.mainContext)
+
+        // Mesma instância de store = a view não foi reconstruída.
+        #expect(first.store === second.store)
+    }
+
+    @Test func testingChallengesCoordinatorReusesInjectedView() {
+        let context = modelContainer.mainContext
+        let view = ChallengesBuilder.build(context: context)
+        let coordinator = ChallengesCoordinator(cached: view)
+
+        let started = coordinator.startChallengesFlow(context: context)
+
+        #expect(started.store === view.store)
+    }
+
+    // O Builder liga Interactor -> Presenter -> Store: carregar pelo interactor da view enche a store da mesma view.
+    @Test func testingChallengesBuilderWiresInteractorToStore() throws {
+        let context = modelContainer.mainContext
+        let repository = GenericRepository<Activity>(context: context)
+        let completed = Activity(category: .physical, result: ActivityResult(time: 5, humor: .calm),
+                                 name: "Caminhada", description: "-", archived: false)
+        let archived = Activity(category: .social, result: nil, name: "Arquivada", description: "-", archived: true)
+        try repository.add(completed)
+        try repository.add(archived)
+        let view = ChallengesBuilder.build(context: context)
+
+        view.interactor.loadChallenges()
+
+        #expect(view.store.challenges.count == 1)
+        #expect(view.store.challenges.first === completed)
+        #expect(view.store.archivedChallenges.first === archived)
+    }
+
+    // MARK: - ActivityStep (botão de navegação e alerta de saída)
+
+    // Cada par é (step, botão esperado no canto superior esquerdo).
+    @Test(arguments: [
+        (ActivityStep.draw, ActivityNavigationButton.back),
+        (.challenge, .close),
+        (.inProgress, .back),
+        (.mood, .close),
+        (.photo, .back),
+        (.summary, .back)
+    ])
+    func testingNavigationButtonForEachStep(step: ActivityStep, expected: ActivityNavigationButton) {
+        #expect(step.navigationButton == expected)
+    }
+
+    // Só o X abre o alerta "deseja sair do desafio?", então só os steps com X têm mensagem.
+    @Test(arguments: [ActivityStep.draw, .challenge, .inProgress, .mood, .photo, .summary])
+    func testingExitMessageExistsOnlyForStepsWithCloseButton(step: ActivityStep) {
+        let hasMessage = step.exitMessage?.isEmpty == false
+
+        #expect(hasMessage == (step.navigationButton == .close))
     }
 
 //    @Test func testingProfileBuilding() async throws {
