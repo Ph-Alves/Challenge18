@@ -487,7 +487,7 @@ struct InteractorTests {
 
     /// Deixa o Interactor no step `.photo`: `Activity` e `ActivityResult` já estão no banco.
     @discardableResult
-    private func prepareAtPhotoStep(_ sut: ActivitySUT, humor: Humor = .calm) throws -> Activity {
+    private func prepareAtPhotoStep(_ sut: ActivitySUT, humor: Humor = .pleasant) throws -> Activity {
         let result = ActivityResult(achievementTitle: "mestre offline",
                                     achievementDescription: "você ficou 5 minutos sem celular",
                                     time: 300,
@@ -503,7 +503,7 @@ struct InteractorTests {
         let defaults = makeIsolatedDefaults()
         let saved = makeActivitySUT()
         saved.interactor.defaults = defaults
-        let activity = try prepareAtPhotoStep(saved, humor: .frustrated)
+        let activity = try prepareAtPhotoStep(saved, humor: .veryUnpleasant)
         saved.interactor.cacheData(title: "título", subtitle: "sub", description: "descrição")
 
         // Um Interactor novo, como depois de o iOS encerrar o app.
@@ -513,11 +513,11 @@ struct InteractorTests {
 
         #expect(restored.interactor.currentActivity === activity)
         #expect(restored.interactor.result === activity.result)
-        #expect(restored.interactor.selectedHumor == .frustrated)
+        #expect(restored.interactor.selectedHumor == .veryUnpleasant)
         // A conquista não estava na memória ao salvar: vem do que já estava gravado no `result`.
         #expect(restored.interactor.achievement?.title == "mestre offline")
         #expect(restored.interactor.achievement?.description == "você ficou 5 minutos sem celular")
-        #expect(restored.presenter.presentedHumors == [.frustrated])
+        #expect(restored.presenter.presentedHumors == [.veryUnpleasant])
         #expect(restored.presenter.restoredChallenges.count == 1)
         #expect(restored.presenter.restoredChallenges.first?.title == "título")
         #expect(restored.presenter.restoredChallenges.first?.subtitle == "sub")
@@ -1099,7 +1099,7 @@ struct InteractorTests {
     @Test func testingContinueFromPhotoPresentsTheStoredAchievement() {
         let sut = makeActivitySUT()
         completeActivity(on: sut)
-        sut.interactor.result = ActivityResult(time: 10, humor: .chill)
+        sut.interactor.result = ActivityResult(time: 10, humor: .veryPleasant)
         sut.interactor.achievement = Achievement(title: "mestre offline", description: "você passou 1h offline")
 
         sut.interactor.continueFromPhoto()
@@ -1144,7 +1144,7 @@ struct InteractorTests {
     @Test func testingAchievementArrivingAfterResultIsWrittenInIt() async {
         let sut = makeActivitySUT()
         completeActivity(on: sut)
-        let result = ActivityResult(time: 10, humor: .chill)
+        let result = ActivityResult(time: 10, humor: .veryPleasant)
         sut.interactor.result = result
 
         await sut.interactor.achievementTask?.value
@@ -1178,7 +1178,7 @@ struct InteractorTests {
     @Test func testingCancelTimerDiscardsAchievementStillBeingGenerated() async {
         let sut = makeActivitySUT()
         completeActivity(on: sut)
-        let result = ActivityResult(time: 10, humor: .chill)
+        let result = ActivityResult(time: 10, humor: .veryPleasant)
         sut.interactor.result = result
 
         sut.interactor.cancelTimer()
@@ -1448,7 +1448,7 @@ struct InteractorTests {
     @discardableResult
     private func addChallenge(_ name: String,
                               category: ActivityCategory = .physical,
-                              humor: Humor? = .calm,
+                              humor: Humor? = .pleasant,
                               archived: Bool = false,
                               createdAt: Date = Date(),
                               in repository: GenericRepository<Activity>) throws -> Activity {
@@ -1476,7 +1476,7 @@ struct InteractorTests {
     @Test func testingLoadChallengesSplitsCompletedAndArchived() throws {
         let sut = makeChallengesSUT()
         try addChallenge("Caminhada", in: sut.repository)
-        try addChallenge("Leitura", category: .cognitive, humor: .chill, in: sut.repository)
+        try addChallenge("Leitura", category: .cognitive, humor: .veryPleasant, in: sut.repository)
         try addChallenge("Sem humor", humor: nil, in: sut.repository)
         try addChallenge("Arquivada", archived: true, in: sut.repository)
 
@@ -1990,7 +1990,7 @@ struct InteractorTests {
 
     @Test func testingSelectActivityPresentsTheSelectedActivity() throws {
         let sut = makeFeelingsSUT()
-        let activity = makeFeelingActivity(named: "Caminhada", humor: .calm)
+        let activity = makeFeelingActivity(named: "Caminhada", humor: .pleasant)
         try sut.repository.add(activity)
 
         sut.interactor.selectActivity(activity: activity)
@@ -2003,8 +2003,8 @@ struct InteractorTests {
     // Depois de apagar, a lista é recarregada sem a atividade apagada.
     @Test func testingDeleteActivityRemovesItAndReloadsFeelings() throws {
         let sut = makeFeelingsSUT()
-        let walk = makeFeelingActivity(named: "Caminhada", humor: .calm)
-        let read = makeFeelingActivity(named: "Leitura", humor: .chill)
+        let walk = makeFeelingActivity(named: "Caminhada", humor: .pleasant)
+        let read = makeFeelingActivity(named: "Leitura", humor: .veryPleasant)
         try sut.repository.add(walk)
         try sut.repository.add(read)
 
@@ -2145,7 +2145,7 @@ struct InteractorTests {
     // Fechar sem fotografar não pode mexer na foto que a atividade já tinha.
     @Test func testingCloseCameraKeepsTheCurrentPhoto() throws {
         let sut = makeFeelingsSUT()
-        let activity = makeFeelingActivity(named: "Caminhada", humor: .calm)
+        let activity = makeFeelingActivity(named: "Caminhada", humor: .pleasant)
         activity.result?.photo = Data([9])
         try sut.repository.add(activity)
         sut.interactor.selectActivity(activity: activity)
@@ -2187,7 +2187,7 @@ struct InteractorTests {
     // O ponto principal da feature: a foto nova substitui a antiga e vai para o banco.
     @Test func testingTakePhotoReplacesActivityPhotoAndPresentsUpdate() throws {
         let sut = makeFeelingsSUT()
-        let activity = makeFeelingActivity(named: "Caminhada", humor: .calm)
+        let activity = makeFeelingActivity(named: "Caminhada", humor: .pleasant)
         activity.result?.photo = Data([9])
         try sut.repository.add(activity)
         sut.interactor.selectActivity(activity: activity)
@@ -2205,7 +2205,7 @@ struct InteractorTests {
     // O story usa a foto, então precisa ser gerado de novo com a nova.
     @Test func testingTakePhotoRendersTheStoryAgain() throws {
         let sut = makeFeelingsSUT()
-        let activity = makeFeelingActivity(named: "Caminhada", humor: .calm)
+        let activity = makeFeelingActivity(named: "Caminhada", humor: .pleasant)
         try sut.repository.add(activity)
         sut.interactor.selectActivity(activity: activity)
 
@@ -2226,7 +2226,7 @@ struct InteractorTests {
 
     @Test func testingTakePhotoFailurePresentsErrorAndKeepsPhoto() throws {
         let sut = makeFeelingsSUT()
-        let activity = makeFeelingActivity(named: "Caminhada", humor: .calm)
+        let activity = makeFeelingActivity(named: "Caminhada", humor: .pleasant)
         activity.result?.photo = Data([9])
         try sut.repository.add(activity)
         sut.interactor.selectActivity(activity: activity)

@@ -232,7 +232,7 @@ struct BuilderTests {
     @Test func testingChallengesBuilderWiresInteractorToStore() throws {
         let context = modelContainer.mainContext
         let repository = GenericRepository<Activity>(context: context)
-        let completed = Activity(category: .physical, result: ActivityResult(time: 5, humor: .calm),
+        let completed = Activity(category: .physical, result: ActivityResult(time: 5, humor: .pleasant),
                                  name: "Caminhada", description: "-", archived: false)
         let archived = Activity(category: .social, result: nil, name: "Arquivada", description: "-", archived: true)
         try repository.add(completed)

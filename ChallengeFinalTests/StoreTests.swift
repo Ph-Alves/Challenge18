@@ -231,11 +231,11 @@ struct StoreTests {
         let walk = makeFeelingActivity(named: "Caminhada", humor: .pleasant)
         let read = makeFeelingActivity(named: "Leitura", humor: .veryPleasant)
 
-        store.presentFeelingsLoaded(feelings: [.pleasant: [(walk, nil)], .chill: [(read, nil)]])
+        store.presentFeelingsLoaded(feelings: [.pleasant: [(walk, nil)], .veryPleasant: [(read, nil)]])
 
         #expect(store.feelings.count == 2)
-        #expect(store.feelings[.calm]?.first?.activity === walk)
-        #expect(store.feelings[.chill]?.first?.activity === read)
+        #expect(store.feelings[.pleasant]?.first?.activity === walk)
+        #expect(store.feelings[.veryPleasant]?.first?.activity === read)
     }
 
     @Test func testingPresentFeelingsLoadedReplacesPreviousFeelings() {
@@ -250,7 +250,7 @@ struct StoreTests {
 
     @Test func testingPresentFeelingsLoadedWithEmptyDictionaryClearsStore() {
         let store = FeelingsStore()
-        store.presentFeelingsLoaded(feelings: [.calm: [(makeFeelingActivity(named: "Caminhada", humor: .pleasant), nil)]])
+        store.presentFeelingsLoaded(feelings: [.pleasant: [(makeFeelingActivity(named: "Caminhada", humor: .pleasant), nil)]])
 
         store.presentFeelingsLoaded(feelings: [:])
 
@@ -259,13 +259,13 @@ struct StoreTests {
 
     @Test func testingPresentFeelingsLoadedKeepsImageNextToActivity() {
         let store = FeelingsStore()
-        let walk = makeFeelingActivity(named: "Caminhada", humor: .calm)
+        let walk = makeFeelingActivity(named: "Caminhada", humor: .pleasant)
         let image = Image(systemName: "photo")
 
-        store.presentFeelingsLoaded(feelings: [.calm: [(walk, image), (makeFeelingActivity(named: "Leitura", humor: .calm), nil)]])
+        store.presentFeelingsLoaded(feelings: [.pleasant: [(walk, image), (makeFeelingActivity(named: "Leitura", humor: .pleasant), nil)]])
 
-        #expect(store.feelings[.calm]?.first?.image != nil)
-        #expect(store.feelings[.calm]?.last?.image == nil)
+        #expect(store.feelings[.pleasant]?.first?.image != nil)
+        #expect(store.feelings[.pleasant]?.last?.image == nil)
     }
 
     @Test func testingFeelingsStoreStartsWithDetailAndCameraClosed() {
@@ -283,7 +283,7 @@ struct StoreTests {
 
     @Test func testingPresentActivityDetailsOpensDetail() {
         let store = FeelingsStore()
-        let walk = makeFeelingActivity(named: "Caminhada", humor: .calm)
+        let walk = makeFeelingActivity(named: "Caminhada", humor: .pleasant)
 
         store.presentActivityDetails(activity: walk, photo: Image(systemName: "photo"))
 
@@ -294,7 +294,7 @@ struct StoreTests {
 
     @Test func testingReturnToFeelingsClosesDetail() {
         let store = FeelingsStore()
-        store.presentActivityDetails(activity: makeFeelingActivity(named: "Caminhada", humor: .calm), photo: nil)
+        store.presentActivityDetails(activity: makeFeelingActivity(named: "Caminhada", humor: .pleasant), photo: nil)
 
         store.returnToFeelings()
 
@@ -304,33 +304,33 @@ struct StoreTests {
     // A foto nova vale para o detalhe e para o card da mesma atividade na lista.
     @Test func testingPresentPhotoUpdatesSelectedPhotoAndMatchingListEntry() {
         let store = FeelingsStore()
-        let walk = makeFeelingActivity(named: "Caminhada", humor: .calm)
-        let read = makeFeelingActivity(named: "Leitura", humor: .chill)
-        store.presentFeelingsLoaded(feelings: [.calm: [(walk, nil)], .chill: [(read, nil)]])
+        let walk = makeFeelingActivity(named: "Caminhada", humor: .pleasant)
+        let read = makeFeelingActivity(named: "Leitura", humor: .veryPleasant)
+        store.presentFeelingsLoaded(feelings: [.pleasant: [(walk, nil)], .veryPleasant: [(read, nil)]])
         store.presentActivityDetails(activity: walk, photo: nil)
 
         store.presentPhoto(Image(systemName: "photo"))
 
         #expect(store.selectedPhoto != nil)
-        #expect(store.feelings[.calm]?.first?.image != nil)
+        #expect(store.feelings[.pleasant]?.first?.image != nil)
         // As outras atividades não mudam.
-        #expect(store.feelings[.chill]?.first?.image == nil)
+        #expect(store.feelings[.veryPleasant]?.first?.image == nil)
     }
 
     @Test func testingPresentPhotoWithoutSelectedActivityOnlySetsSelectedPhoto() {
         let store = FeelingsStore()
-        let walk = makeFeelingActivity(named: "Caminhada", humor: .calm)
-        store.presentFeelingsLoaded(feelings: [.calm: [(walk, nil)]])
+        let walk = makeFeelingActivity(named: "Caminhada", humor: .pleasant)
+        store.presentFeelingsLoaded(feelings: [.pleasant: [(walk, nil)]])
 
         store.presentPhoto(Image(systemName: "photo"))
 
         #expect(store.selectedPhoto != nil)
-        #expect(store.feelings[.calm]?.first?.image == nil)
+        #expect(store.feelings[.pleasant]?.first?.image == nil)
     }
 
     @Test func testingPresentDetailVisibilityKeepsSelectedActivity() {
         let store = FeelingsStore()
-        let walk = makeFeelingActivity(named: "Caminhada", humor: .calm)
+        let walk = makeFeelingActivity(named: "Caminhada", humor: .pleasant)
         store.presentActivityDetails(activity: walk, photo: nil)
 
         store.presentDetailVisibility(isVisible: false)
@@ -407,7 +407,7 @@ struct StoreTests {
 
     @Test func testingDisplayChallengesStoresListFilterAndEmptyState() {
         let store = ChallengesStore()
-        let walk = makeFeelingActivity(named: "Caminhada", humor: .calm)
+        let walk = makeFeelingActivity(named: "Caminhada", humor: .pleasant)
 
         store.displayChallenges([walk], selectedCategory: .physical, emptyState: nil)
 
@@ -424,7 +424,7 @@ struct StoreTests {
 
     @Test func testingDisplayArchivedChallengesAndSheet() {
         let store = ChallengesStore()
-        let archived = makeFeelingActivity(named: "Arquivada", humor: .calm)
+        let archived = makeFeelingActivity(named: "Arquivada", humor: .pleasant)
 
         store.displayArchivedChallenges([archived], emptyState: nil)
         store.displayArchivedSheet(isPresented: true)
@@ -443,7 +443,7 @@ struct StoreTests {
 
     @Test func testingDisplaySummaryOpensAndCloses() {
         let store = ChallengesStore()
-        let walk = makeFeelingActivity(named: "Caminhada", humor: .calm)
+        let walk = makeFeelingActivity(named: "Caminhada", humor: .pleasant)
 
         store.displaySummary(walk, photo: Image(systemName: "photo"))
 
