@@ -186,16 +186,16 @@ struct PresenterTests {
     @Test func testingPresentHumorUpdatesStore() {
         let (presenter, store) = createActivityPresenterAndStore()
 
-        presenter.presentHumor(.frustrated)
+        presenter.presentHumor(.veryUnpleasant)
 
-        #expect(store.humor == .frustrated)
+        #expect(store.humor == .veryUnpleasant)
     }
 
     // MARK: ActivityPresenter (compartilhamento)
 
     @Test func testingPresentStoryRendersStoryImage() throws {
         let (presenter, store) = createActivityPresenterAndStore()
-        let result = ActivityResult(time: 0, humor: .chill)
+        let result = ActivityResult(time: 0, humor: .veryPleasant)
 
         presenter.presentStory(result, title: "faça o seu cardio", subtitle: "menos distração", description: "sem redes sociais")
 
@@ -241,27 +241,27 @@ struct PresenterTests {
     @Test func testingPresentFeelingsLoadedGroupsActivitiesByHumor() {
         let (presenter, store) = createFeelingsPresenterAndStore()
         let activities = [
-            makeFeelingActivity(named: "A", humor: .calm),
-            makeFeelingActivity(named: "B", humor: .chill),
-            makeFeelingActivity(named: "C", humor: .calm)
+            makeFeelingActivity(named: "A", humor: .pleasant),
+            makeFeelingActivity(named: "B", humor: .veryPleasant),
+            makeFeelingActivity(named: "C", humor: .pleasant)
         ]
 
         presenter.presentFeelingsLoaded(activities: activities)
 
         // A ordem original é mantida dentro de cada grupo.
-        #expect(store.feelings[.calm]?.map(\.name) == ["A", "C"])
-        #expect(store.feelings[.chill]?.map(\.name) == ["B"])
+        #expect(store.feelings[.pleasant]?.map(\.name) == ["A", "C"])
+        #expect(store.feelings[.veryPleasant]?.map(\.name) == ["B"])
         #expect(store.feelings.count == 2)
     }
 
     @Test func testingPresentFeelingsLoadedLeavesOutHumorsWithoutActivities() {
         let (presenter, store) = createFeelingsPresenterAndStore()
 
-        presenter.presentFeelingsLoaded(activities: [makeFeelingActivity(named: "A", humor: .calm)])
+        presenter.presentFeelingsLoaded(activities: [makeFeelingActivity(named: "A", humor: .pleasant)])
 
         // A View usa `?? 0` para esses humores.
-        #expect(store.feelings[.locked] == nil)
-        #expect(store.feelings[.frustrated] == nil)
+        #expect(store.feelings[.unpleasant] == nil)
+        #expect(store.feelings[.veryUnpleasant] == nil)
     }
 
     @Test func testingPresentFeelingsLoadedWithNoActivitiesLeavesStoreEmpty() {
@@ -276,22 +276,22 @@ struct PresenterTests {
         let (presenter, store) = createFeelingsPresenterAndStore()
         let activities = [
             makeFeelingActivity(named: "Sem resultado", humor: nil),
-            makeFeelingActivity(named: "Caminhada", humor: .calm)
+            makeFeelingActivity(named: "Caminhada", humor: .pleasant)
         ]
 
         presenter.presentFeelingsLoaded(activities: activities)
 
         #expect(store.feelings.count == 1)
-        #expect(store.feelings[.calm]?.map(\.name) == ["Caminhada"])
+        #expect(store.feelings[.pleasant]?.map(\.name) == ["Caminhada"])
     }
 
     @Test func testingPresentFeelingsLoadedKeepsTheSameActivityInstances() {
         let (presenter, store) = createFeelingsPresenterAndStore()
-        let activity = makeFeelingActivity(named: "Caminhada", humor: .calm)
+        let activity = makeFeelingActivity(named: "Caminhada", humor: .pleasant)
 
         presenter.presentFeelingsLoaded(activities: [activity])
 
-        #expect(store.feelings[.calm]?.first === activity)
+        #expect(store.feelings[.pleasant]?.first === activity)
     }
 
     @Test(arguments: Humor.allCases)
@@ -306,12 +306,12 @@ struct PresenterTests {
     // Cada carga substitui a anterior, não soma.
     @Test func testingPresentFeelingsLoadedReplacesPreviousFeelings() {
         let (presenter, store) = createFeelingsPresenterAndStore()
-        presenter.presentFeelingsLoaded(activities: [makeFeelingActivity(named: "A", humor: .calm)])
+        presenter.presentFeelingsLoaded(activities: [makeFeelingActivity(named: "A", humor: .pleasant)])
 
-        presenter.presentFeelingsLoaded(activities: [makeFeelingActivity(named: "B", humor: .chill)])
+        presenter.presentFeelingsLoaded(activities: [makeFeelingActivity(named: "B", humor: .veryPleasant)])
 
-        #expect(store.feelings[.calm] == nil)
-        #expect(store.feelings[.chill]?.map(\.name) == ["B"])
+        #expect(store.feelings[.pleasant] == nil)
+        #expect(store.feelings[.veryPleasant]?.map(\.name) == ["B"])
     }
 
     // O store é weak: se a tela já foi embora, apresentar não pode quebrar.
@@ -322,7 +322,7 @@ struct PresenterTests {
             presenter = FeelingsPresenter(store: store)
         }
 
-        presenter.presentFeelingsLoaded(activities: [makeFeelingActivity(named: "A", humor: .calm)])
+        presenter.presentFeelingsLoaded(activities: [makeFeelingActivity(named: "A", humor: .pleasant)])
 
         #expect(presenter.store == nil)
     }

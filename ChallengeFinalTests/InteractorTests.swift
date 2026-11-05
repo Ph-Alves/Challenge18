@@ -682,12 +682,12 @@ struct InteractorTests {
     @Test func testingSelectMoodUpdatesResultAndGoesToPhoto() {
         let sut = makeActivitySUT()
         completeActivity(on: sut)
-        let result = ActivityResult(time: 10, humor: .chill)
+        let result = ActivityResult(time: 10, humor: .veryPleasant)
         sut.interactor.result = result
 
-        sut.interactor.selectMood(humor: .frustrated)
+        sut.interactor.selectMood(humor: .veryUnpleasant)
 
-        #expect(result.humor == .frustrated)
+        #expect(result.humor == .veryUnpleasant)
         #expect(sut.interactor.currentActivity?.result === result)
         #expect(sut.presenter.photoCount == 1)
     }
@@ -695,7 +695,7 @@ struct InteractorTests {
     @Test func testingContinueFromPhotoStoresPhotoInResultAndGoesToSummary() {
         let sut = makeActivitySUT()
         completeActivity(on: sut)
-        let result = ActivityResult(time: 10, humor: .chill)
+        let result = ActivityResult(time: 10, humor: .veryPleasant)
         let photo = Data([0x01, 0x02])
         sut.interactor.result = result
         sut.interactor.selectedPhoto = photo
@@ -710,7 +710,7 @@ struct InteractorTests {
     @Test func testingContinueFromPhotoWithoutPhotoKeepsResultPhotoNil() {
         let sut = makeActivitySUT()
         completeActivity(on: sut)
-        let result = ActivityResult(time: 10, humor: .chill)
+        let result = ActivityResult(time: 10, humor: .veryPleasant)
         sut.interactor.result = result
 
         sut.interactor.continueFromPhoto()
@@ -736,7 +736,7 @@ struct InteractorTests {
     @Test func testingFinishActivityFlowClearsFlowStateAndKeepsSavedActivity() throws {
         let sut = makeActivitySUT()
         completeActivity(on: sut)
-        sut.interactor.result = ActivityResult(time: 10, humor: .chill)
+        sut.interactor.result = ActivityResult(time: 10, humor: .veryPleasant)
 
         sut.interactor.finishActivityFlow()
 
@@ -750,22 +750,22 @@ struct InteractorTests {
 
     @Test func testingNextHumorWrapsFromLastToFirst() {
         let sut = makeActivitySUT()
-        sut.interactor.selectedHumor = .chill   // último da roleta
+        sut.interactor.selectedHumor = .veryPleasant   // último da roleta
 
         sut.interactor.nextHumor()
 
-        #expect(sut.interactor.selectedHumor == .frustrated)
-        #expect(sut.presenter.presentedHumors == [.frustrated])
+        #expect(sut.interactor.selectedHumor == .veryUnpleasant)
+        #expect(sut.presenter.presentedHumors == [.veryUnpleasant])
     }
 
     @Test func testingPreviousHumorWrapsFromFirstToLast() {
         let sut = makeActivitySUT()
-        sut.interactor.selectedHumor = .frustrated   // primeiro da roleta
+        sut.interactor.selectedHumor = .veryUnpleasant   // primeiro da roleta
 
         sut.interactor.previousHumor()
 
-        #expect(sut.interactor.selectedHumor == .chill)
-        #expect(sut.presenter.presentedHumors == [.chill])
+        #expect(sut.interactor.selectedHumor == .veryPleasant)
+        #expect(sut.presenter.presentedHumors == [.veryPleasant])
     }
     
     @Test func testingEachHumorChangePlaysOneSelectionTick() {
@@ -923,8 +923,8 @@ struct InteractorTests {
     // Atividades sem resultado (em andamento, abandonadas ou arquivadas) não entram nos sentimentos.
     @Test func testingLoadFeelingsPresentsOnlyActivitiesWithResult() throws {
         let sut = makeFeelingsSUT()
-        try sut.repository.add(makeFeelingActivity(named: "Caminhada", humor: .calm))
-        try sut.repository.add(makeFeelingActivity(named: "Leitura", humor: .chill))
+        try sut.repository.add(makeFeelingActivity(named: "Caminhada", humor: .pleasant))
+        try sut.repository.add(makeFeelingActivity(named: "Leitura", humor: .veryPleasant))
         try sut.repository.add(makeFeelingActivity(named: "Sem resultado", humor: nil))
         try sut.repository.add(makeFeelingActivity(named: "Arquivada", humor: nil, archived: true))
 
@@ -946,23 +946,23 @@ struct InteractorTests {
 
     @Test func testingLoadFeelingsPresentsTheSameActivitiesStoredInRepository() throws {
         let sut = makeFeelingsSUT()
-        let activity = makeFeelingActivity(named: "Caminhada", humor: .calm)
+        let activity = makeFeelingActivity(named: "Caminhada", humor: .pleasant)
         try sut.repository.add(activity)
 
         sut.interactor.loadFeelings()
 
         let presented = try #require(sut.presenter.presentedActivities.first)
         #expect(presented.first === activity)
-        #expect(presented.first?.result?.humor == .calm)
+        #expect(presented.first?.result?.humor == .pleasant)
     }
 
     // A tela chama `loadFeelings()` toda vez que aparece: cada chamada tem que refletir o banco naquele momento.
     @Test func testingLoadFeelingsReflectsActivitiesAddedBetweenCalls() throws {
         let sut = makeFeelingsSUT()
-        try sut.repository.add(makeFeelingActivity(named: "Caminhada", humor: .calm))
+        try sut.repository.add(makeFeelingActivity(named: "Caminhada", humor: .pleasant))
         sut.interactor.loadFeelings()
 
-        try sut.repository.add(makeFeelingActivity(named: "Leitura", humor: .chill))
+        try sut.repository.add(makeFeelingActivity(named: "Leitura", humor: .veryPleasant))
         sut.interactor.loadFeelings()
 
         #expect(sut.presenter.presentedActivities.map(\.count) == [1, 2])

@@ -184,29 +184,29 @@ struct StoreTests {
 
     @Test func testingPresentFeelingsLoadedStoresFeelings() {
         let store = FeelingsStore()
-        let walk = makeFeelingActivity(named: "Caminhada", humor: .calm)
-        let read = makeFeelingActivity(named: "Leitura", humor: .chill)
+        let walk = makeFeelingActivity(named: "Caminhada", humor: .pleasant)
+        let read = makeFeelingActivity(named: "Leitura", humor: .veryPleasant)
 
-        store.presentFeelingsLoaded(feelings: [.calm: [walk], .chill: [read]])
+        store.presentFeelingsLoaded(feelings: [.pleasant: [walk], .veryPleasant: [read]])
 
         #expect(store.feelings.count == 2)
-        #expect(store.feelings[.calm]?.first === walk)
-        #expect(store.feelings[.chill]?.first === read)
+        #expect(store.feelings[.pleasant]?.first === walk)
+        #expect(store.feelings[.veryPleasant]?.first === read)
     }
 
     @Test func testingPresentFeelingsLoadedReplacesPreviousFeelings() {
         let store = FeelingsStore()
-        store.presentFeelingsLoaded(feelings: [.calm: [makeFeelingActivity(named: "Caminhada", humor: .calm)]])
+        store.presentFeelingsLoaded(feelings: [.pleasant: [makeFeelingActivity(named: "Caminhada", humor: .pleasant)]])
 
-        store.presentFeelingsLoaded(feelings: [.chill: [makeFeelingActivity(named: "Leitura", humor: .chill)]])
+        store.presentFeelingsLoaded(feelings: [.veryPleasant: [makeFeelingActivity(named: "Leitura", humor: .veryPleasant)]])
 
-        #expect(store.feelings[.calm] == nil)
-        #expect(store.feelings[.chill]?.count == 1)
+        #expect(store.feelings[.pleasant] == nil)
+        #expect(store.feelings[.veryPleasant]?.count == 1)
     }
 
     @Test func testingPresentFeelingsLoadedWithEmptyDictionaryClearsStore() {
         let store = FeelingsStore()
-        store.presentFeelingsLoaded(feelings: [.calm: [makeFeelingActivity(named: "Caminhada", humor: .calm)]])
+        store.presentFeelingsLoaded(feelings: [.pleasant: [makeFeelingActivity(named: "Caminhada", humor: .pleasant)]])
 
         store.presentFeelingsLoaded(feelings: [:])
 
