@@ -132,6 +132,6 @@ private struct Triangle: Shape {
 }
 
 #Preview {
-    HumorWheel(selected: .frustrated)
+    HumorWheel(selected: .veryUnpleasant)
 }
 

@@ -197,9 +197,9 @@ struct PresenterTests {
     @Test func testingPresentHumorUpdatesStore() {
         let (presenter, store) = createActivityPresenterAndStore()
         
-        presenter.presentHumor(.frustrated)
+        presenter.presentHumor(.veryUnpleasant)
         
-        #expect(store.humor == .frustrated)
+        #expect(store.humor == .veryUnpleasant)
     }
 
     // MARK: ActivityPresenter (conquista)
@@ -219,8 +219,8 @@ struct PresenterTests {
     
     @Test func testingPresentStoryRendersStoryImage() throws {
         let (presenter, store) = createActivityPresenterAndStore()
-        let result = ActivityResult(time: 0, humor: .chill)
-        
+        let result = ActivityResult(time: 0, humor: .veryPleasant)
+
         presenter.presentStory(result, title: "faça o seu cardio", subtitle: "menos distração", description: "sem redes sociais")
         
         // O story sai em 1080x1920 px (360x640 pt com scale 3).
@@ -265,27 +265,27 @@ struct PresenterTests {
     @Test func testingPresentFeelingsLoadedGroupsActivitiesByHumor() {
         let (presenter, store) = createFeelingsPresenterAndStore()
         let activities = [
-            makeFeelingActivity(named: "A", humor: .calm),
-            makeFeelingActivity(named: "B", humor: .chill),
-            makeFeelingActivity(named: "C", humor: .calm)
+            makeFeelingActivity(named: "A", humor: .pleasant),
+            makeFeelingActivity(named: "B", humor: .veryPleasant),
+            makeFeelingActivity(named: "C", humor: .pleasant)
         ]
         
         presenter.presentFeelingsLoaded(activities: activities)
         
         // A ordem original é mantida dentro de cada grupo.
-        #expect(store.feelings[.calm]?.map(\.activity.name) == ["A", "C"])
-        #expect(store.feelings[.chill]?.map(\.activity.name) == ["B"])
+        #expect(store.feelings[.pleasant]?.map(\.activity.name) == ["A", "C"])
+        #expect(store.feelings[.veryPleasant]?.map(\.activity.name) == ["B"])
         #expect(store.feelings.count == 2)
     }
     
     @Test func testingPresentFeelingsLoadedLeavesOutHumorsWithoutActivities() {
         let (presenter, store) = createFeelingsPresenterAndStore()
-        
-        presenter.presentFeelingsLoaded(activities: [makeFeelingActivity(named: "A", humor: .calm)])
-        
+
+        presenter.presentFeelingsLoaded(activities: [makeFeelingActivity(named: "A", humor: .pleasant)])
+
         // A View usa `?? 0` para esses humores.
-        #expect(store.feelings[.locked] == nil)
-        #expect(store.feelings[.frustrated] == nil)
+        #expect(store.feelings[.unpleasant] == nil)
+        #expect(store.feelings[.veryUnpleasant] == nil)
     }
     
     @Test func testingPresentFeelingsLoadedWithNoActivitiesLeavesStoreEmpty() {
@@ -300,22 +300,22 @@ struct PresenterTests {
         let (presenter, store) = createFeelingsPresenterAndStore()
         let activities = [
             makeFeelingActivity(named: "Sem resultado", humor: nil),
-            makeFeelingActivity(named: "Caminhada", humor: .calm)
+            makeFeelingActivity(named: "Caminhada", humor: .pleasant)
         ]
         
         presenter.presentFeelingsLoaded(activities: activities)
         
         #expect(store.feelings.count == 1)
-        #expect(store.feelings[.calm]?.map(\.activity.name) == ["Caminhada"])
+        #expect(store.feelings[.pleasant]?.map(\.activity.name) == ["Caminhada"])
     }
     
     @Test func testingPresentFeelingsLoadedKeepsTheSameActivityInstances() {
         let (presenter, store) = createFeelingsPresenterAndStore()
-        let activity = makeFeelingActivity(named: "Caminhada", humor: .calm)
-        
+        let activity = makeFeelingActivity(named: "Caminhada", humor: .pleasant)
+
         presenter.presentFeelingsLoaded(activities: [activity])
-        
-        #expect(store.feelings[.calm]?.first?.activity === activity)
+
+        #expect(store.feelings[.pleasant]?.first?.activity === activity)
     }
     
     @Test(arguments: Humor.allCases)
@@ -330,12 +330,12 @@ struct PresenterTests {
     // Cada carga substitui a anterior, não soma.
     @Test func testingPresentFeelingsLoadedReplacesPreviousFeelings() {
         let (presenter, store) = createFeelingsPresenterAndStore()
-        presenter.presentFeelingsLoaded(activities: [makeFeelingActivity(named: "A", humor: .calm)])
-        
-        presenter.presentFeelingsLoaded(activities: [makeFeelingActivity(named: "B", humor: .chill)])
-        
-        #expect(store.feelings[.calm] == nil)
-        #expect(store.feelings[.chill]?.map(\.activity.name) == ["B"])
+        presenter.presentFeelingsLoaded(activities: [makeFeelingActivity(named: "A", humor: .pleasant)])
+
+        presenter.presentFeelingsLoaded(activities: [makeFeelingActivity(named: "B", humor: .veryPleasant)])
+
+        #expect(store.feelings[.pleasant] == nil)
+        #expect(store.feelings[.veryPleasant]?.map(\.activity.name) == ["B"])
     }
     
     // O store é weak: se a tela já foi embora, apresentar não pode quebrar.
@@ -345,9 +345,9 @@ struct PresenterTests {
             let store = FeelingsStore()
             presenter = FeelingsPresenter(store: store)
         }
-        
-        presenter.presentFeelingsLoaded(activities: [makeFeelingActivity(named: "A", humor: .calm)])
-        
+
+        presenter.presentFeelingsLoaded(activities: [makeFeelingActivity(named: "A", humor: .pleasant)])
+
         #expect(presenter.store == nil)
     }
     
@@ -372,41 +372,41 @@ struct PresenterTests {
     // A conversão acontece aqui, uma vez, para a lista só mostrar.
     @Test func testingPresentFeelingsLoadedConvertsPhotoDataToImage() {
         let (presenter, store) = createFeelingsPresenterAndStore()
-        let activity = makeFeelingActivity(named: "Caminhada", humor: .calm, photo: makePhotoData())
+        let activity = makeFeelingActivity(named: "Caminhada", humor: .pleasant, photo: makePhotoData())
         
         presenter.presentFeelingsLoaded(activities: [activity])
         
-        #expect(store.feelings[.calm]?.first?.image != nil)
+        #expect(store.feelings[.pleasant]?.first?.image != nil)
     }
     
     @Test func testingPresentFeelingsLoadedWithoutPhotoHasNoImage() {
         let (presenter, store) = createFeelingsPresenterAndStore()
         
-        presenter.presentFeelingsLoaded(activities: [makeFeelingActivity(named: "Caminhada", humor: .calm)])
+        presenter.presentFeelingsLoaded(activities: [makeFeelingActivity(named: "Caminhada", humor: .pleasant)])
         
-        #expect(store.feelings[.calm]?.count == 1)
-        #expect(store.feelings[.calm]?.first?.image == nil)
+        #expect(store.feelings[.pleasant]?.count == 1)
+        #expect(store.feelings[.pleasant]?.first?.image == nil)
     }
     
     // Bytes que não formam uma imagem não derrubam a lista: o card só fica sem foto.
     @Test func testingPresentFeelingsLoadedWithInvalidPhotoDataHasNoImage() {
         let (presenter, store) = createFeelingsPresenterAndStore()
-        let activity = makeFeelingActivity(named: "Caminhada", humor: .calm, photo: Data([1, 2, 3]))
+        let activity = makeFeelingActivity(named: "Caminhada", humor: .pleasant, photo: Data([1, 2, 3]))
         
         presenter.presentFeelingsLoaded(activities: [activity])
         
-        #expect(store.feelings[.calm]?.first?.image == nil)
+        #expect(store.feelings[.pleasant]?.first?.image == nil)
     }
     
     // Cada atividade fica com a sua própria foto.
     @Test func testingPresentFeelingsLoadedKeepsEachImageWithItsActivity() {
         let (presenter, store) = createFeelingsPresenterAndStore()
-        let withPhoto = makeFeelingActivity(named: "Com foto", humor: .calm, photo: makePhotoData())
-        let withoutPhoto = makeFeelingActivity(named: "Sem foto", humor: .calm)
+        let withPhoto = makeFeelingActivity(named: "Com foto", humor: .pleasant, photo: makePhotoData())
+        let withoutPhoto = makeFeelingActivity(named: "Sem foto", humor: .pleasant)
         
         presenter.presentFeelingsLoaded(activities: [withPhoto, withoutPhoto])
         
-        let entries = store.feelings[.calm] ?? []
+        let entries = store.feelings[.pleasant] ?? []
         #expect(entries.first(where: { $0.activity === withPhoto })?.image != nil)
         #expect(entries.first(where: { $0.activity === withoutPhoto })?.image == nil)
     }
@@ -428,7 +428,7 @@ struct PresenterTests {
     
     @Test func testingPresentSelectedActivityOpensDetailWithPhotoAndStory() {
         let (presenter, store) = createFeelingsPresenterAndStore()
-        let activity = makeFeelingActivity(named: "Caminhada", humor: .calm, photo: makePhotoData())
+        let activity = makeFeelingActivity(named: "Caminhada", humor: .pleasant, photo: makePhotoData())
         
         presenter.presentSelectedActivity(activity: activity)
         
@@ -441,7 +441,7 @@ struct PresenterTests {
     @Test func testingPresentSelectedActivityWithoutPhotoStillRendersStory() {
         let (presenter, store) = createFeelingsPresenterAndStore()
         
-        presenter.presentSelectedActivity(activity: makeFeelingActivity(named: "Caminhada", humor: .calm))
+        presenter.presentSelectedActivity(activity: makeFeelingActivity(named: "Caminhada", humor: .pleasant))
         
         #expect(store.selectedPhoto == nil)
         #expect(store.storyImage != nil)
@@ -500,7 +500,7 @@ struct PresenterTests {
     
     @Test func testingPresentPhotoUpdatedWithInvalidDataShowsErrorAndKeepsOldPhoto() {
         let (presenter, store) = createFeelingsPresenterAndStore()
-        let activity = makeFeelingActivity(named: "Caminhada", humor: .calm, photo: makePhotoData())
+        let activity = makeFeelingActivity(named: "Caminhada", humor: .pleasant, photo: makePhotoData())
         presenter.presentSelectedActivity(activity: activity)
         presenter.presentCamera()
         
@@ -514,14 +514,14 @@ struct PresenterTests {
     // A foto trocada também aparece no card da lista, sem recarregar tudo.
     @Test func testingPresentPhotoUpdatedRefreshesTheListCard() {
         let (presenter, store) = createFeelingsPresenterAndStore()
-        let activity = makeFeelingActivity(named: "Caminhada", humor: .calm)
+        let activity = makeFeelingActivity(named: "Caminhada", humor: .pleasant)
         presenter.presentFeelingsLoaded(activities: [activity])
         presenter.presentSelectedActivity(activity: activity)
-        #expect(store.feelings[.calm]?.first?.image == nil)
+        #expect(store.feelings[.pleasant]?.first?.image == nil)
         
         presenter.presentPhotoUpdated(makePhotoData())
         
-        #expect(store.feelings[.calm]?.first?.image != nil)
+        #expect(store.feelings[.pleasant]?.first?.image != nil)
     }
     
     @Test(arguments: [
@@ -561,7 +561,7 @@ struct PresenterTests {
     @Test(arguments: [true, false])
     func testingPresentDetailVisibilityShowsOrHidesDetailKeepingActivity(isVisible: Bool) {
         let (presenter, store) = createFeelingsPresenterAndStore()
-        let activity = makeFeelingActivity(named: "Caminhada", humor: .calm)
+        let activity = makeFeelingActivity(named: "Caminhada", humor: .pleasant)
         presenter.presentSelectedActivity(activity: activity)
         
         presenter.presentDetailVisibility(isVisible: isVisible)
@@ -584,7 +584,7 @@ struct PresenterTests {
     @Test func testingPresentStoryRendersImageForActivity() {
         let (presenter, store) = createFeelingsPresenterAndStore()
         
-        presenter.presentStory(for: makeFeelingActivity(named: "Caminhada", humor: .calm, photo: makePhotoData()))
+        presenter.presentStory(for: makeFeelingActivity(named: "Caminhada", humor: .pleasant, photo: makePhotoData()))
         
         #expect(store.storyImage != nil)
     }
@@ -620,7 +620,7 @@ struct PresenterTests {
     }
     
     private func makeChallenge(named name: String, photo: Data? = nil) -> Activity {
-        let result = ActivityResult(photo: photo, time: 10, humor: .calm)
+        let result = ActivityResult(photo: photo, time: 10, humor: .pleasant)
         return Activity(category: .physical, result: result, name: name, description: "-", archived: false)
     }
     

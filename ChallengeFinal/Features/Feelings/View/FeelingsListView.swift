@@ -81,5 +81,5 @@ struct FeelingsListView: View {
 }
 
 #Preview {
-    FeelingsListView(feelings: [.annoyed: [(activity: Activity(category: .cognitive, result: nil, name: "teste", description: "", archived: false), image: nil)]], redirectAction: {_ in})
+    FeelingsListView(feelings: [.unpleasant: [(activity: Activity(category: .cognitive, result: nil, name: "teste", description: "", archived: false), image: nil)]], redirectAction: {_ in})
 }

@@ -7,8 +7,17 @@
 
 // MARK: - Enum de temas
 enum Theme: String, Codable {
-    case themeOne
-    case themeTwo
-    case themeThree
-    case themeFour
+    case sober
+    case bubblegum
+    case pop
+    case techNature
+    
+    var displayName: String {
+        switch self {
+        case .sober: return "sober."
+        case .bubblegum: return "bubblegum"
+        case .pop: return "pop!"
+        case .techNature: return "tech nature"
+        }
+    }
 }

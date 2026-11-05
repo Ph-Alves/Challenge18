@@ -14,7 +14,8 @@ struct ArchivedChallengeRow: View {
     var body: some View {
         HStack(spacing: 12) {
             HStack(spacing: 12) {
-                Image(systemName: activity.category.icon)
+                // vai quebrar por conta do asset de alta, se quiser testar precisa comentar a imagem ou ajustar o tamanho
+                Image(activity.category.closedIcon)
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundStyle(.white)
                     .frame(width: 40, height: 40)

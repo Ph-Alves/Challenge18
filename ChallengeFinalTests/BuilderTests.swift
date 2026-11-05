@@ -183,15 +183,15 @@ struct BuilderTests {
     // O Builder liga Interactor -> Presenter -> Store: carregar pelo interactor da view enche a store da mesma view.
     @Test func testingFeelingsBuilderWiresInteractorToStore() throws {
         let context = modelContainer.mainContext
-        let result = ActivityResult(time: 5, humor: .calm)
+        let result = ActivityResult(time: 5, humor: .pleasant)
         let activity = Activity(category: .physical, result: result, name: "Caminhada", description: "-", archived: false)
         try GenericRepository<Activity>(context: context).add(activity)
         let view = FeelingsBuilder.build(context: context)
         
         view.interactor.loadFeelings()
         
-        #expect(view.store.feelings[.calm]?.count == 1)
-        #expect(view.store.feelings[.calm]?.first?.activity === activity)
+        #expect(view.store.feelings[.pleasant]?.count == 1)
+        #expect(view.store.feelings[.pleasant]?.first?.activity === activity)
     }
     
     // MARK: - Challenges
@@ -232,7 +232,7 @@ struct BuilderTests {
     @Test func testingChallengesBuilderWiresInteractorToStore() throws {
         let context = modelContainer.mainContext
         let repository = GenericRepository<Activity>(context: context)
-        let completed = Activity(category: .physical, result: ActivityResult(time: 5, humor: .calm),
+        let completed = Activity(category: .physical, result: ActivityResult(time: 5, humor: .pleasant),
                                  name: "Caminhada", description: "-", archived: false)
         let archived = Activity(category: .social, result: nil, name: "Arquivada", description: "-", archived: true)
         try repository.add(completed)

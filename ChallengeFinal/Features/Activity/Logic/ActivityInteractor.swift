@@ -831,7 +831,7 @@ final class ActivityInteractor: ActivityInteractorProtocol {
             achievementTitle: achievement?.title ?? "",
             achievementDescription: achievement?.description ?? "",
             time: timerElapsed,
-            humor: selectedHumor ?? .chill
+            humor: selectedHumor ?? .neutral
         )
 
         result = newResult
@@ -858,7 +858,7 @@ final class ActivityInteractor: ActivityInteractorProtocol {
     /// (depois do último vem o primeiro, e vice-versa).
     private func moveHumor(by offset: Int) {
         let humors = Humor.allCases
-        let current = selectedHumor ?? .chill
+        let current = selectedHumor ?? .neutral
 
         guard let index = humors.firstIndex(of: current) else { return }
 

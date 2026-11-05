@@ -43,6 +43,6 @@ struct EmojiLabelComponent: View {
 }
 
 #Preview {
-    EmojiLabelComponent(humor: .frustrated, highlighted: true)
-    EmojiLabelComponent(humor: .frustrated, highlighted: false)
+    EmojiLabelComponent(humor: .veryUnpleasant, highlighted: true)
+    EmojiLabelComponent(humor: .veryUnpleasant, highlighted: false)
 }

@@ -31,6 +31,8 @@ struct RootView: View {
             Tab("Profile", systemImage: "seal.fill", value: AppTab.profile) {
                 // feature ainda não existe
             }
+            
+            
         }
     }
 }

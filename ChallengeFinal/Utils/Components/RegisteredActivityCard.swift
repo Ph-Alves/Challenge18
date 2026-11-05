@@ -49,7 +49,7 @@ struct RegisteredActivityCard: View {
 //MARK: - Previews
 #Preview {
     HStack(spacing: 24) {
-        RegisteredActivityCard(title: "Com foto", humor: .frustrated, photo: Image(systemName: "person.crop.square.fill"))
+        RegisteredActivityCard(title: "Com foto", humor: .unpleasant, photo: Image(systemName: "person.crop.square.fill"))
         RegisteredActivityCard(title: "Sem foto e sem humor", humor: nil, photo: nil)
     }
     .padding(32)

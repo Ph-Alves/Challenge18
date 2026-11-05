@@ -118,5 +118,5 @@ struct SummaryView: View {
 }
 
 #Preview {
-    SummaryView(style: .activity,title: "testee", description: "teste", humor: .annoyed, onFinish: {}, onShare: {})
+    SummaryView(style: .activity,title: "testee", description: "teste", humor: .veryPleasant, onFinish: {}, onShare: {})
 }

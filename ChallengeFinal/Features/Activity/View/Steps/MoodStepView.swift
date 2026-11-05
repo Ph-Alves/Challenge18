@@ -129,7 +129,7 @@ struct MoodStepView: View {
 // MARK: - Preview
 
 #Preview("Interativo") {
-    @Previewable @State var humor: Humor = .frustrated
+    @Previewable @State var humor: Humor = .veryUnpleasant
     let humors = Humor.allCases
 
     MoodStepView(

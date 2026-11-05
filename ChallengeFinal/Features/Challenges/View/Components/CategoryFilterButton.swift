@@ -15,7 +15,9 @@ struct CategoryFilterButton: View {
     var body: some View {
         Button(action: action) {
             VStack(spacing: 6) {
-                Image(systemName: category.icon) //colocar o asset no de alta
+                // vai quebrar por conta do asset de alta, se quiser testar precisa comentar a imagem ou ajustar o tamanho
+                Image(category.closedIcon)
+
                     .font(.system(size: 18, weight: .semibold))
                     .foregroundStyle(.black)
                     .frame(width: 44, height: 44)
