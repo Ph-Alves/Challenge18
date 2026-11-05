@@ -54,11 +54,6 @@ struct SoberStyle: ThemeStyleProtocol {
             .pleasant: (base: "plesantBase", humor: "plesantHumor"),
             .veryPleasant: (base: "veryPleasantBase", humor: "veryPleasantHumor")
         ],
-        
-        challengeTabIcon: "challengeTabIcon",
-        homeTabIcon: "homeTabIcon",
-        feelingsTabIcon: "feelingsTabIcon",
-        profileTabIcon: "profileTabIcon",
         placeholderCheckIcon: "placeholderCheckIcon",
         photoPlaceholder: "photoPlaceholder",
         archivedChallengeIcon: "archiveIcon",
@@ -66,10 +61,16 @@ struct SoberStyle: ThemeStyleProtocol {
         camera: "camera",
         cameraIcon: "cameraIcon",
         nextIcon: "nextIcon",
-        pauseIcon: "pauseIcon")
+        pauseIcon: "pauseIcon",
+        tabBar: TabBarIcons(challenge: "challengeTabIcon", home: "homeTabIcon", feelings: "feelingsTabIcon", profile: "profileTabIcon"))
     
     let humorWheel = HumorWheelStyle(
         pointerAsset: "wheelArrow",
         backgroundAsset: "wheelBackground")
+    
+    let photoFilter: PhotoFilter? = PhotoFilter(
+        saturation: 0,
+        overlayColor: .black,
+        overlayOpacity: 0.4)
     
 }
