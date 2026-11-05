@@ -67,7 +67,83 @@ struct BuilderTests {
             Issue.record("Esperava o step .activity depois de iniciar o fluxo")
         }
     }
-    
+
+    // MARK: - Home reabre a Activity depois dos Ajustes
+
+    private func makeIsolatedDefaults() -> UserDefaults {
+        let name = "BuilderTests.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: name)!
+        defaults.removePersistentDomain(forName: name)
+        return defaults
+    }
+
+    private func saveSnapshot(in defaults: UserDefaults, savedAt: Date = Date()) throws {
+        let snapshot = TemporaryData(step: .photo, category: .sensorial, activityID: UUID(), resultID: UUID(),
+                                     title: "t", subtitle: "s", description: "d",
+                                     achievementTitle: "a", achievementDescription: "b", savedAt: savedAt)
+        defaults.set(try JSONEncoder().encode(snapshot), forKey: TemporaryData.key)
+    }
+
+    @Test func testingHomeCoordinatorStartsInActivityWhenThereIsASnapshot() throws {
+        let defaults = makeIsolatedDefaults()
+        try saveSnapshot(in: defaults)
+
+        let coordinator = HomeCoordinator(defaults: defaults)
+
+        guard case .activity(let flow) = coordinator.step else {
+            Issue.record("Esperava começar no step .activity com um snapshot válido")
+            return
+        }
+        // O fluxo já nasce no step salvo, sem passar pelo sorteio.
+        #expect(flow.step == .photo)
+        // A Home só espia: quem consome o snapshot é o `restoreData()` do Interactor.
+        #expect(defaults.data(forKey: TemporaryData.key) != nil)
+    }
+
+    @Test func testingActivityCoordinatorStartsInDrawByDefault() {
+        let coordinator = ActivityCoordinator(selectedCategory: .physical, onFinish: {})
+
+        #expect(coordinator.step == .draw)
+    }
+
+    @Test(arguments: [ActivityStep.challenge, .inProgress, .mood, .photo, .summary])
+    func testingActivityCoordinatorStartsInTheGivenStep(step: ActivityStep) {
+        let coordinator = ActivityCoordinator(selectedCategory: .physical, initialStep: step, onFinish: {})
+
+        #expect(coordinator.step == step)
+    }
+
+    @Test func testingStartActivityFlowWithoutStepStartsInDraw() {
+        let coordinator = makeHomeCoordinator()
+
+        coordinator.startActivityFlow(category: .cognitive)
+
+        guard case .activity(let flow) = coordinator.step else {
+            Issue.record("Esperava o step .activity depois de iniciar o fluxo")
+            return
+        }
+        #expect(flow.step == .draw)
+    }
+
+    @Test func testingHomeCoordinatorStartsInHomeWithoutASnapshot() {
+        let coordinator = HomeCoordinator(defaults: makeIsolatedDefaults())
+
+        if case .home = coordinator.step {} else {
+            Issue.record("Esperava começar no step .home sem snapshot")
+        }
+    }
+
+    @Test func testingHomeCoordinatorIgnoresAnExpiredSnapshot() throws {
+        let defaults = makeIsolatedDefaults()
+        try saveSnapshot(in: defaults, savedAt: Date().addingTimeInterval(-TemporaryData.lifetime - 1))
+
+        let coordinator = HomeCoordinator(defaults: defaults)
+
+        if case .home = coordinator.step {} else {
+            Issue.record("Esperava começar no step .home com o snapshot expirado")
+        }
+    }
+
 
     // MARK: - Feelings
 

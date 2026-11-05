@@ -89,6 +89,19 @@ struct StoreTests {
         #expect(store.isSearching == false)
     }
     
+    @Test func testingDisplayRestoredChallengeStoresFieldsWithoutMarkingReady() {
+        let (store, _) = createActivityStore()
+
+        store.displayRestoredChallenge(title: "título", subtitle: "sub", description: "descrição")
+
+        #expect(store.activityTitle == "título")
+        #expect(store.activitySubtitle == "sub")
+        #expect(store.activityDescription == "descrição")
+        // Não é um sorteio novo: a View não deve animar a bola de novo.
+        #expect(store.isChallengeReady == false)
+        #expect(store.isSearching == false)
+    }
+
     @Test func testingDisplaySearchingAlsoUndoesAccepted() {
         let (store, _) = createActivityStore()
         store.displayAcceptedActivity()

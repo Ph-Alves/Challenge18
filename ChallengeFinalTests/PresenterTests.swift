@@ -100,6 +100,17 @@ struct PresenterTests {
         return try! ModelContainer(for: schema, configurations: config)
     }()
     
+    @Test func testingPresentRestoredChallengeFillsStoreWithoutMarkingReady() {
+        let (presenter, store) = createActivityPresenterAndStore()
+
+        presenter.presentRestoredChallenge(title: "respire fundo", subtitle: "Pausa", description: "Respire por um minuto.")
+
+        #expect(store.activityTitle == "respire fundo")
+        #expect(store.activitySubtitle == "Pausa")
+        #expect(store.activityDescription == "Respire por um minuto.")
+        #expect(store.isChallengeReady == false)
+    }
+
     @Test func testingPresentSearchingMarksStoreAsSearching() {
         let (presenter, store) = createActivityPresenterAndStore()
         

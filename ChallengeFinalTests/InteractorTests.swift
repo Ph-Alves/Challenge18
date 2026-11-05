@@ -48,6 +48,8 @@ final class ActivityPresenterSpy: ActivityPresenterProtocol {
     private(set) var inProgressCount = 0
     private(set) var moodCount = 0
     private(set) var photoCount = 0
+    /// Textos do desafio que o Interactor devolveu à Store ao restaurar o fluxo, em ordem.
+    private(set) var restoredChallenges: [(title: String, subtitle: String, description: String)] = []
     private(set) var summaryCount = 0
     /// Conquistas que o Interactor mandou para o summary, em ordem.
     private(set) var presentedAchievements: [Achievement] = []
@@ -72,6 +74,9 @@ final class ActivityPresenterSpy: ActivityPresenterProtocol {
     func presentStartAgain() {}
     func presentMood() { moodCount += 1 }
     func presentPhoto() { photoCount += 1 }
+    func presentRestoredChallenge(title: String, subtitle: String, description: String) {
+        restoredChallenges.append((title, subtitle, description))
+    }
     func presentCamera() {}
     func presentCameraClosed() {}
     func presentPermissionDenied() {}
@@ -421,6 +426,226 @@ struct InteractorTests {
         }
     }
     
+    // MARK: ActivityInteractor (restaurar o fluxo depois dos Ajustes)
+
+    /// `UserDefaults` só deste teste, para não mexer no do app nem em outros testes.
+    private func makeIsolatedDefaults() -> UserDefaults {
+        let name = "InteractorTests.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: name)!
+        defaults.removePersistentDomain(forName: name)
+        return defaults
+    }
+
+    /// Deixa o Interactor no step `.photo`: `Activity` e `ActivityResult` já estão no banco.
+    @discardableResult
+    private func prepareAtPhotoStep(_ sut: ActivitySUT, humor: Humor = .calm) throws -> Activity {
+        let result = ActivityResult(achievementTitle: "mestre offline",
+                                    achievementDescription: "você ficou 5 minutos sem celular",
+                                    time: 300,
+                                    humor: humor)
+        let activity = Activity(category: .physical, result: result, name: "título", description: "sub", archived: false)
+        try sut.repository.add(activity)
+        sut.interactor.currentActivity = activity
+        sut.interactor.result = result
+        return activity
+    }
+
+    @Test func testingCacheDataThenRestoreDataRestoresInteractorStateAndPresents() throws {
+        let defaults = makeIsolatedDefaults()
+        let saved = makeActivitySUT()
+        saved.interactor.defaults = defaults
+        let activity = try prepareAtPhotoStep(saved, humor: .frustrated)
+        saved.interactor.cacheData(title: "título", subtitle: "sub", description: "descrição")
+
+        // Um Interactor novo, como depois de o iOS encerrar o app.
+        let restored = makeActivitySUT()
+        restored.interactor.defaults = defaults
+        restored.interactor.restoreData()
+
+        #expect(restored.interactor.currentActivity === activity)
+        #expect(restored.interactor.result === activity.result)
+        #expect(restored.interactor.selectedHumor == .frustrated)
+        // A conquista não estava na memória ao salvar: vem do que já estava gravado no `result`.
+        #expect(restored.interactor.achievement?.title == "mestre offline")
+        #expect(restored.interactor.achievement?.description == "você ficou 5 minutos sem celular")
+        #expect(restored.presenter.presentedHumors == [.frustrated])
+        #expect(restored.presenter.restoredChallenges.count == 1)
+        #expect(restored.presenter.restoredChallenges.first?.title == "título")
+        #expect(restored.presenter.restoredChallenges.first?.subtitle == "sub")
+        #expect(restored.presenter.restoredChallenges.first?.description == "descrição")
+        #expect(restored.presenter.photoCount == 1)
+    }
+
+    @Test func testingContinueFromPhotoAfterRestoreOpensSummaryWithTheStoredAchievement() throws {
+        let defaults = makeIsolatedDefaults()
+        let saved = makeActivitySUT()
+        saved.interactor.defaults = defaults
+        try prepareAtPhotoStep(saved)
+        saved.interactor.cacheData(title: "t", subtitle: "s", description: "d")
+
+        let restored = makeActivitySUT()
+        restored.interactor.defaults = defaults
+        restored.interactor.restoreData()
+        restored.interactor.continueFromPhoto()
+
+        #expect(restored.presenter.summaryCount == 1)
+        #expect(restored.presenter.presentedAchievements.first?.title == "mestre offline")
+    }
+
+    @Test func testingCacheDataPrefersTheAchievementInMemory() throws {
+        let defaults = makeIsolatedDefaults()
+        let saved = makeActivitySUT()
+        saved.interactor.defaults = defaults
+        try prepareAtPhotoStep(saved)
+        saved.interactor.achievement = Achievement(title: "da memória", description: "descrição da memória")
+        saved.interactor.cacheData(title: "t", subtitle: "s", description: "d")
+
+        let restored = makeActivitySUT()
+        restored.interactor.defaults = defaults
+        restored.interactor.restoreData()
+
+        #expect(restored.interactor.achievement?.title == "da memória")
+        #expect(restored.interactor.achievement?.description == "descrição da memória")
+    }
+
+    @Test func testingCacheDataWithoutActivitySavesNothing() {
+        let defaults = makeIsolatedDefaults()
+        let sut = makeActivitySUT()
+        sut.interactor.defaults = defaults
+
+        sut.interactor.cacheData(title: "t", subtitle: "s", description: "d")
+
+        #expect(defaults.data(forKey: TemporaryData.key) == nil)
+    }
+
+    @Test func testingRestoreDataWithoutSnapshotDoesNothing() {
+        let sut = makeActivitySUT()
+        sut.interactor.defaults = makeIsolatedDefaults()
+
+        sut.interactor.restoreData()
+
+        #expect(sut.interactor.currentActivity == nil)
+        #expect(sut.interactor.achievement == nil)
+        #expect(sut.presenter.presentedHumors.isEmpty)
+        #expect(sut.presenter.restoredChallenges.isEmpty)
+        #expect(sut.presenter.photoCount == 0)
+    }
+
+    @Test func testingRestoreDataConsumesTheSnapshot() throws {
+        let defaults = makeIsolatedDefaults()
+        let saved = makeActivitySUT()
+        saved.interactor.defaults = defaults
+        try prepareAtPhotoStep(saved)
+        saved.interactor.cacheData(title: "t", subtitle: "s", description: "d")
+
+        let first = makeActivitySUT()
+        first.interactor.defaults = defaults
+        first.interactor.restoreData()
+        let second = makeActivitySUT()
+        second.interactor.defaults = defaults
+        second.interactor.restoreData()
+
+        #expect(defaults.data(forKey: TemporaryData.key) == nil)
+        #expect(first.presenter.photoCount == 1)
+        #expect(second.presenter.photoCount == 0)
+    }
+
+    @Test func testingRestoreDataIgnoresAnExpiredSnapshot() throws {
+        let defaults = makeIsolatedDefaults()
+        let saved = makeActivitySUT()
+        saved.interactor.defaults = defaults
+        let activity = try prepareAtPhotoStep(saved)
+        let expired = TemporaryData(step: .photo,
+                                    category: .physical,
+                                    activityID: activity.activityID,
+                                    resultID: try #require(activity.result).resultID,
+                                    title: "t",
+                                    subtitle: "s",
+                                    description: "d",
+                                    achievementTitle: "a",
+                                    achievementDescription: "b",
+                                    savedAt: Date().addingTimeInterval(-2 * 60 * 60))
+        defaults.set(try JSONEncoder().encode(expired), forKey: TemporaryData.key)
+
+        let restored = makeActivitySUT()
+        restored.interactor.defaults = defaults
+        restored.interactor.restoreData()
+
+        #expect(restored.interactor.currentActivity == nil)
+        #expect(restored.presenter.photoCount == 0)
+        // Mesmo expirado, o snapshot é apagado.
+        #expect(defaults.data(forKey: TemporaryData.key) == nil)
+    }
+
+    @Test func testingRestoreDataIgnoresASnapshotWhoseActivityWasDeleted() throws {
+        let defaults = makeIsolatedDefaults()
+        let saved = makeActivitySUT()
+        saved.interactor.defaults = defaults
+        let activity = try prepareAtPhotoStep(saved)
+        saved.interactor.cacheData(title: "t", subtitle: "s", description: "d")
+        try saved.repository.delete(activity)
+
+        let restored = makeActivitySUT()
+        restored.interactor.defaults = defaults
+        restored.interactor.restoreData()
+
+        #expect(restored.interactor.currentActivity == nil)
+        #expect(restored.presenter.restoredChallenges.isEmpty)
+        #expect(restored.presenter.photoCount == 0)
+    }
+
+    @Test func testingLoadReturnsAValidSnapshotWithoutDeletingIt() throws {
+        let defaults = makeIsolatedDefaults()
+        let snapshot = TemporaryData(step: .photo, category: .social, activityID: UUID(), resultID: UUID(),
+                                     title: "t", subtitle: "s", description: "d",
+                                     achievementTitle: "a", achievementDescription: "b", savedAt: Date())
+        defaults.set(try JSONEncoder().encode(snapshot), forKey: TemporaryData.key)
+
+        let loaded = TemporaryData.load(from: defaults)
+
+        #expect(loaded?.category == .social)
+        #expect(loaded?.activityID == snapshot.activityID)
+        #expect(loaded?.step == .photo)
+        // A Home só espia: quem apaga é o `restoreData()`.
+        #expect(defaults.data(forKey: TemporaryData.key) != nil)
+    }
+
+    @Test func testingLoadWithoutSnapshotReturnsNil() {
+        #expect(TemporaryData.load(from: makeIsolatedDefaults()) == nil)
+    }
+
+    @Test func testingLoadIgnoresAnExpiredSnapshot() throws {
+        let defaults = makeIsolatedDefaults()
+        let expired = TemporaryData(step: .photo, category: .physical, activityID: UUID(), resultID: UUID(),
+                                    title: "t", subtitle: "s", description: "d",
+                                    achievementTitle: "a", achievementDescription: "b",
+                                    savedAt: Date().addingTimeInterval(-TemporaryData.lifetime - 1))
+        defaults.set(try JSONEncoder().encode(expired), forKey: TemporaryData.key)
+
+        #expect(TemporaryData.load(from: defaults) == nil)
+    }
+
+    @Test func testingLoadIgnoresCorruptedData() {
+        let defaults = makeIsolatedDefaults()
+        defaults.set(Data("não é um json".utf8), forKey: TemporaryData.key)
+
+        #expect(TemporaryData.load(from: defaults) == nil)
+    }
+
+    @Test func testingFinishActivityFlowDiscardsALeftoverSnapshot() throws {
+        let defaults = makeIsolatedDefaults()
+        let sut = makeActivitySUT()
+        sut.interactor.defaults = defaults
+        try prepareAtPhotoStep(sut)
+        sut.interactor.cacheData(title: "t", subtitle: "s", description: "d")
+        #expect(defaults.data(forKey: TemporaryData.key) != nil)
+
+        sut.interactor.finishActivityFlow()
+
+        #expect(defaults.data(forKey: TemporaryData.key) == nil)
+        #expect(sut.presenter.flowFinishedCount == 1)
+    }
+
     @Test func testingRerollPresentsSearchingThenChallenge() async {
         let sut = makeActivitySUT()
         
