@@ -15,7 +15,8 @@ enum CustomButtonType {
 }
 
 struct CustomButtonComponent: View {
-    
+    @Environment(DesignSystem.self) private var designSystem
+
     let title: String
     let icon: String?
     var type: CustomButtonType = .primary
@@ -24,42 +25,52 @@ struct CustomButtonComponent: View {
     private var backgroundColor: Color {
         switch type {
         case .primary:
-            return Color._404040
+            return designSystem.style.colors.fillPrimary
         case .secondary:
-            return Color.E_0_E_0_E_0
+            return Color.clear
         case .tertiary:
-            return Color.F_4_F_4_F_4
-            
+            return Color.clear
+
         }
-        
+    }
+    
+    private var borderColor: Color {
+        switch type {
+        case .secondary:
+            return designSystem.style.colors.strokeDefault
+        case .primary, .tertiary:
+            return .clear
+        }
     }
     
     private var foregroundColor: Color {
         
         switch type {
         case .primary:
-            return .white
+            return designSystem.style.colors.textInverse
         case .secondary, .tertiary:
-            return .black
+            return designSystem.style.colors.textPrimary
         }
         
     }
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 5) {
+            HStack(spacing: 6) {
                 if let icon {
                     Image(systemName: icon)
                 }
                 
                 Text(title)
+                    .font(designSystem.style.typography.text2)
             }
-            .font(.subheadline)
-            .padding(.horizontal, 20)
-            .padding(.vertical, 5)
             .frame(maxWidth: .infinity)
+            .padding(.vertical, 8)
             .background(backgroundColor)
             .foregroundStyle(foregroundColor)
-            .clipShape(.capsule)
+            .clipShape(RoundedRectangle(cornerRadius: 36))
+            .overlay(
+                RoundedRectangle(cornerRadius: 36 ).stroke(borderColor, lineWidth: 1)
+            )
             .lineLimit(1)
         }.buttonStyle(.plain)
         
@@ -67,5 +78,11 @@ struct CustomButtonComponent: View {
 }
 
 #Preview {
-    CustomButtonComponent(title: "arquivar", icon: "calendar", type: .primary, action: {})
+    CustomButtonComponent(title: "arquivar", icon: "calendar", type: .primary, action: {}).environment(DesignSystem.shared)
+
+    CustomButtonComponent(title: "arquivar", icon: "", type: .secondary, action: {})    .environment(DesignSystem.shared)
+
+    CustomButtonComponent(title: "arquivar", icon: "calendar", type: .tertiary, action: {})    .environment(DesignSystem.shared)
+
+
 }
