@@ -21,6 +21,48 @@ struct HomeView: View {
     // Para observar
     var store: HomeStore
 
+    // Estado da animação do círculo no swipe
+    @State private var imageOffset: CGFloat = 0
+    @State private var imageOpacity: Double = 1
+    @State private var isAnimatingSwipe = false
+
+    // MARK: - Animation
+
+    // Troca a categoria: a imagem atual sai para o lado do swipe
+    // e a nova entra vindo do lado oposto.
+    private func changeCategory(towardsNext: Bool) {
+        guard !isAnimatingSwipe else { return }
+        isAnimatingSwipe = true
+        // Swipe para esquerda (próxima): sai pela esquerda, entra pela direita
+        let distance: CGFloat = towardsNext ? -200 : 200
+
+        withAnimation(.easeIn(duration: 0.15)) {
+            imageOffset = distance
+            imageOpacity = 0
+        }
+
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(150))
+            if towardsNext {
+                interactor.nextCategory(current: store.currentCategory)
+            } else {
+                interactor.previousCategory(current: store.currentCategory)
+            }
+            // Reposiciona do lado oposto sem animar
+            // Toda mudança de estado carrega uma transaction, que define como a mudança deve ser animada.
+            var transaction = Transaction(animation: nil)
+            transaction.disablesAnimations = true
+            withTransaction(transaction) {
+                imageOffset = -distance
+            }
+            withAnimation(.spring(duration: 0.3)) {
+                imageOffset = 0
+                imageOpacity = 1
+            }
+            isAnimatingSwipe = false
+        }
+    }
+
     // MARK: - View
     var body: some View {
         VStack(spacing: 10) {
@@ -53,22 +95,19 @@ struct HomeView: View {
                                 // pego o width
                                 // Positivo: esquerda para direita
                                 // Negativo: direita para esquerda
-                                if value.translation.width < 0 {
-                                    interactor.nextCategory(current: store.currentCategory)
-                                } else {
-                                    interactor.previousCategory(current: store.currentCategory)
-                                }
+                                changeCategory(towardsNext: value.translation.width < 0)
                             }
                     )
-                    .animation(.easeInOut(duration: 0.2), value: store.currentCategory)
+                    .offset(x: imageOffset)
+                    .opacity(imageOpacity)
+                    .onTapGesture {
+                        interactor.startActivity()
+                    }
                 
                 
                 // Texto da respectiva categoria
                 CategoryText(category: store.currentCategory)
                     .font(designSystem.currentTheme.style.typography.title3)
-            }
-            .onTapGesture {
-                interactor.startActivity()
             }
             
             Spacer()
