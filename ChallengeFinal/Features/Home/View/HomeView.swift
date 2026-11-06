@@ -14,54 +14,75 @@ struct HomeView: View {
 
     // MARK: - Variables
     
+    @Environment(DesignSystem.self) private var designSystem
+    
     // Para executar
     let interactor: HomeInteractorProtocol
     // Para observar
     var store: HomeStore
-    
-    @Environment(DesignSystem.self) private var designSystem
 
     // MARK: - View
     var body: some View {
-        VStack(spacing: 40) {
+        VStack(spacing: 10) {
             // Parte superior de humor dos dias da semana
             WeeklyHumor(week: store.daysOfWeek)
-                .padding(.bottom, 37)
+                .padding(.bottom, 36)
             
-            // Titutlo
-            Text("Oi, desafie-se!")
-                .font(designSystem.currentTheme.style.typography.title1)
-
-            // Circulo de desafio
-            ChallengeCircle(text: "Eu te ajudo no que fazer <3", size: .big)
-            // Gesture para o swipe (esquerda/direita)
-                .gesture(
-                    DragGesture(minimumDistance: 20)
-                    // Quando o swipe termina, eu verifico o valor
-                        .onEnded { value in
-                            // Se width > height, então e horizontal
-                            let isHorizontalSwipe = abs(value.translation.width) > abs(value.translation.height)
-                            guard isHorizontalSwipe else { return }
-
-                            // pego o width
-                            // Positivo: esquerda para direita
-                            // Negativo: direita para esquerda
-                            if value.translation.width < 0 {
-                                interactor.nextCategory(current: store.currentCategory)
-                            } else {
-                                interactor.previousCategory(current: store.currentCategory)
+            VStack {
+                // Titutlo
+                Text("oi, desafie-se!")
+                    .font(designSystem.currentTheme.style.typography.title1)
+                // Subtitulo
+                Text("aperte e encontre o desafio \nperfeito para você")
+                    .font(designSystem.currentTheme.style.typography.text2)
+                    .multilineTextAlignment(.center)
+            }
+            
+            VStack {
+                // Circulo de desafio
+                Image(store.currentCategory.closedIcon)
+                // Gesture para o swipe (esquerda/direita)
+                    .gesture(
+                        DragGesture(minimumDistance: 20)
+                        // Quando o swipe termina, eu verifico o valor
+                            .onEnded { value in
+                                // Se width > height, então e horizontal
+                                let isHorizontalSwipe = abs(value.translation.width) > abs(value.translation.height)
+                                guard isHorizontalSwipe else { return }
+                                
+                                // pego o width
+                                // Positivo: esquerda para direita
+                                // Negativo: direita para esquerda
+                                if value.translation.width < 0 {
+                                    interactor.nextCategory(current: store.currentCategory)
+                                } else {
+                                    interactor.previousCategory(current: store.currentCategory)
+                                }
                             }
-                        }
-                )
-                .padding(.horizontal)
-                .contentShape(Circle())
-                .onTapGesture {
-                    interactor.startActivity()
-                }
-
+                    )
+                    .animation(.easeInOut(duration: 0.2), value: store.currentCategory)
+                
+                
+                // Texto da respectiva categoria
+                CategoryText(category: store.currentCategory)
+                    .font(designSystem.currentTheme.style.typography.title3)
+            }
+            .onTapGesture {
+                interactor.startActivity()
+            }
             
-            // Texto da respectiva categoria
-            CategoryText(category: store.currentCategory)
+            Spacer()
+            
+            // Indicador de categoria: a barra da categoria atual fica maior
+            HStack(spacing: 10) {
+                ForEach(ActivityCategory.allCases, id: \.self) { category in
+                    let isSelected = category == store.currentCategory
+                    Capsule()
+                        .frame(width: isSelected ? 5 : 2, height: isSelected ? 20 : 14)
+                }
+            }
+            .frame(height: 20)
+            .animation(.easeInOut(duration: 0.2), value: store.currentCategory)
             
             Spacer()
         }
@@ -102,4 +123,5 @@ extension HomeStore {
 // MARK: - Preview
 #Preview {
     HomeView(interactor: HomeInteractorStub(), store: .preview)
+        .environment(DesignSystem.shared)
 }
