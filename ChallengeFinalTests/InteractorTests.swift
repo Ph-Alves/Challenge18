@@ -143,6 +143,7 @@ final class HapticsWorkerMock: HapticsWorkerProtocol {
     private(set) var intensities: [Double] = []
     private(set) var stopLoopCount = 0
     private(set) var selectionTickCount = 0
+    private(set) var categoryChangeCount = 0
     
     func prepareHaptics() { prepareCount += 1 }
     func startShakeLoop() { startLoopCount += 1 }
@@ -150,6 +151,7 @@ final class HapticsWorkerMock: HapticsWorkerProtocol {
     func stopShakeLoopIfIdle(timeout: TimeInterval) {}
     func stopShakeLoop() { stopLoopCount += 1 }
     func playSelectionTick() { selectionTickCount += 1 }
+    func playCategoryChange() { categoryChangeCount += 1 }
 }
 
 final class CoreMotionWorkerMock: CoreMotionWorkerProtocol {
@@ -410,6 +412,59 @@ struct InteractorTests {
         interactor.previousCategory(current: current)
         
         #expect(presenterSpy.presentedCategory == expected)
+    }
+    
+    // MARK: Haptics na troca de grupo
+    
+    // A engine é preparada assim que a Home é montada, para o primeiro swipe não atrasar.
+    @Test func testingHomeInteractorPreparesHapticsOnInit() {
+        let haptics = HapticsWorkerMock()
+        _ = HomeInteractor(repository: makeActivityRepository(), presenter: HomePresenterSpy(), haptics: haptics)
+        
+        #expect(haptics.prepareCount == 1)
+        #expect(haptics.categoryChangeCount == 0)
+    }
+    
+    // Cada troca de grupo (nas duas direções, inclusive dando a volta) dá exatamente um toque.
+    @Test(arguments: ActivityCategory.allCases)
+    func testingCategoryChangePlaysHapticInBothDirections(current: ActivityCategory) {
+        let haptics = HapticsWorkerMock()
+        let interactor = HomeInteractor(repository: makeActivityRepository(), presenter: HomePresenterSpy(), haptics: haptics)
+        
+        interactor.nextCategory(current: current)
+        #expect(haptics.categoryChangeCount == 1)
+        
+        interactor.previousCategory(current: current)
+        #expect(haptics.categoryChangeCount == 2)
+        
+        // Não usa o tique da roleta: o toque de troca de grupo é próprio.
+        #expect(haptics.selectionTickCount == 0)
+    }
+    
+    // Consistência: swipes seguidos dão um toque por troca, sem perder nenhum.
+    @Test func testingSequentialSwipesPlayOneHapticPerChange() {
+        let haptics = HapticsWorkerMock()
+        let presenterSpy = HomePresenterSpy()
+        let interactor = HomeInteractor(repository: makeActivityRepository(), presenter: presenterSpy, haptics: haptics)
+        
+        var category = ActivityCategory.physical
+        for _ in 0..<8 {
+            interactor.nextCategory(current: category)
+            category = presenterSpy.presentedCategory ?? category
+        }
+        
+        #expect(haptics.categoryChangeCount == 8)
+        #expect(category == .physical) // deu duas voltas completas
+    }
+    
+    // Intensidade validada: a troca de grupo é mais suave/redonda que o tique da roleta,
+    // e os valores ficam dentro da faixa aceita pela CoreHaptics (0...1).
+    @Test func testingCategoryChangeHapticFeel() {
+        let feel = HapticFeel.categoryChange
+        
+        #expect((0...1).contains(feel.intensity))
+        #expect((0...1).contains(feel.sharpness))
+        #expect(feel.sharpness < HapticFeel.selectionTick.sharpness)
     }
     
     @Test func testingIfInteractorCatchesWeekCorrectly() throws {
