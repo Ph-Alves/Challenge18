@@ -24,6 +24,9 @@ protocol ChallengesPresenterProtocol: AnyObject {
     func presentPermissionDenied()
     func presentFlash(isOn: Bool)
     func presentCameraError(_ error: Error)
+    // Reflita
+    func presentHumor(_ humor: Humor)
+    func presentMood(isPresented: Bool)
 }
 
 // MARK: - Class
@@ -136,5 +139,15 @@ final class ChallengesPresenter: ChallengesPresenterProtocol {
         }
  
         store?.displayError(message)
+    }
+    
+    // MARK: - Reflita (humor)
+    
+    func presentHumor(_ humor: Humor) {
+        store?.displayHumor(humor)
+    }
+    
+    func presentMood(isPresented: Bool) {
+        store?.displayMood(isPresented: isPresented)
     }
 }

@@ -14,6 +14,26 @@ enum SummaryStyle {
 
 struct SummaryView: View {
     
+    // MARK: - Estado do desafio aberto
+
+    /// Os três jeitos de visualizar um desafio já aberto.
+    private enum DisplayState {
+        /// Sem foto → botão "adicionar foto".
+        case withoutPhoto
+        /// Com foto → botão "substituir foto".
+        case withPhoto
+        /// Sem humor registrado → ganha o botão "reflita!".
+        case withoutFeeling
+    }
+
+    /// Calculado a partir do que a view já recebe.
+    /// Sem humor tem prioridade, porque é o único que muda o layout.
+    private var displayState: DisplayState {
+        if humor == nil { return .withoutFeeling }
+        if photo == nil { return .withoutPhoto }
+        return .withPhoto
+    }
+    
     /// Estilo do componente (para mudar com base no fluxo)
     let style: SummaryStyle
     
@@ -34,6 +54,9 @@ struct SummaryView: View {
 
     /// Toque em "compartilhar".
     let onShare: () -> Void
+    
+    /// Toque em "reflita!" (só aparece no `.display` quando não há humor registrado).
+    var onReflect: () -> Void = {}
     
     var body: some View {
         VStack(spacing: 0) {
@@ -74,7 +97,6 @@ struct SummaryView: View {
 
     private var photoCard: some View {
         PhotoCard(photo: photo, height: 228)
-            // O selo de humor fica "pendurado" no canto de cima, como no protótipo.
             .overlay(alignment: .topTrailing) {
                 if let humor {
                     EmojiLabelComponent(humor: humor, highlighted: true)
@@ -84,36 +106,60 @@ struct SummaryView: View {
     }
 
     // MARK: - Botões
-
+    @ViewBuilder
     private var buttons: some View {
         VStack(spacing: 12) {
             switch style {
             case .activity:
-                CustomButtonComponent(
-                    title: "finalizar",
-                    icon: nil,
-                    type: .secondary,
-                    action: onFinish
-                )
-                .bold()
+                activityButtons
             case .display:
-                CustomButtonComponent(
-                    title: "tirar outra foto",
-                    icon: "arrow.trianglehead.2.clockwise.rotate.90",
-                    type: .secondary,
-                    action: onFinish
-                )
-                .bold()
+                switch displayState {
+                case .withoutFeeling:
+                    withoutFeelingButtons
+                case .withPhoto, .withoutPhoto:
+                    photoButtons
+                }
             }
-            
-            CustomButtonComponent(
-                title: "compartilhar",
-                icon: "square.and.arrow.up",
-                type: .secondary,
-                action: onShare
-            )
-            .bold()
         }
+    }
+    
+    //MARK: - Grupos de botões utilizados em cada caso.
+    @ViewBuilder
+    private var activityButtons: some View {
+        CustomButtonComponent(title: "finalizar", icon: nil, type: .secondary, action: onFinish)
+            .bold()
+        shareButton(type: .secondary)
+    }
+
+    @ViewBuilder
+    private var photoButtons: some View {
+        shareButton(type: .primary)
+        photoButton(type: .secondary)
+    }
+
+    @ViewBuilder
+    private var withoutFeelingButtons: some View {
+        CustomButtonComponent(title: "reflita!", icon: nil, type: .primary, action: onReflect)
+            .bold()
+        shareButton(type: .secondary)
+        photoButton(type: .tertiary)
+    }
+    
+    //MARK: - Botões reutilizáveis ao longo das subviews
+    
+    private func shareButton(type: CustomButtonType) -> some View {
+        CustomButtonComponent(title: "compartilhar", icon: "arrow.clockwise", type: type, action: onShare)
+            .bold()
+    }
+    
+    private func photoButton(type: CustomButtonType) -> some View {
+        CustomButtonComponent(
+            title: photo == nil ? "adicionar foto" : "substituir foto",
+            icon: nil,
+            type: type,
+            action: onFinish
+        )
+        .bold()
     }
 }
 
