@@ -23,13 +23,13 @@ enum ActivityCategory: String, Codable, CaseIterable {
     var text: String {
         switch self {
         case .cognitive:
-            return "Mente"
+            return "mente"
         case .physical:
-            return "Movimento"
+            return "movimento"
         case .sensorial:
-            return "Sentidos"
+            return "sentidos"
         case .social:
-            return "Conexão"
+            return "conexão"
         }
     }
 }
