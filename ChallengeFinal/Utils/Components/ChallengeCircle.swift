@@ -7,46 +7,41 @@
 
 import SwiftUI
 
-enum CircleSize {
-    case big
-    case medium
-    case small
-}
-
 struct ChallengeCircle: View {
     // MARK: - Variables
+    @Environment(DesignSystem.self) private var designSystem
+    
+    let category: ActivityCategory
     let text: String
-    let size: CircleSize
-    var frameSize: CGFloat {
-        switch size {
-        case .big:
-            return 300
-        case .medium:
-            return 250
-        case .small:
-            return 177
+    
+    private var TextLayout: CGSize {
+        switch category {
+        case .cognitive:
+            return CGSize(width: -30, height: 40)
+        case .physical:
+            return CGSize(width: 30, height: 40)
+        case .sensorial:
+            return CGSize(width: 30, height: -45)
+        case .social:
+            return CGSize(width: 30, height: 40)
         }
     }
 
     // MARK: - View
     var body: some View {
-        ZStack {
-            Circle()
-                .stroke(LinearGradient(colors: [.black, .gray], startPoint: UnitPoint(x: 1, y: 1), endPoint: UnitPoint(x: 0, y: 1)), lineWidth: 35)
-                .frame(width: frameSize, height: frameSize)
+        ZStack(alignment: .center) {
+            Image(category.openIcon)
 
             Text(text)
+                .foregroundStyle(.red)
                 .multilineTextAlignment(.center)
-                .frame(maxWidth: 190)
+                .offset(TextLayout)
         }
     }
 }
 
 // MARK: - Preview
 #Preview {
-    VStack(spacing: 40) {
-        ChallengeCircle(text: "Escolha as escadas: Na próxima oportunidade, use as escadas em vez do elevador, se for seguro e viável.", size: .big)
-        ChallengeCircle(text: "Descubra sua própria mão.", size: .medium)
-        ChallengeCircle(text: "abc", size: .small)
-    }
+    ChallengeCircle(category: .sensorial, text: "Descubra sua própria mão.")
+        .environment(DesignSystem.shared)
 }

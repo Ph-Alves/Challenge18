@@ -41,8 +41,8 @@ struct ChallengeDisplayView: View {
             ZStack {
                 // O círculo com o desafio aparece primeiro, centralizado.
                 // Durante o reroll ele mostra uma mensagem de busca no lugar do título.
-                ChallengeCircle(text: isSearching ? "Procurando um novo desafio..." : challengeTitle, size: .big)
-                    .offset(y: elevateCircle ? -120 : 0)
+//                ChallengeCircle(text: isSearching ? "Procurando um novo desafio..." : challengeTitle, size: .big)
+//                    .offset(y: elevateCircle ? -120 : 0)
 
                 // Depois do círculo, entram o diálogo e o botão.
                 // O `padding(.top, 250)` posiciona o bloco abaixo do círculo já elevado.

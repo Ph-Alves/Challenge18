@@ -33,7 +33,7 @@ struct HomeView: View {
                 .font(designSystem.currentTheme.style.typography.title1)
 
             // Circulo de desafio
-            ChallengeCircle(text: "Eu te ajudo no que fazer <3", size: .big)
+//            ChallengeCircle(text: "Eu te ajudo no que fazer <3", size: .big)
             // Gesture para o swipe (esquerda/direita)
                 .gesture(
                     DragGesture(minimumDistance: 20)

@@ -14,8 +14,8 @@ struct ChallengeDescription: View {
     let challengeDescription: String
     
     var body: some View {
-        ChallengeCircle(text: challengeTitle, size: .small)
-            .padding(.bottom, 31)
+//        ChallengeCircle(text: challengeTitle, size: .small)
+//            .padding(.bottom, 31)
         
         Text(challengeSubTitle)
             .font(.title2)

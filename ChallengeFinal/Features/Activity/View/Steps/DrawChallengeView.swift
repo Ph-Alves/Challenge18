@@ -45,18 +45,18 @@ struct DrawChallengeView: View {
                 .animation(.easeInOut, value: isSearching)
             }
 
-            ChallengeCircle(text: isSearching ? "Procurando um novo desafio..." : "Pode me chacoalhar :)", size: .medium)
+//            ChallengeCircle(text: isSearching ? "Procurando um novo desafio..." : "Pode me chacoalhar :)", size: .medium)
                 // Alternativa ao shake: só conta o deslize predominantemente horizontal,
                 // para não confundir com rolagem ou toques acidentais na vertical.
-                .gesture(
-                    DragGesture(minimumDistance: 20)
-                        .onEnded { value in
-                            let isHorizontalSwipe = abs(value.translation.width) > abs(value.translation.height)
-                            if isHorizontalSwipe {
-                                swipeRaffle()
-                            }
-                        }
-                )
+//                .gesture(
+//                    DragGesture(minimumDistance: 20)
+//                        .onEnded { value in
+//                            let isHorizontalSwipe = abs(value.translation.width) > abs(value.translation.height)
+//                            if isHorizontalSwipe {
+//                                swipeRaffle()
+//                            }
+//                        }
+//                )
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity) // centraliza na tela toda
         .padding(.horizontal)
