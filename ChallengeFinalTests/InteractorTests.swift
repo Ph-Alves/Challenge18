@@ -321,6 +321,13 @@ final class ChallengesPresenterSpy: ChallengesPresenterProtocol {
     private(set) var permissionDeniedCount = 0
     private(set) var flashStates: [Bool] = []
     private(set) var cameraErrors: [Error] = []
+    
+    // Reflita (humor no resumo)
+    private(set) var presentedHumors: [Humor] = []
+    private(set) var moodStates: [Bool] = []
+    
+    func presentHumor(_ humor: Humor) { presentedHumors.append(humor) }
+    func presentMood(isPresented: Bool) { moodStates.append(isPresented) }
 
     func presentCamera(isPresented: Bool) { cameraStates.append(isPresented) }
     func presentCameraClosed() { cameraClosedCount += 1 }
@@ -1269,6 +1276,19 @@ struct InteractorTests {
  
         #expect(sut.haptics.selectionTickCount == 3)
     }
+    
+    // MARK: - Humor (roleta)
+
+    @Test(arguments: [
+        (Humor.veryUnpleasant, 1, Humor.unpleasant),
+        (Humor.veryPleasant, 1, Humor.veryUnpleasant),   // dá a volta no fim
+        (Humor.veryUnpleasant, -1, Humor.veryPleasant),  // dá a volta no começo
+        (Humor.neutral, 0, Humor.neutral),
+        (Humor.neutral, 5, Humor.neutral)                // uma volta inteira
+    ])
+    func testingHumorMovedWrapsAroundTheWheel(start: Humor, offset: Int, expected: Humor) {
+        #expect(start.moved(by: offset) == expected)
+    }
 
     // MARK: - ActivityInteractor (compartilhamento)
 
@@ -1433,6 +1453,7 @@ struct InteractorTests {
         let repository: GenericRepository<Activity>
         let share: ShareWorkerMock
         let camera: ConfigurableCameraWorkerMock
+        let haptics: HapticsWorkerMock
     }
 
     private func makeChallengesSUT() -> ChallengesSUT {
@@ -1440,9 +1461,10 @@ struct InteractorTests {
         let repository = makeActivityRepository()
         let share = ShareWorkerMock()
         let camera = ConfigurableCameraWorkerMock()
-        let interactor = ChallengesInteractor(repository: repository, presenter: presenter, share: share, camera: camera)
-        return ChallengesSUT(interactor: interactor, presenter: presenter, repository: repository, share: share, camera: camera)
-    }
+        let haptics = HapticsWorkerMock()
+        let interactor = ChallengesInteractor(repository: repository, presenter: presenter, share: share, camera: camera, haptics: haptics)
+        return ChallengesSUT(interactor: interactor, presenter: presenter, repository: repository, share: share, camera: camera, haptics: haptics)
+        }
 
     /// Concluído = não arquivado e com `ActivityResult`. `humor == nil` cria sem resultado.
     @discardableResult
@@ -1719,6 +1741,110 @@ struct InteractorTests {
 
         #expect(sut.presenter.errors.count == 1)
         #expect(sut.presenter.errors.first! == nil)
+    }
+    
+    // MARK: ChallengesInteractor (reflita)
+
+    @Test func testingChallengesOpenMoodStartsAtNeutralAndOpensMood() throws {
+        let sut = makeChallengesSUT()
+        let activity = try addChallenge("Sem humor", humor: nil, in: sut.repository)
+        sut.interactor.openSummary(activity)
+
+        sut.interactor.openMood()
+
+        #expect(sut.interactor.reflectionHumor == .neutral)
+        #expect(sut.presenter.presentedHumors == [.neutral])
+        #expect(sut.presenter.moodStates == [true])
+    }
+
+    @Test func testingChallengesOpenMoodWithoutSummaryDoesNothing() {
+        let sut = makeChallengesSUT()
+
+        sut.interactor.openMood()
+
+        #expect(sut.presenter.presentedHumors.isEmpty)
+        #expect(sut.presenter.moodStates.isEmpty)
+    }
+
+    @Test func testingChallengesHumorWheelMovesAndPlaysTick() throws {
+        let sut = makeChallengesSUT()
+        let activity = try addChallenge("Sem humor", humor: nil, in: sut.repository)
+        sut.interactor.openSummary(activity)
+        sut.interactor.openMood()
+
+        sut.interactor.nextHumor()
+        sut.interactor.nextHumor()
+        sut.interactor.previousHumor()
+
+        #expect(sut.interactor.reflectionHumor == .pleasant)
+        #expect(sut.presenter.presentedHumors == [.neutral, .pleasant, .veryPleasant, .pleasant])
+        #expect(sut.haptics.selectionTickCount == 3)
+    }
+
+    @Test func testingChallengesSaveHumorSavesClosesMoodAndRefreshes() throws {
+        let sut = makeChallengesSUT()
+        let activity = try addChallenge("Sem humor", humor: nil, in: sut.repository)
+        sut.interactor.openSummary(activity)
+        sut.interactor.openMood()
+        sut.interactor.previousHumor()   // neutro -> desagradável
+
+        sut.interactor.saveHumor()
+
+        #expect(activity.result?.humor == .unpleasant)
+        #expect(sut.presenter.moodStates == [true, false])
+        #expect(sut.presenter.summaries.last! === activity)   // o resumo continua aberto, agora com humor
+        #expect(sut.presenter.challengesCalls.isEmpty == false)
+    }
+
+    @Test func testingChallengesSaveHumorCreatesResultWhenMissing() throws {
+        let sut = makeChallengesSUT()
+        let activity = Activity(category: .physical, result: nil, name: "Sem resultado", description: "-", archived: false)
+        try sut.repository.add(activity)
+        sut.interactor.openSummary(activity)
+        sut.interactor.openMood()
+
+        sut.interactor.saveHumor()
+
+        #expect(activity.result != nil)
+        #expect(activity.result?.humor == .neutral)
+    }
+
+    @Test func testingChallengesSaveHumorKeepsThePhoto() throws {
+        let sut = makeChallengesSUT()
+        let activity = try addChallenge("Sem humor", humor: nil, in: sut.repository)
+        activity.result?.photo = Data([7])
+        sut.interactor.openSummary(activity)
+        sut.interactor.openMood()
+
+        sut.interactor.saveHumor()
+
+        #expect(activity.result?.photo == Data([7]))
+    }
+
+    @Test func testingChallengesCloseMoodDoesNotSaveHumor() throws {
+        let sut = makeChallengesSUT()
+        let activity = try addChallenge("Sem humor", humor: nil, in: sut.repository)
+        sut.interactor.openSummary(activity)
+        sut.interactor.openMood()
+        sut.interactor.nextHumor()
+
+        sut.interactor.closeMood()
+
+        #expect(activity.result?.humor == nil)
+        #expect(sut.presenter.moodStates == [true, false])
+    }
+
+    @Test func testingChallengesReopeningMoodStartsAtNeutralAgain() throws {
+        let sut = makeChallengesSUT()
+        let activity = try addChallenge("Sem humor", humor: nil, in: sut.repository)
+        sut.interactor.openSummary(activity)
+        sut.interactor.openMood()
+        sut.interactor.nextHumor()
+        sut.interactor.closeMood()
+
+        sut.interactor.openMood()
+
+        #expect(sut.interactor.reflectionHumor == .neutral)
     }
     
     // MARK: ChallengesInteractor (ordenação)

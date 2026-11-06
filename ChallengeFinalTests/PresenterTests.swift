@@ -710,6 +710,22 @@ struct PresenterTests {
     @Test func testingPresentSummaryWithoutPhotoHasNoImage() {
         let (presenter, store) = createChallengesPresenterAndStore()
     }
+    
+    // MARK: ChallengesPresenter (reflita)
+
+    @Test func testingChallengesPresentHumorAndMoodForwardToStore() {
+        let (presenter, store) = createChallengesPresenterAndStore()
+
+        presenter.presentHumor(.pleasant)
+        presenter.presentMood(isPresented: true)
+
+        #expect(store.reflectionHumor == .pleasant)
+        #expect(store.isMoodPresented)
+
+        presenter.presentMood(isPresented: false)
+
+        #expect(store.isMoodPresented == false)
+    }
         
         //    // MARK: - ProfilePresenter
         //
