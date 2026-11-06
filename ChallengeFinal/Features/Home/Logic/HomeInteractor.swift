@@ -27,11 +27,17 @@ final class HomeInteractor: HomeInteractorProtocol {
     // MARK: - Variables
     private let repository: GenericRepository<Activity>
     private let presenter: HomePresenterProtocol
+    private let haptics: HapticsWorkerProtocol
+
     
     // MARK: - Init
-    init(repository: GenericRepository<Activity>, presenter: HomePresenterProtocol) {
+    init(repository: GenericRepository<Activity>, presenter: HomePresenterProtocol, haptics: HapticsWorkerProtocol = HapticsWorker()) {
         self.repository = repository
         self.presenter = presenter
+        self.haptics = haptics
+        // Liga a engine já na abertura da Home: assim o primeiro swipe
+        // vibra junto com a troca, sem o atraso de criar a engine na hora.
+        self.haptics.prepareHaptics()
     }
     
     // MARK: - Functions
@@ -66,13 +72,13 @@ final class HomeInteractor: HomeInteractorProtocol {
     func nextCategory(current: ActivityCategory) {
         switch current {
         case .physical:
-            presenter.presentCategory(.cognitive)
+            changeCategory(to: .cognitive)
         case .cognitive:
-            presenter.presentCategory(.sensorial)
+            changeCategory(to: .sensorial)
         case .sensorial:
-            presenter.presentCategory(.social)
+            changeCategory(to: .social)
         case .social:
-            presenter.presentCategory(.physical)
+            changeCategory(to: .physical)
         }
     }
     
@@ -80,13 +86,13 @@ final class HomeInteractor: HomeInteractorProtocol {
     func previousCategory(current: ActivityCategory) {
         switch current {
         case .physical:
-            presenter.presentCategory(.social)
+            changeCategory(to: .social)
         case .cognitive:
-            presenter.presentCategory(.physical)
+            changeCategory(to: .physical)
         case .sensorial:
-            presenter.presentCategory(.cognitive)
+            changeCategory(to: .cognitive)
         case .social:
-            presenter.presentCategory(.sensorial)
+            changeCategory(to: .sensorial)
         }
     }
     
@@ -94,5 +100,14 @@ final class HomeInteractor: HomeInteractorProtocol {
     // então só pedimos ao Presenter para abrir o fluxo (Presenter -> Store -> Coordinator).
     func startActivity() {
         presenter.presentActivityFlow()
+    }
+    
+    // MARK: - Private Functions
+    
+    /// Troca o grupo e vibra no mesmo instante, para o toque coincidir
+    /// com a mudança que aparece na tela.
+    private func changeCategory(to category: ActivityCategory) {
+        presenter.presentCategory(category)
+        haptics.playCategoryChange()
     }
 }
