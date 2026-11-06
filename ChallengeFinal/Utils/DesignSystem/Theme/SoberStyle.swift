@@ -13,6 +13,7 @@ struct SoberStyle: ThemeStyleProtocol {
         title1: .custom("Bodoni 72", size: 36, relativeTo: .largeTitle),
         title2: .custom("Bodoni 72", size: 32, relativeTo: .title),
         title3: .custom("Bodoni 72", size: 24, relativeTo: .title3),
+        title4: .custom("Bodoni 72", size: 18, relativeTo: .title3),
         subtitle1:.custom("SpecialGothic-Bold", size: 22, relativeTo: .title2),
         subtitle2: .custom("SpecialGothic-SemiBold", size: 18, relativeTo: .title3),
         subtitle3: .custom("SpecialGothic-Bold", size: 14, relativeTo: .subheadline),
@@ -37,14 +38,16 @@ struct SoberStyle: ThemeStyleProtocol {
         emotionPessimo: .soberEmotionPessimo,
         emotionStroke: .soberEmotionStroke,
         overlaySoft: .soberOverlaySoft,
-        overlayStrong: .soberOverlayStrong)
+        overlayStrong: .soberOverlayStrong,
+        emotionBGFill: .soberEmotionBGFill)
+        
     
     let icons = IconsSet(
         activityIcons: [
-            .cognitive: (closed: "eightBall", open: "eightBall"),
-            .physical:  (closed: "coffee",    open: "openCoffee"),
-            .sensorial: (closed: "coockie",   open: "openCookie"),
-            .social:    (closed: "telephone", open: "openPhone")
+            .cognitive: (closed: "eightBall", open: "eightBall",   card: "eightCard"),
+            .physical:  (closed: "coffee",    open: "openCoffee", card: "coffeeCard"),
+            .sensorial: (closed: "coockie",   open: "openCookie", card: "coockieCard"),
+            .social:    (closed: "telephone", open: "openPhone",  card: "telephoneCard")
         ],
         
         feelingIcons: [

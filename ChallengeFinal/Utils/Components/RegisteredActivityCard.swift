@@ -13,13 +13,13 @@ struct RegisteredActivityCard: View {
     var title: String
     var humor: Humor?
     let photo: Image?
-    
+
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
             VStack(alignment: .leading, spacing: 12) {
                 PhotoCard(photo: photo, height: 120, cornerRadius: 16)
                     .padding(.top, 10)
-                
+
                 Text(title)
                     .lineLimit(1)
                     .font(designSystem.style.typography.text3)
@@ -35,7 +35,7 @@ struct RegisteredActivityCard: View {
                 RoundedRectangle(cornerRadius: 20)
                     .stroke(designSystem.style.colors.strokeDefault, lineWidth: 1.5)
             )
-            
+
             if let humor {
                 HumorIconBadge( humor: humor, size: 33).offset(x: 14, y: 12)
             }
@@ -53,19 +53,4 @@ struct RegisteredActivityCard: View {
     .environment(DesignSystem.shared)
 }
 
-struct HumorIconBadge: View {
-    @Environment(DesignSystem.self) private var designSystem
-    let humor: Humor
-    var size: CGFloat
 
-    var body: some View {
-        
-        Image(humor.cardIcon)
-            .resizable()
-            .frame(width: size, height: size)
-            .padding(8)
-            .background(
-                RoundedRectangle(cornerRadius: 6).fill(designSystem.style.colors.fillPrimary)
-            )
-    }
-}

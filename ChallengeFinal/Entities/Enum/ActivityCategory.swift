@@ -19,7 +19,11 @@ enum ActivityCategory: String, Codable, CaseIterable {
     var openIcon: String {
         DesignSystem.shared.style.icons.activityIcons[self]?.open ?? ""
     }
-    
+
+    var cardIcon: String {
+        DesignSystem.shared.style.icons.activityIcons[self]?.card ?? ""
+    }
+
     var text: String {
         switch self {
         case .cognitive:

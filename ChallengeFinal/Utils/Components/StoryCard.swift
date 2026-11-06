@@ -23,7 +23,8 @@ struct StoryCard: View {
    var challengePhoto: UIImage? = nil
     
     private let size = ShareImageSpecification.pointSize
-    
+    @Environment(DesignSystem.self) private var designSystem
+
     // MARK: - View
     var body: some View {
         content
@@ -40,22 +41,21 @@ struct StoryCard: View {
     
     private var content: some View {
         VStack(spacing: 12) {
-            ChallengeCircle(text: "você conseguiu!", size: .small)
-                .padding(.bottom, 20)
+            
             
             Text(challengeTitle)
-                .font(.system(size: 22, weight: .bold))
+                .font(designSystem.style.typography.title3)
                 .padding(.top, 20)
             
             Text(challengeDescription)
-                .font(.system(size: 16))
+                .font(designSystem.style.typography.text2)
                 .lineLimit(nil)
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.top, 10)
             
         //CHANGE: trocar pelo nome real
-            Text("nome do app")
-                .font(.system(size: 12, weight: .medium))
+            Text("selfmaxxing.")
+                .font(designSystem.style.typography.title4)
                 .padding(.top, 24)
         }
         .frame(maxWidth: 260)
@@ -90,7 +90,7 @@ struct StoryCard: View {
     StoryCard(
         challengeTitle: "menos distração, mais foco",
         challengeDescription: "sem redes sociais, seu cardio vira um momento para cuidar do corpo e desacelerar a mente."
-    )
+    ).environment(DesignSystem.shared)
 }
 
 #Preview("Story 2 - com foto") {
@@ -98,6 +98,6 @@ struct StoryCard: View {
         challengeTitle: "menos distração, mais foco",
         challengeDescription: "sem redes sociais, seu cardio vira um momento para cuidar do corpo e desacelerar a mente.",
         challengePhoto: UIImage(named: "test")
-    )
+    ).environment(DesignSystem.shared)
 }
 

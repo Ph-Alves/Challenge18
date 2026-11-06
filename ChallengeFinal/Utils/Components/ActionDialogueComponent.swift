@@ -51,7 +51,7 @@ struct ActionDialogComponent: View {
             }
 
         }
-        .padding(.vertical,23)
+        .padding(.vertical,24)
         .padding(.horizontal,30)
         .background(designSystem.style.colors.backgroundPrimary)
 

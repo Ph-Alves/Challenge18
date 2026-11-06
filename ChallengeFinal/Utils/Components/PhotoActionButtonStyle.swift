@@ -29,10 +29,12 @@ import SwiftUI
 ///
 /// Dica: quando o `DesignSystem.swift` tiver cores e fontes, troque os valores fixos daqui.
 struct PhotoActionButtonStyle: ButtonStyle {
+    @Environment(DesignSystem.self) private var designSystem
+
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.system(size: 15, weight: .semibold))
-            .foregroundStyle(.black)
+            .foregroundStyle(designSystem.style.colors.textPrimary)
             .frame(maxWidth: .infinity)
             .frame(height: 36)
             .background(Color(white: 0.88), in: .rect(cornerRadius: 12))
