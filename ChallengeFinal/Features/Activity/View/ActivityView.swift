@@ -152,6 +152,7 @@ struct ActivityView: View {
         // Humor: a roleta gira com swipe; "continuar" segue para a selfie.
         case .mood:
             MoodStepView(
+                style: .activity,
                 humor: store.humor,
                 onNext: { interactor.nextHumor() },
                 onPrevious: { interactor.previousHumor() },
