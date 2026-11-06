@@ -39,3 +39,12 @@ enum Humor: String, Codable, CaseIterable { //CaseIterable: a roleta monta as op
         }
     }
 }
+
+
+extension Humor {
+    func moved(by offset: Int) -> Humor {
+        let all = Humor.allCases
+        let index = all.firstIndex(of: self) ?? 0
+        return all[(index + offset + all.count) % all.count]
+    }
+}

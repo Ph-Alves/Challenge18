@@ -66,9 +66,27 @@ struct ChallengesView: View {
                 photo: store.selectedPhoto,
                 humor: activity.result?.humor,
                 onFinish: { interactor.retakePhoto() },
-                onShare: { interactor.shareStory() }
+                onShare: { interactor.shareStory() },
+                onReflect: { interactor.openMood() }
             )
             .presentationDragIndicator(.visible)
+            // "reflita!": a roleta abre por cima do resumo (que continua aberto por baixo).
+            .fullScreenCover(isPresented: isMoodPresented) {
+                NavigationStack {
+                    MoodStepView(
+                        style: .reflection,
+                        humor: store.reflectionHumor,
+                        onNext: interactor.nextHumor,
+                        onPrevious: interactor.previousHumor,
+                        onContinue: interactor.saveHumor
+                    )
+                    .toolbar {
+                        ToolbarItem(placement: .topBarLeading) {
+                            Button(role: .close, action: interactor.closeMood)
+                        }
+                    }
+                }
+            }
             // Com o resumo aberto, o alerta e o share sheet precisam sair DESTE sheet
             // (a tela de baixo não consegue apresentar nada por cima dele).
             .alert("ops", isPresented: isErrorPresented) {
@@ -199,6 +217,14 @@ struct ChallengesView: View {
         Binding(
             get: { store.isCameraPresented },
             set: { if !$0 { interactor.closeCamera() } }
+        )
+    }
+    
+    /// Lê a Store e, se a tela do humor for fechada por fora, avisa o Interactor.
+    private var isMoodPresented: Binding<Bool> {
+        Binding(
+            get: { store.isMoodPresented },
+            set: { if !$0 { interactor.closeMood() } }
         )
     }
 }

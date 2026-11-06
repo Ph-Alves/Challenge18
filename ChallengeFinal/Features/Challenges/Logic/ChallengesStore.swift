@@ -20,6 +20,10 @@ protocol ChallengesStoreProtocol: AnyObject {
     // MARK: Câmera
     func displayCamera(isPresented: Bool)
     func displayCameraFlashIcon(_ icon: String)
+    // MARK: Reflita (humor no resumo)
+    func displayHumor(_ humor: Humor)
+    func displayMood(isPresented: Bool)
+    
 }
 
 // MARK: - Class
@@ -62,6 +66,12 @@ final class ChallengesStore: ChallengesStoreProtocol {
     // Câmera (tirar outra foto no resumo)
     private(set) var isCameraPresented = false
     private(set) var cameraFlashIcon = "bolt.slash"
+    
+    // Reflita (registrar o humor de um desafio que ficou sem)
+    /// Humor no topo da roleta do `MoodStepView`.
+    private(set) var reflectionHumor: Humor = .neutral
+    /// Controla a `fullScreenCover` do `MoodStepView`, aberta por cima do resumo.
+    private(set) var isMoodPresented = false
 
     // MARK: - Funções do ciclo VIP
 
@@ -100,6 +110,14 @@ final class ChallengesStore: ChallengesStoreProtocol {
     
     func displayCameraFlashIcon(_ icon: String) {
         cameraFlashIcon = icon
+    }
+    
+    func displayHumor(_ humor: Humor) {
+        reflectionHumor = humor
+    }
+    
+    func displayMood(isPresented: Bool) {
+        isMoodPresented = isPresented
     }
 }
 
