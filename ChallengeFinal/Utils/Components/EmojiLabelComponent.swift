@@ -13,15 +13,17 @@ struct EmojiLabelComponent: View {
 
     var humor: Humor
     var highlighted: Bool = false
+    
     var body: some View {
         VStack(spacing: 6) {
             Image(humor.baseIcon)
                 .resizable()
                 .scaledToFit()
-                .frame(width: highlighted ? 50: 63)
+                .frame(width: highlighted ? 63: 81)
             
             Text(humor.rawValue)
-                .font(designSystem.style.typography.text3)
+                .foregroundStyle(designSystem.style.colors.textPrimary)
+                .font(highlighted ? designSystem.style.typography.text3 : designSystem.style.typography.subtitle2)
                 .fontWeight(.semibold)
                 .multilineTextAlignment(.center)
         }

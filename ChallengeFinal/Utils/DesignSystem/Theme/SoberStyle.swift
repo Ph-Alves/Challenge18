@@ -48,11 +48,11 @@ struct SoberStyle: ThemeStyleProtocol {
         ],
         
         feelingIcons: [
-            .veryUnpleasant: (base: "veryUnpleasantBase", humor: "veryUnpleasantHumor"),
-            .unpleasant: (base: "unpleasantBase", humor: "unpleasantHumor"),
-            .neutral: (base: "neutralBase", humor: "neutralHumor"),
-            .pleasant: (base: "plesantBase", humor: "plesantHumor"),
-            .veryPleasant: (base: "veryPleasantBase", humor: "veryPleasantHumor")
+            .veryUnpleasant: (base: "veryUnpleasantBase", humor: "veryUnpleasantHumor", card: "veryUnpleasantCard"),
+            .unpleasant: (base: "unpleasantBase", humor: "unpleasantHumor", card: "unpleasantCard"),
+            .neutral: (base: "neutralBase", humor: "neutralHumor", card: "neutralCard"),
+            .pleasant: (base: "plesantBase", humor: "plesantHumor", card: "pleasantCard"),
+            .veryPleasant: (base: "veryPleasantBase", humor: "veryPleasantHumor", card: "veryPleasantCard")
         ],
         placeholderCheckIcon: "placeholderCheckIcon",
         photoPlaceholder: "photoPlaceholder",

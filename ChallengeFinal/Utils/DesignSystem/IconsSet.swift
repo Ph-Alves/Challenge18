@@ -9,7 +9,7 @@ import Foundation
 
 struct IconsSet {
     let activityIcons: [ActivityCategory: (closed: String, open: String)] //foi
-    let feelingIcons: [Humor: (base: String, humor: String)]
+    let feelingIcons: [Humor: (base: String, humor: String, card: String)]
     let placeholderCheckIcon: String // foi
     let photoPlaceholder: String //foi
     let archivedChallengeIcon: String  //foi//foi
@@ -21,5 +21,4 @@ struct IconsSet {
     let tabBar: TabBarIcons
 
 }
-
 

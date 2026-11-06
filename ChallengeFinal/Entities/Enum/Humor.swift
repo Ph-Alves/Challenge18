@@ -22,6 +22,9 @@ enum Humor: String, Codable, CaseIterable { //CaseIterable: a roleta monta as op
         DesignSystem.shared.style.icons.feelingIcons[self]?.base ?? ""
     }
     
+    var cardIcon: String { DesignSystem.shared.style.icons.feelingIcons[self]?.card ?? ""
+    }
+    
     /// Frase curta mostrada embaixo do nome, na roleta.
     /// CHANGE: checar frases com o paulinho.
     var detail: String {
