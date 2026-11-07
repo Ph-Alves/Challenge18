@@ -15,6 +15,13 @@ import SwiftUI
 ///
 /// Só desenha: quem decide a seleção é o Interactor (via Store).
 struct HumorWheel: View {
+    
+    //MARK: - DESIGN SYSTEM
+    @Environment(DesignSystem.self) private var designSystem
+    
+    //atalhos
+    private var colors: ColorPalette { designSystem.style.colors }
+    private var icons: IconsSet { designSystem.style.icons }
 
     // MARK: - Variables
 
@@ -28,10 +35,10 @@ struct HumorWheel: View {
     let onPrevious: () -> Void
     
     /// Diâmetro externo da roleta.
-    private let diameter: CGFloat = 640
+    private let diameter: CGFloat = 669.65
 
     /// Espessura da faixa das fatias.
-    private let thickness: CGFloat = 120
+    private let thickness: CGFloat = 100
 
     /// Rotação da roleta onde ela parou (sempre múltiplo de `segmentAngle`), em graus.
     /// Acumulada, sem módulo: não volta a 0 depois de uma volta completa.
@@ -155,8 +162,6 @@ struct HumorWheel: View {
 
     /// Cor de cada fatia: a cor do humor no tema ativo (não muda com a seleção).
     private func color(for humor: Humor) -> Color {
-        let colors = DesignSystem.shared.style.colors
-
         switch humor {
         case .veryUnpleasant: return colors.emotionPessimo
         case .unpleasant: return colors.emotionDesagradavel
@@ -170,10 +175,11 @@ struct HumorWheel: View {
 
     /// Triângulo fixo no topo, apontando para o humor selecionado.
     private var pointer: some View {
-        Triangle()
-            .fill(Color.E_0_E_0_E_0)
-            .frame(width: 48, height: 44)
-            .offset(y: -20)
+        Image(designSystem.style.humorWheel.pointerAsset)
+            .resizable()
+            .scaledToFit()
+            .frame(width: 84, height: 69)
+            .offset(y: -40)
     }
 
     // MARK: - Auxiliares
@@ -188,34 +194,15 @@ struct HumorWheel: View {
     }
 }
 
-// MARK: - Triângulo
-
-/// Triângulo apontando para baixo (o marcador da roleta).
-private struct Triangle: Shape {
-    func path(in rect: CGRect) -> Path {
-        var path = Path()
-        path.move(to: CGPoint(x: rect.minX, y: rect.minY))
-        path.addLine(to: CGPoint(x: rect.maxX, y: rect.minY))
-        path.addLine(to: CGPoint(x: rect.midX, y: rect.maxY))
-        path.closeSubpath()
-        return path
-    }
-}
-
-#Preview {
-    @Previewable @State var humor: Humor = .veryUnpleasant
-    let humors = Humor.allCases
-
+//MARK: - Preview
+#Preview("Roleta inteira") {
+    @Previewable @State var humor: Humor = .neutral
+ 
     HumorWheel(
         selected: humor,
-        onNext: {
-            let index = humors.firstIndex(of: humor) ?? 0
-            humor = humors[(index + 1) % humors.count]
-        },
-        onPrevious: {
-            let index = humors.firstIndex(of: humor) ?? 0
-            humor = humors[(index - 1 + humors.count) % humors.count]
-        }
+        onNext: { humor = humor.moved(by: 1) },
+        onPrevious: { humor = humor.moved(by: -1) }
     )
+    .scaleEffect(0.55)
+    .environment(DesignSystem.shared)
 }
-

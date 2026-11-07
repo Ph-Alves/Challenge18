@@ -14,6 +14,14 @@ enum MoodStyle {
 
 struct MoodStepView: View {
     
+    //MARK: - DESIGN SYSTEM
+    @Environment(DesignSystem.self) private var designSystem
+    
+    //atalhos
+    private var typography: Typography { designSystem.style.typography }
+    private var colors: ColorPalette { designSystem.style.colors }
+    private var icons: IconsSet { designSystem.style.icons }
+    
     // MARK: - Variables
     
     let style: MoodStyle
@@ -31,7 +39,7 @@ struct MoodStepView: View {
     var body: some View {
         VStack(spacing: 0) {
             header
-                .padding(.top, 24)
+                .padding(.top, 70)
             
             Spacer(minLength: 32)
             
@@ -40,7 +48,7 @@ struct MoodStepView: View {
             continueButton.padding(.bottom, 60)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.white)
+        .background(colors.backgroundPrimary)
     }
     
     // MARK: - Título
@@ -48,13 +56,13 @@ struct MoodStepView: View {
     private var header: some View {
         VStack(spacing: 16) {
             Text("reflita!")
-                .font(.system(size: 28, weight: .bold))
+                .font(typography.title2)
             
             Text("como você se sentiu\ndurante esse desafio?")
-                .font(.system(size: 15))
+                .font(typography.text2)
         }
         .multilineTextAlignment(.center)
-        .foregroundStyle(.black)
+        .foregroundStyle(colors.textPrimary)
     }
     
     // MARK: - Roleta
@@ -65,17 +73,25 @@ struct MoodStepView: View {
         Color.clear
             .frame(height: 340)
             .overlay(alignment: .top) {
-                HumorWheel(selected: humor, onNext: onNext, onPrevious: onPrevious)
-                    .padding(.top, 20) // espaço para o marcador
+                ZStack(alignment: .top) {
+
+                    Image(designSystem.style.humorWheel.backgroundAsset)
+                        .resizable()
+                        .scaledToFit()
+                       .frame(width: 480, height: 221)
+                       .padding(.top, -20)
+                       .allowsHitTesting(false)
+
+                    HumorWheel(selected: humor, onNext: onNext, onPrevious: onPrevious)
+                        .padding(.top, 40) // espaço para o marcador (o offset dele)
+                }
             }
             .overlay(alignment: .top) {
                 humorInfo
-                    .padding(.top, 172) // logo abaixo da faixa da roleta
+                    .padding(.top, 187) // logo abaixo da faixa da roleta
+                    .allowsHitTesting(false) // o arraste passa para a roleta
             }
-            .clipped()
-            .contentShape(Rectangle())
     }
-    
     /// Emoji, nome e descrição do humor selecionado.
     private var humorInfo: some View {
         VStack(spacing: 12) {
@@ -85,14 +101,11 @@ struct MoodStepView: View {
                 .frame(width: 64, height: 64)
             
             Text(humor.rawValue.lowercased())
-                .font(.system(size: 20, weight: .bold))
-            
-            Text(humor.detail)
-                .font(.system(size: 15))
-                .padding(.top, 12)
+                .font(typography.subtitle2.bold())
+                .foregroundStyle(colors.textPrimary)
         }
         .multilineTextAlignment(.center)
-        .foregroundStyle(.black)
+        .foregroundStyle(.pink)
         // Troca suave quando o humor muda.
         .id(humor)
         .transition(.opacity)
@@ -104,7 +117,9 @@ struct MoodStepView: View {
     private var continueButton: some View {
         CustomButtonComponent(
             title: style == .activity ? "continuar" : "salvar",
-            icon: nil, type: .secondary, action: onContinue
+            icon: nil,
+            type: .secondary,
+            action: onContinue
         )
         .frame(width: 140)
     }
@@ -112,36 +127,20 @@ struct MoodStepView: View {
 
 // MARK: - Preview
 
-#Preview("Fluxo de activity") {
-    @Previewable @State var humor: Humor = .veryUnpleasant
-
-    MoodStepView(
-        style: .activity,
-        humor: humor,
-        onNext: { humor = Humor.previewMoved(humor, by: 1) },
-        onPrevious: { humor = Humor.previewMoved(humor, by: -1) },
-        onContinue: { print("continuar") }
-    )
-}
-
-#Preview("Reflexão") {
-    @Previewable @State var humor: Humor = .neutral
-
-    MoodStepView(
-        style: .reflection,
-        humor: humor,
-        onNext: { humor = Humor.previewMoved(humor, by: 1) },
-        onPrevious: { humor = Humor.previewMoved(humor, by: -1) },
-        onContinue: { print("salvar") }
-    )
-}
-
-/// Rotação da roleta só para o preview.
-private extension Humor {
-    static func previewMoved(_ humor: Humor, by offset: Int) -> Humor {
-        let humors = Humor.allCases
-        let index = humors.firstIndex(of: humor) ?? 0
-        return humors[(index + offset + humors.count) % humors.count]
-    }
+#Preview("Em uma sheet") {
+    @Previewable @State var humor: Humor = .pleasant
+    @Previewable @State var isPresented = true
+ 
+//    Button("abrir reflexão") { isPresented = true }
+//        .sheet(isPresented: $isPresented) {
+            MoodStepView(
+                style: .reflection,
+                humor: humor,
+                onNext: { humor = humor.moved(by: 1) },
+                onPrevious: { humor = humor.moved(by: -1) },
+                onContinue: { isPresented = false }
+            )
+//        }
+        .environment(DesignSystem.shared)
 }
 
