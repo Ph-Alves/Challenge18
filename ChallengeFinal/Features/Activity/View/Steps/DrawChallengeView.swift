@@ -15,6 +15,12 @@ import SwiftUI
 struct DrawChallengeView: View {
 
     // MARK: - Variables
+    @Environment(DesignSystem.self) private var designSystem
+    /// Liga enquanto `isSearching` para animar o pulso da bola.
+    @State private var isPulsing = false
+
+    /// Categoria selecionada
+    var selectedCategory: ActivityCategory
     /// O sorteio está em andamento: troca os textos e esconde o título.
     var isSearching: Bool
     /// O desafio já foi sorteado: dispara a animação final e o avanço de step.
@@ -27,16 +33,14 @@ struct DrawChallengeView: View {
     var finishDetection: () -> Void
     /// Fim da animação da bola: avança para o step `.challenge`.
     var growFinished: () -> Void
-    @Environment(DesignSystem.self) private var designSystem
 
     // MARK: - View
     var body: some View {
-        VStack(alignment: .center, spacing: isSearching ? 0 : 66) {
-            
+        VStack(alignment: .center, spacing: isSearching ? 0 : 28) {
             if !isSearching {
-                VStack {
-                    Text("Atrás de um novo desafio?")
-                        .font(.title.bold())
+                VStack(spacing: 17) {
+                    Text("atrás de um novo desafio?")
+                        .font(designSystem.style.typography.title1)
                         .multilineTextAlignment(.center)
                         .contentTransition(.opacity)
                     Text("chacoalhe seu iphone e desafie-se").font(designSystem.currentTheme.style.typography.text2)
@@ -45,24 +49,36 @@ struct DrawChallengeView: View {
                 .animation(.easeInOut, value: isSearching)
             }
 
-//            ChallengeCircle(text: isSearching ? "Procurando um novo desafio..." : "Pode me chacoalhar :)", size: .medium)
-                // Alternativa ao shake: só conta o deslize predominantemente horizontal,
-                // para não confundir com rolagem ou toques acidentais na vertical.
-//                .gesture(
-//                    DragGesture(minimumDistance: 20)
-//                        .onEnded { value in
-//                            let isHorizontalSwipe = abs(value.translation.width) > abs(value.translation.height)
-//                            if isHorizontalSwipe {
-//                                swipeRaffle()
-//                            }
-//                        }
-//                )
+            ChallengeCircle(category: selectedCategory, text: nil, isOpen: false)
+                // Pulsa (aumenta e diminui) enquanto sorteia (isSearching); ao terminar, volta ao normal.
+                .scaleEffect(isPulsing ? 1.08 : 1)
+                .animation(
+                    isSearching ? .easeInOut(duration: 0.6).repeatForever(autoreverses: true) : .easeOut(duration: 0.2),
+                    value: isPulsing
+                )
+//              Alternativa ao shake: só conta o deslize predominantemente horizontal,
+//              para não confundir com rolagem ou toques acidentais na vertical.
+                .gesture(
+                    DragGesture(minimumDistance: 20)
+                        .onEnded { value in
+                            let isHorizontalSwipe = abs(value.translation.width) > abs(value.translation.height)
+                            if isHorizontalSwipe {
+                                swipeRaffle()
+                            }
+                        }
+                )
+                .animation(.bouncy, value: isSearching)
+                .padding(.bottom, isSearching ? 0 : 150)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity) // centraliza na tela toda
         .padding(.horizontal)
         // O acelerômetro só fica ligado enquanto a tela está visível.
         .onAppear {
             startDetection()
+            isPulsing = isSearching
+        }
+        // O pulso começa quando o sorteio começa, não quando a view aparece.
+        .onChange(of: isSearching) { _, searching in
+            isPulsing = searching
         }
         .onChange(of: isChallengeReady) { _, ready in
             guard ready else { return }
@@ -81,9 +97,11 @@ struct DrawChallengeView: View {
 // MARK: - Preview
 
 #Preview("Searching") {
-    DrawChallengeView(isSearching: true, isChallengeReady: false, swipeRaffle: {}, startDetection: {}, finishDetection: {}, growFinished: {})
+    DrawChallengeView(selectedCategory: .physical, isSearching: true, isChallengeReady: false, swipeRaffle: {}, startDetection: {}, finishDetection: {}, growFinished: {})
+        .environment(DesignSystem.shared)
 }
 
 #Preview("Shake") {
-    DrawChallengeView(isSearching: false, isChallengeReady: false, swipeRaffle: {}, startDetection: {}, finishDetection: {}, growFinished: {})
+    DrawChallengeView(selectedCategory: .physical, isSearching: false, isChallengeReady: false, swipeRaffle: {}, startDetection: {}, finishDetection: {}, growFinished: {})
+        .environment(DesignSystem.shared)
 }

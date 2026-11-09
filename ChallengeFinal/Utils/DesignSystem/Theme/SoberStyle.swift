@@ -42,7 +42,7 @@ struct SoberStyle: ThemeStyleProtocol {
     let icons = IconsSet(
         activityIcons: [
             .cognitive: (closed: "coffee",    open: "openCoffee"),
-            .physical:  (closed: "eightBall", open: "eightBall"),
+            .physical:  (closed: "eightBall", open: "openBall"),
             .sensorial: (closed: "coockie",   open: "openCookie"),
             .social:    (closed: "telephone", open: "openPhone")
         ],

@@ -122,6 +122,7 @@ struct ActivityView: View {
         // A seta de voltar encerra o fluxo e devolve o usuário à Home.
         case .draw:
             DrawChallengeView(
+                selectedCategory: currentCategory,
                 isSearching: store.isSearching,
                 isChallengeReady: store.isChallengeReady,
                 swipeRaffle: { interactor.raffle(for: currentCategory) },
@@ -176,6 +177,7 @@ struct ActivityView: View {
             // (o arquivar salva antes) e continuam nesta tela.
             if !store.isChallengeAccepted {
                 ChallengeDisplayView(
+                    currentCategory: currentCategory,
                     challengeTitle: title,
                     isSearching: store.isSearching,
                     archiveAction: {
@@ -304,4 +306,5 @@ struct ActivityView: View {
         context: container.mainContext,
         currentCategory: .cognitive
     )
+    .environment(DesignSystem.shared)
 }
