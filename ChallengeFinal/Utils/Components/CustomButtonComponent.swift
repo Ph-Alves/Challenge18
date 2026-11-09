@@ -69,3 +69,8 @@ struct CustomButtonComponent: View {
 #Preview {
     CustomButtonComponent(title: "arquivar", icon: "calendar", type: .primary, action: {})
 }
+
+
+#Preview {
+    CustomButtonComponent(title: "arquivar", icon: "calendar", type: .secondary, action: {})
+}

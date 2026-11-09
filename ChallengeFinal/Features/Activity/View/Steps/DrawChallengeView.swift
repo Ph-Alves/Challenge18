@@ -25,10 +25,9 @@ struct DrawChallengeView: View {
     var startDetection: () -> Void
     /// Desliga o acelerômetro (ao sair).
     var finishDetection: () -> Void
-    /// Seta de voltar: encerra o fluxo e devolve o usuário à Home.
-    var returnAction: () -> Void
     /// Fim da animação da bola: avança para o step `.challenge`.
     var growFinished: () -> Void
+    @Environment(DesignSystem.self) private var designSystem
 
     // MARK: - View
     var body: some View {
@@ -40,7 +39,7 @@ struct DrawChallengeView: View {
                         .font(.title.bold())
                         .multilineTextAlignment(.center)
                         .contentTransition(.opacity)
-                    Text("chacoalhe seu iphone e desafie-se")
+                    Text("chacoalhe seu iphone e desafie-se").font(designSystem.currentTheme.style.typography.text2)
                 }
                 .padding(.horizontal, 40)
                 .animation(.easeInOut, value: isSearching)
@@ -60,10 +59,6 @@ struct DrawChallengeView: View {
                 )
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity) // centraliza na tela toda
-        .overlay(alignment: .topLeading) {
-            BackButton(action: returnAction)
-                .padding(.horizontal)
-        }
         .padding(.horizontal)
         // O acelerômetro só fica ligado enquanto a tela está visível.
         .onAppear {
@@ -86,9 +81,9 @@ struct DrawChallengeView: View {
 // MARK: - Preview
 
 #Preview("Searching") {
-    DrawChallengeView(isSearching: true, isChallengeReady: false, swipeRaffle: {}, startDetection: {}, finishDetection: {}, returnAction: {}, growFinished: {})
+    DrawChallengeView(isSearching: true, isChallengeReady: false, swipeRaffle: {}, startDetection: {}, finishDetection: {}, growFinished: {})
 }
 
 #Preview("Shake") {
-    DrawChallengeView(isSearching: false, isChallengeReady: false, swipeRaffle: {}, startDetection: {}, finishDetection: {}, returnAction: {}, growFinished: {})
+    DrawChallengeView(isSearching: false, isChallengeReady: false, swipeRaffle: {}, startDetection: {}, finishDetection: {}, growFinished: {})
 }

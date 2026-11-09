@@ -7,41 +7,27 @@
 
 // MARK: - Tipo de humor do usuário ao realizar uma atividade
 enum Humor: String, Codable, CaseIterable { //CaseIterable: a roleta monta as opções na ordem em que os cases foram declarados.
-    case frustrated = "Frustrado"
-    case locked = "Travado"
-    case annoyed = "Incomodado"
-    case calm = "Leve"
-    case chill = "Tranquilo"
+    case veryUnpleasant = "Péssimo"
+    case unpleasant = "Desagradável"
+    case neutral = "Neutro"
+    case pleasant = "Agradável"
+    case veryPleasant = "Ótimo"
     
+    // Vêm do tema ativo (sem valor próprio no enum)
     var icon: String {
-        switch self {
-        case .frustrated:
-            return "frustrado"
-        case .locked:
-            return "travado"
-        case .annoyed:
-            return "incomodado"
-        case .calm:
-            return "tranquilo"
-        case .chill:
-            return "leve"
-        }
+        DesignSystem.shared.style.icons.feelingIcons[self]?.humor ?? ""
     }
-    
-    /// Frase curta mostrada embaixo do nome, na roleta.
-    /// CHANGE: checar frases com o paulinho.
-    var detail: String {
-        switch self {
-        case .frustrated:
-            return "foi difícil e irritante"
-        case .locked:
-            return "não consegui sair do lugar"
-        case .annoyed:
-            return "algo me incomodou"
-        case .calm:
-            return "fluiu sem esforço"
-        case .chill:
-            return "me senti em paz"
-        }
+
+    var baseIcon: String {
+        DesignSystem.shared.style.icons.feelingIcons[self]?.base ?? ""
+    }
+}
+
+
+extension Humor {
+    func moved(by offset: Int) -> Humor {
+        let all = Humor.allCases
+        let index = all.firstIndex(of: self) ?? 0
+        return all[(index + offset + all.count) % all.count]
     }
 }

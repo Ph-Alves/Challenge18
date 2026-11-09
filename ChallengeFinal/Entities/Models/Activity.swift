@@ -18,15 +18,18 @@ final class Activity {
     @Relationship(deleteRule: .cascade, inverse: \ActivityResult.activity)
     var result: ActivityResult?
     
+    var createdAt: Date
+    
     var name: String = ""
     
     var activityDescription: String = ""
     
     var archived: Bool = false
     
-    init(category: ActivityCategory, result: ActivityResult?, name: String, description: String, archived: Bool) {
+    init(category: ActivityCategory, result: ActivityResult?, createdAt: Date = Date(), name: String, description: String, archived: Bool) {
         self.category = category
         self.result = result
+        self.createdAt = createdAt
         self.name = name
         self.activityDescription = description
         self.archived = archived

@@ -7,6 +7,9 @@
 
 import Foundation
 import Testing
+import SwiftData
+import SwiftUI
+import UIKit
 @testable import ChallengeFinal
 
 @Suite("Tests for all stores in the project")
@@ -86,6 +89,19 @@ struct StoreTests {
         #expect(store.isSearching == false)
     }
     
+    @Test func testingDisplayRestoredChallengeStoresFieldsWithoutMarkingReady() {
+        let (store, _) = createActivityStore()
+
+        store.displayRestoredChallenge(title: "título", subtitle: "sub", description: "descrição")
+
+        #expect(store.activityTitle == "título")
+        #expect(store.activitySubtitle == "sub")
+        #expect(store.activityDescription == "descrição")
+        // Não é um sorteio novo: a View não deve animar a bola de novo.
+        #expect(store.isChallengeReady == false)
+        #expect(store.isSearching == false)
+    }
+
     @Test func testingDisplaySearchingAlsoUndoesAccepted() {
         let (store, _) = createActivityStore()
         store.displayAcceptedActivity()
@@ -137,6 +153,35 @@ struct StoreTests {
         #expect(store.currentStep == .draw)
     }
 
+    // MARK: ActivityStore (conquista)
+
+    @Test func testingActivityStoreStartsWithoutAchievement() {
+        let (store, _) = createActivityStore()
+
+        #expect(store.achievementTitle == nil)
+        #expect(store.achievementDescription == nil)
+    }
+
+    @Test func testingTransitionToSummaryStoresAchievementAndGoesToSummary() {
+        let (store, coordinator) = createActivityStore()
+
+        store.transitionToSummary(achievement: Achievement(title: "mestre offline", description: "você passou 1h offline"))
+
+        #expect(store.achievementTitle == "mestre offline")
+        #expect(store.achievementDescription == "você passou 1h offline")
+        #expect(coordinator.step == .summary)
+    }
+
+    @Test func testingTransitionToSummaryReplacesPreviousAchievement() {
+        let (store, _) = createActivityStore()
+        store.transitionToSummary(achievement: Achievement(title: "mestre offline", description: "você passou 1h offline"))
+
+        store.transitionToSummary(achievement: Achievement(title: "olhar atento", description: "você passou 5 min observando"))
+
+        #expect(store.achievementTitle == "olhar atento")
+        #expect(store.achievementDescription == "você passou 5 min observando")
+    }
+
     // MARK: ActivityStore (cronômetro)
 
     @Test func testingActivityStoreStartsWithZeroedTime() {
@@ -160,6 +205,298 @@ struct StoreTests {
         store.displayTimer("00:00:00")
 
         #expect(store.timeText == "00:00:00")
+    }
+    // MARK: - FeelingsStore
+
+    // SwiftData precisa de um container carregado para criar `Activity` e `ActivityResult`.
+    let modelContainer: ModelContainer = {
+        let schema = Schema([Activity.self, ActivityResult.self, Profile.self])
+        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        return try! ModelContainer(for: schema, configurations: config)
+    }()
+
+    private func makeFeelingActivity(named name: String, humor: Humor) -> Activity {
+        let result = ActivityResult(time: 10, humor: humor)
+        return Activity(category: .physical, result: result, name: name, description: "-", archived: false)
+    }
+
+    @Test func testingFeelingsStoreStartsEmpty() {
+        let store = FeelingsStore()
+
+        #expect(store.feelings.isEmpty)
+    }
+
+    @Test func testingPresentFeelingsLoadedStoresFeelings() {
+        let store = FeelingsStore()
+        let walk = makeFeelingActivity(named: "Caminhada", humor: .pleasant)
+        let read = makeFeelingActivity(named: "Leitura", humor: .veryPleasant)
+
+        store.presentFeelingsLoaded(feelings: [.pleasant: [(walk, nil)], .veryPleasant: [(read, nil)]])
+
+        #expect(store.feelings.count == 2)
+        #expect(store.feelings[.pleasant]?.first?.activity === walk)
+        #expect(store.feelings[.veryPleasant]?.first?.activity === read)
+    }
+
+    @Test func testingPresentFeelingsLoadedReplacesPreviousFeelings() {
+        let store = FeelingsStore()
+        store.presentFeelingsLoaded(feelings: [.pleasant: [(makeFeelingActivity(named: "Caminhada", humor: .pleasant), nil)]])
+
+        store.presentFeelingsLoaded(feelings: [.veryPleasant: [(makeFeelingActivity(named: "Leitura", humor: .veryPleasant), nil)]])
+
+        #expect(store.feelings[.pleasant] == nil)
+        #expect(store.feelings[.veryPleasant]?.count == 1)
+    }
+
+    @Test func testingPresentFeelingsLoadedWithEmptyDictionaryClearsStore() {
+        let store = FeelingsStore()
+        store.presentFeelingsLoaded(feelings: [.pleasant: [(makeFeelingActivity(named: "Caminhada", humor: .pleasant), nil)]])
+
+        store.presentFeelingsLoaded(feelings: [:])
+
+        #expect(store.feelings.isEmpty)
+    }
+
+    @Test func testingPresentFeelingsLoadedKeepsImageNextToActivity() {
+        let store = FeelingsStore()
+        let walk = makeFeelingActivity(named: "Caminhada", humor: .pleasant)
+        let image = Image(systemName: "photo")
+
+        store.presentFeelingsLoaded(feelings: [.pleasant: [(walk, image), (makeFeelingActivity(named: "Leitura", humor: .pleasant), nil)]])
+
+        #expect(store.feelings[.pleasant]?.first?.image != nil)
+        #expect(store.feelings[.pleasant]?.last?.image == nil)
+    }
+
+    @Test func testingFeelingsStoreStartsWithDetailAndCameraClosed() {
+        let store = FeelingsStore()
+
+        #expect(store.presentDetail == false)
+        #expect(store.selectedActivity == nil)
+        #expect(store.selectedPhoto == nil)
+        #expect(store.isCameraPresented == false)
+        #expect(store.cameraFlashIcon == "bolt.slash")
+        #expect(store.errorMessage == nil)
+        #expect(store.storyImage == nil)
+        #expect(store.shareItem == nil)
+    }
+
+    @Test func testingPresentActivityDetailsOpensDetail() {
+        let store = FeelingsStore()
+        let walk = makeFeelingActivity(named: "Caminhada", humor: .pleasant)
+
+        store.presentActivityDetails(activity: walk, photo: Image(systemName: "photo"))
+
+        #expect(store.presentDetail)
+        #expect(store.selectedActivity === walk)
+        #expect(store.selectedPhoto != nil)
+    }
+
+    @Test func testingReturnToFeelingsClosesDetail() {
+        let store = FeelingsStore()
+        store.presentActivityDetails(activity: makeFeelingActivity(named: "Caminhada", humor: .pleasant), photo: nil)
+
+        store.returnToFeelings()
+
+        #expect(store.presentDetail == false)
+    }
+
+    // A foto nova vale para o detalhe e para o card da mesma atividade na lista.
+    @Test func testingPresentPhotoUpdatesSelectedPhotoAndMatchingListEntry() {
+        let store = FeelingsStore()
+        let walk = makeFeelingActivity(named: "Caminhada", humor: .pleasant)
+        let read = makeFeelingActivity(named: "Leitura", humor: .veryPleasant)
+        store.presentFeelingsLoaded(feelings: [.pleasant: [(walk, nil)], .veryPleasant: [(read, nil)]])
+        store.presentActivityDetails(activity: walk, photo: nil)
+
+        store.presentPhoto(Image(systemName: "photo"))
+
+        #expect(store.selectedPhoto != nil)
+        #expect(store.feelings[.pleasant]?.first?.image != nil)
+        // As outras atividades não mudam.
+        #expect(store.feelings[.veryPleasant]?.first?.image == nil)
+    }
+
+    @Test func testingPresentPhotoWithoutSelectedActivityOnlySetsSelectedPhoto() {
+        let store = FeelingsStore()
+        let walk = makeFeelingActivity(named: "Caminhada", humor: .pleasant)
+        store.presentFeelingsLoaded(feelings: [.pleasant: [(walk, nil)]])
+
+        store.presentPhoto(Image(systemName: "photo"))
+
+        #expect(store.selectedPhoto != nil)
+        #expect(store.feelings[.pleasant]?.first?.image == nil)
+    }
+
+    @Test func testingPresentDetailVisibilityKeepsSelectedActivity() {
+        let store = FeelingsStore()
+        let walk = makeFeelingActivity(named: "Caminhada", humor: .pleasant)
+        store.presentActivityDetails(activity: walk, photo: nil)
+
+        store.presentDetailVisibility(isVisible: false)
+
+        #expect(store.presentDetail == false)
+        #expect(store.selectedActivity === walk)
+
+        store.presentDetailVisibility(isVisible: true)
+
+        #expect(store.presentDetail)
+    }
+
+    // O alerta abre com mensagem e, ao fechar, limpa a mensagem.
+    @Test func testingIsErrorPresentedFollowsMessage() {
+        let store = FeelingsStore()
+        #expect(store.isErrorPresented == false)
+
+        store.presentError("Ops")
+        #expect(store.isErrorPresented)
+
+        store.isErrorPresented = false
+        #expect(store.errorMessage == nil)
+    }
+
+    @Test func testingFeelingsStoreCameraState() {
+        let store = FeelingsStore()
+
+        store.presentCamera(isPresented: true)
+        store.presentFlashIcon("bolt.fill")
+        store.presentError("Ops")
+
+        #expect(store.isCameraPresented)
+        #expect(store.cameraFlashIcon == "bolt.fill")
+        #expect(store.errorMessage == "Ops")
+
+        store.presentCamera(isPresented: false)
+        store.presentError(nil)
+
+        #expect(store.isCameraPresented == false)
+        #expect(store.errorMessage == nil)
+    }
+
+    @Test func testingFeelingsStoreShareState() {
+        let store = FeelingsStore()
+        let item = ShareItem(activityItems: [URL(fileURLWithPath: "/tmp/story.png")])
+
+        store.presentStoryImage(UIImage())
+        store.presentShareSheet(item)
+
+        #expect(store.storyImage != nil)
+        #expect(store.shareItem?.id == item.id)
+
+        store.presentShareSheet(nil)
+
+        #expect(store.shareItem == nil)
+    }
+
+    // MARK: - ChallengesStore
+
+    @Test func testingChallengesStoreStartsEmptyAndClosed() {
+        let store = ChallengesStore()
+
+        #expect(store.challenges.isEmpty)
+        #expect(store.selectedCategory == nil)
+        #expect(store.emptyState == nil)
+        #expect(store.archivedChallenges.isEmpty)
+        #expect(store.archivedEmptyState == nil)
+        #expect(store.isArchivedPresented == false)
+        #expect(store.selectedChallenge == nil)
+        #expect(store.selectedPhoto == nil)
+        #expect(store.shareItem == nil)
+        #expect(store.errorMessage == nil)
+    }
+
+    @Test func testingDisplayChallengesStoresListFilterAndEmptyState() {
+        let store = ChallengesStore()
+        let walk = makeFeelingActivity(named: "Caminhada", humor: .pleasant)
+
+        store.displayChallenges([walk], selectedCategory: .physical, emptyState: nil)
+
+        #expect(store.challenges.first === walk)
+        #expect(store.selectedCategory == .physical)
+        #expect(store.emptyState == nil)
+
+        store.displayChallenges([], selectedCategory: nil, emptyState: .noResults)
+
+        #expect(store.challenges.isEmpty)
+        #expect(store.selectedCategory == nil)
+        #expect(store.emptyState == .noResults)
+    }
+
+    @Test func testingDisplayArchivedChallengesAndSheet() {
+        let store = ChallengesStore()
+        let archived = makeFeelingActivity(named: "Arquivada", humor: .pleasant)
+
+        store.displayArchivedChallenges([archived], emptyState: nil)
+        store.displayArchivedSheet(isPresented: true)
+
+        #expect(store.archivedChallenges.first === archived)
+        #expect(store.archivedEmptyState == nil)
+        #expect(store.isArchivedPresented)
+
+        store.displayArchivedChallenges([], emptyState: .noArchived)
+        store.displayArchivedSheet(isPresented: false)
+
+        #expect(store.archivedChallenges.isEmpty)
+        #expect(store.archivedEmptyState == .noArchived)
+        #expect(store.isArchivedPresented == false)
+    }
+
+    @Test func testingDisplaySummaryOpensAndCloses() {
+        let store = ChallengesStore()
+        let walk = makeFeelingActivity(named: "Caminhada", humor: .pleasant)
+
+        store.displaySummary(walk, photo: Image(systemName: "photo"))
+
+        #expect(store.selectedChallenge === walk)
+        #expect(store.selectedPhoto != nil)
+
+        store.displaySummary(nil, photo: nil)
+
+        #expect(store.selectedChallenge == nil)
+        #expect(store.selectedPhoto == nil)
+    }
+
+    @Test func testingChallengesStoreShareAndErrorState() {
+        let store = ChallengesStore()
+        let item = ShareItem(activityItems: [URL(fileURLWithPath: "/tmp/story.png")])
+
+        store.displayShareSheet(item)
+        store.displayError("Ops")
+
+        #expect(store.shareItem?.id == item.id)
+        #expect(store.errorMessage == "Ops")
+
+        store.displayShareSheet(nil)
+        store.displayError(nil)
+
+        #expect(store.shareItem == nil)
+        #expect(store.errorMessage == nil)
+    }
+    
+    @Test func testingChallengesStoreReflectionState() {
+        let store = ChallengesStore()
+
+        #expect(store.reflectionHumor == .neutral)
+        #expect(store.isMoodPresented == false)
+
+        store.displayHumor(.unpleasant)
+        store.displayMood(isPresented: true)
+
+        #expect(store.reflectionHumor == .unpleasant)
+        #expect(store.isMoodPresented)
+
+        store.displayMood(isPresented: false)
+
+        #expect(store.isMoodPresented == false)
+    }
+
+    // Cada estado vazio precisa de título e mensagem próprios (a View só mostra o que vem daqui).
+    @Test func testingChallengesEmptyStatesHaveDistinctTexts() {
+        let states: [ChallengesEmptyState] = [.noCompleted, .noResults, .noArchived]
+
+        #expect(states.allSatisfy { !$0.title.isEmpty && !$0.message.isEmpty })
+        #expect(Set(states.map(\.title)).count == states.count)
+        #expect(Set(states.map(\.message)).count == states.count)
     }
 //    // MARK: - ProfileStore
 //

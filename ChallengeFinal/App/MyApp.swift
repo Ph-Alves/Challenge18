@@ -11,6 +11,8 @@ import SwiftData
         WindowGroup {
             RootView(coordinator: appCoordinator)
                 .modelContainer(for: [Activity.self, ActivityResult.self, Profile.self])
+                .environment(DesignSystem.shared)
+
         }
     }
 }
