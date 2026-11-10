@@ -29,6 +29,13 @@ protocol ChallengesInteractorProtocol: AnyObject {
     func switchCamera()
     func takePhoto()
     func didSelectFromGallery(_ item: PhotosPickerItem)
+    // MARK: Reflita (registrar o humor no resumo)
+    func openMood()                                   // "reflita!" no resumo
+    func nextHumor()                                  // swipe para a esquerda na roleta
+    func previousHumor()                              // swipe para a direita na roleta
+    func saveHumor()                                  // "salvar" no MoodStepView
+    func closeMood()                                  // X do MoodStepView
+    
 }
 
 //MARK: - Class
@@ -39,6 +46,7 @@ final class ChallengesInteractor: ChallengesInteractorProtocol {
     private let presenter: ChallengesPresenterProtocol
     private let share: ShareWorkerProtocol
     private let camera: CameraWorkerProtocol
+    private let haptics: HapticsWorkerProtocol
     
     ///Estado dos filtros: guardado aqui para que, ao voltar para a tela (ou devolver um arquivado), a lista recalcule com os mesmos critérios.
     private(set) var searchText: String = ""
@@ -54,12 +62,16 @@ final class ChallengesInteractor: ChallengesInteractorProtocol {
     /// encadear sheet -> câmera -> sheet (a câmera só abre depois que o detalhe fecha).
     var isRetakingPhoto = false
     
+    /// Humor no topo da roleta enquanto o usuário reflete. Só vai para o banco no `saveHumor()`.
+    private(set) var reflectionHumor: Humor = .neutral
+    
     // MARK: - Init
-    init(repository: GenericRepository<Activity>, presenter: ChallengesPresenterProtocol, share: ShareWorkerProtocol = ShareWorker(), camera: CameraWorkerProtocol = CameraWorker()) {
+    init(repository: GenericRepository<Activity>, presenter: ChallengesPresenterProtocol, share: ShareWorkerProtocol = ShareWorker(), camera: CameraWorkerProtocol = CameraWorker(), haptics: HapticsWorkerProtocol = HapticsWorker()) {
         self.repository = repository
         self.presenter = presenter
         self.share = share
         self.camera = camera
+        self.haptics = haptics
     }
     
     //MARK: - Functions
@@ -243,8 +255,69 @@ final class ChallengesInteractor: ChallengesInteractorProtocol {
          }
      }
     
+    // MARK: - Reflita (registrar o humor no resumo)
+    //
+    // Desafios que o usuário saiu no step `.mood` ficam sem humor e o resumo mostra "reflita!".
+    // O `MoodStepView` abre por cima do resumo; a roleta gira aqui e o humor só é salvo no "salvar".
+    
+    /// Toque em "reflita!": a roleta sempre começa no neutro.
+    func openMood() {
+        guard selectedActivity != nil else { return }
+        reflectionHumor = .neutral
+        presenter.presentHumor(reflectionHumor)
+        presenter.presentMood(isPresented: true)
+    }
+    
+    func nextHumor() {
+        moveHumor(by: 1)
+    }
+    
+    func previousHumor() {
+        moveHumor(by: -1)
+    }
+    
+    /// Toque em "salvar": grava o humor no `ActivityResult` e volta para o resumo,
+    /// que troca o "reflita!" pelos botões de foto.
+    func saveHumor() {
+        guard let selectedActivity else {
+            presenter.presentMood(isPresented: false)
+            return
+        }
+        
+        // Se por algum motivo o desafio não tem resultado, ele nasce aqui.
+        let result = selectedActivity.result ?? ActivityResult(time: 0)
+        let oldHumor = result.humor
+        
+        do {
+            result.humor = reflectionHumor
+            selectedActivity.result = result
+            try repository.save()
+        } catch {
+            result.humor = oldHumor
+            presenter.presentMood(isPresented: false)
+            presenter.presentError("não foi possível salvar seu humor. tente de novo.")
+            return
+        }
+        
+        presenter.presentMood(isPresented: false)
+        presenter.presentSummary(selectedActivity)
+        refreshCompleted()
+    }
+    
+    /// X do `MoodStepView`: fecha sem salvar.
+    func closeMood() {
+        presenter.presentMood(isPresented: false)
+    }
+    
     
     //MARK: - Private Functions
+    
+    /// Anda `offset` fatias na roleta e dá o tique.
+    private func moveHumor(by offset: Int) {
+        reflectionHumor = reflectionHumor.moved(by: offset)
+        presenter.presentHumor(reflectionHumor)
+        haptics.playSelectionTick()
+    }
     
     private func hideSummaryForCamera() {
         isRetakingPhoto = true

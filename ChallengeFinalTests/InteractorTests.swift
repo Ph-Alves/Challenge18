@@ -143,13 +143,18 @@ final class HapticsWorkerMock: HapticsWorkerProtocol {
     private(set) var intensities: [Double] = []
     private(set) var stopLoopCount = 0
     private(set) var selectionTickCount = 0
+    private(set) var categoryChangeCount = 0
+    // Timeouts recebidos do timer de inatividade do Interactor (é ele que, no worker real,
+    // faz a sessão terminar quando a pessoa para antes do passo final da contagem).
+    private(set) var idleTimeouts: [TimeInterval] = []
     
     func prepareHaptics() { prepareCount += 1 }
     func startShakeLoop() { startLoopCount += 1 }
     func updateShakeIntensity(_ magnitude: Double) { intensities.append(magnitude) }
-    func stopShakeLoopIfIdle(timeout: TimeInterval) {}
+    func stopShakeLoopIfIdle(timeout: TimeInterval) { idleTimeouts.append(timeout) }
     func stopShakeLoop() { stopLoopCount += 1 }
     func playSelectionTick() { selectionTickCount += 1 }
+    func playCategoryChange() { categoryChangeCount += 1 }
 }
 
 final class CoreMotionWorkerMock: CoreMotionWorkerProtocol {
@@ -321,6 +326,13 @@ final class ChallengesPresenterSpy: ChallengesPresenterProtocol {
     private(set) var permissionDeniedCount = 0
     private(set) var flashStates: [Bool] = []
     private(set) var cameraErrors: [Error] = []
+    
+    // Reflita (humor no resumo)
+    private(set) var presentedHumors: [Humor] = []
+    private(set) var moodStates: [Bool] = []
+    
+    func presentHumor(_ humor: Humor) { presentedHumors.append(humor) }
+    func presentMood(isPresented: Bool) { moodStates.append(isPresented) }
 
     func presentCamera(isPresented: Bool) { cameraStates.append(isPresented) }
     func presentCameraClosed() { cameraClosedCount += 1 }
@@ -403,6 +415,84 @@ struct InteractorTests {
         interactor.previousCategory(current: current)
         
         #expect(presenterSpy.presentedCategory == expected)
+    }
+    
+    // MARK: Haptics na troca de grupo
+    
+    // A engine é preparada assim que a Home é montada, para o primeiro swipe não atrasar.
+    @Test func testingHomeInteractorPreparesHapticsOnInit() {
+        let haptics = HapticsWorkerMock()
+        _ = HomeInteractor(repository: makeActivityRepository(), presenter: HomePresenterSpy(), haptics: haptics)
+        
+        #expect(haptics.prepareCount == 1)
+        #expect(haptics.categoryChangeCount == 0)
+    }
+    
+    // Cada troca de grupo (nas duas direções, inclusive dando a volta) dá exatamente um toque.
+    @Test(arguments: ActivityCategory.allCases)
+    func testingCategoryChangePlaysHapticInBothDirections(current: ActivityCategory) {
+        let haptics = HapticsWorkerMock()
+        let interactor = HomeInteractor(repository: makeActivityRepository(), presenter: HomePresenterSpy(), haptics: haptics)
+        
+        interactor.nextCategory(current: current)
+        #expect(haptics.categoryChangeCount == 1)
+        
+        interactor.previousCategory(current: current)
+        #expect(haptics.categoryChangeCount == 2)
+        
+        // Não usa o tique da roleta: o toque de troca de grupo é próprio.
+        #expect(haptics.selectionTickCount == 0)
+    }
+    
+    // Consistência: swipes seguidos dão um toque por troca, sem perder nenhum.
+    @Test func testingSequentialSwipesPlayOneHapticPerChange() {
+        let haptics = HapticsWorkerMock()
+        let presenterSpy = HomePresenterSpy()
+        let interactor = HomeInteractor(repository: makeActivityRepository(), presenter: presenterSpy, haptics: haptics)
+        
+        var category = ActivityCategory.physical
+        for _ in 0..<8 {
+            interactor.nextCategory(current: category)
+            category = presenterSpy.presentedCategory ?? category
+        }
+        
+        #expect(haptics.categoryChangeCount == 8)
+        #expect(category == .physical) // deu duas voltas completas
+    }
+    
+    // Intensidade validada: a troca de grupo é mais suave/redonda que o tique da roleta,
+    // e os valores ficam dentro da faixa aceita pela CoreHaptics (0...1).
+    @Test func testingCategoryChangeHapticFeel() {
+        let feel = HapticFeel.categoryChange
+        
+        #expect((0...1).contains(feel.intensity))
+        #expect((0...1).contains(feel.sharpness))
+        #expect(feel.sharpness < HapticFeel.selectionTick.sharpness)
+    }
+    
+    // O zumbido final do chacoalhar precisa ser o toque mais forte do loop: é ele que
+    // avisa que o sorteio vai acontecer. Valores também dentro da faixa da CoreHaptics (0...1).
+    @Test func testingShakeFinishHapticFeel() {
+        let finish = HapticFeel.shakeFinish
+        
+        #expect((0...1).contains(finish.intensity))
+        #expect((0...1).contains(finish.sharpness))
+        #expect(finish.intensity >= HapticFeel.shakeTick.intensity)
+        #expect(finish.intensity >= HapticFeel.selectionTick.intensity)
+    }
+    
+    // Sem hardware de haptics (simulador/CI) o worker real não abre sessão. Mesmo assim,
+    // stop manual e checagem de inatividade nunca podem avisar "sessão terminou",
+    // senão sairíamos da tela ou ficaríamos parados e sortearia sem ninguém chacoalhar.
+    @Test func testingManualStopAndIdleCheckDoNotEndShakeSession() {
+        let worker = HapticsWorker()
+        var endedCount = 0
+        worker.onShakeSessionEnded = { endedCount += 1 }
+        
+        worker.stopShakeLoop()                     // stop manual: sem zumbido e sem sorteio
+        worker.stopShakeLoopIfIdle(timeout: 0)     // sem sessão em andamento: nada a encerrar
+        
+        #expect(endedCount == 0)
     }
     
     @Test func testingIfInteractorCatchesWeekCorrectly() throws {
@@ -850,6 +940,52 @@ struct InteractorTests {
         #expect(sut.foundation.generateCalls.count == 1)
     }
     
+    // Com a contagem por passos, a sessão pode terminar no passo final mesmo com a pessoa
+    // ainda sacudindo. O callback é o mesmo, então o sorteio acontece do mesmo jeito.
+    @Test func testingShakeSessionEndedWhileStillShakingRaffles() async {
+        let sut = makeActivitySUT()
+        sut.interactor.detectMotion(for: .physical)
+        defer { sut.interactor.finishDetection() }
+        
+        sut.motion.onMotionUpdate?(5)
+        sut.motion.onMotionUpdate?(5)             // continua sacudindo até o passo final
+        sut.haptics.onShakeSessionEnded?()
+        await wait { sut.presenter.events.count >= 2 }
+        
+        #expect(sut.foundation.generateCalls.count == 1)
+        #expect(sut.presenter.events == [.searching, .challenge(title: "título")])
+    }
+    
+    // Depois do zumbido final, o worker só libera um novo chacoalhar quando a pessoa para.
+    // Quando isso acontece, uma nova sessão forte tem que poder sortear de novo.
+    @Test func testingNewStrongShakeAfterSessionEndedCanRaffleAgain() async {
+        let sut = makeActivitySUT()
+        sut.interactor.detectMotion(for: .social)
+        defer { sut.interactor.finishDetection() }
+        
+        sut.motion.onMotionUpdate?(5)
+        sut.haptics.onShakeSessionEnded?()
+        await wait { sut.foundation.generateCalls.count == 1 }
+        
+        sut.motion.onMotionUpdate?(5)             // nova sessão
+        sut.haptics.onShakeSessionEnded?()
+        await wait { sut.foundation.generateCalls.count == 2 }
+        
+        #expect(sut.foundation.generateCalls.count == 2)
+    }
+    
+    // O Interactor é quem "bate o ponto" da inatividade: o timer chama o worker com o
+    // timeout de 0.25s, e é o worker que encerra a sessão (zumbido final + sorteio).
+    @Test func testingIdleTimerPollsHapticsWorkerWithTimeout() async {
+        let sut = makeActivitySUT()
+        sut.interactor.detectMotion(for: .physical)
+        defer { sut.interactor.finishDetection() }
+        
+        await wait { !sut.haptics.idleTimeouts.isEmpty }
+        
+        #expect(sut.haptics.idleTimeouts.allSatisfy { $0 == 0.25 })
+    }
+    
     @Test func testingFinishDetectionStopsMotionAndHaptics() {
         let sut = makeActivitySUT()
         sut.interactor.detectMotion(for: .physical)
@@ -1269,6 +1405,19 @@ struct InteractorTests {
  
         #expect(sut.haptics.selectionTickCount == 3)
     }
+    
+    // MARK: - Humor (roleta)
+
+    @Test(arguments: [
+        (Humor.veryUnpleasant, 1, Humor.unpleasant),
+        (Humor.veryPleasant, 1, Humor.veryUnpleasant),   // dá a volta no fim
+        (Humor.veryUnpleasant, -1, Humor.veryPleasant),  // dá a volta no começo
+        (Humor.neutral, 0, Humor.neutral),
+        (Humor.neutral, 5, Humor.neutral)                // uma volta inteira
+    ])
+    func testingHumorMovedWrapsAroundTheWheel(start: Humor, offset: Int, expected: Humor) {
+        #expect(start.moved(by: offset) == expected)
+    }
 
     // MARK: - ActivityInteractor (compartilhamento)
 
@@ -1433,6 +1582,7 @@ struct InteractorTests {
         let repository: GenericRepository<Activity>
         let share: ShareWorkerMock
         let camera: ConfigurableCameraWorkerMock
+        let haptics: HapticsWorkerMock
     }
 
     private func makeChallengesSUT() -> ChallengesSUT {
@@ -1440,9 +1590,10 @@ struct InteractorTests {
         let repository = makeActivityRepository()
         let share = ShareWorkerMock()
         let camera = ConfigurableCameraWorkerMock()
-        let interactor = ChallengesInteractor(repository: repository, presenter: presenter, share: share, camera: camera)
-        return ChallengesSUT(interactor: interactor, presenter: presenter, repository: repository, share: share, camera: camera)
-    }
+        let haptics = HapticsWorkerMock()
+        let interactor = ChallengesInteractor(repository: repository, presenter: presenter, share: share, camera: camera, haptics: haptics)
+        return ChallengesSUT(interactor: interactor, presenter: presenter, repository: repository, share: share, camera: camera, haptics: haptics)
+        }
 
     /// Concluído = não arquivado e com `ActivityResult`. `humor == nil` cria sem resultado.
     @discardableResult
@@ -1719,6 +1870,110 @@ struct InteractorTests {
 
         #expect(sut.presenter.errors.count == 1)
         #expect(sut.presenter.errors.first! == nil)
+    }
+    
+    // MARK: ChallengesInteractor (reflita)
+
+    @Test func testingChallengesOpenMoodStartsAtNeutralAndOpensMood() throws {
+        let sut = makeChallengesSUT()
+        let activity = try addChallenge("Sem humor", humor: nil, in: sut.repository)
+        sut.interactor.openSummary(activity)
+
+        sut.interactor.openMood()
+
+        #expect(sut.interactor.reflectionHumor == .neutral)
+        #expect(sut.presenter.presentedHumors == [.neutral])
+        #expect(sut.presenter.moodStates == [true])
+    }
+
+    @Test func testingChallengesOpenMoodWithoutSummaryDoesNothing() {
+        let sut = makeChallengesSUT()
+
+        sut.interactor.openMood()
+
+        #expect(sut.presenter.presentedHumors.isEmpty)
+        #expect(sut.presenter.moodStates.isEmpty)
+    }
+
+    @Test func testingChallengesHumorWheelMovesAndPlaysTick() throws {
+        let sut = makeChallengesSUT()
+        let activity = try addChallenge("Sem humor", humor: nil, in: sut.repository)
+        sut.interactor.openSummary(activity)
+        sut.interactor.openMood()
+
+        sut.interactor.nextHumor()
+        sut.interactor.nextHumor()
+        sut.interactor.previousHumor()
+
+        #expect(sut.interactor.reflectionHumor == .pleasant)
+        #expect(sut.presenter.presentedHumors == [.neutral, .pleasant, .veryPleasant, .pleasant])
+        #expect(sut.haptics.selectionTickCount == 3)
+    }
+
+    @Test func testingChallengesSaveHumorSavesClosesMoodAndRefreshes() throws {
+        let sut = makeChallengesSUT()
+        let activity = try addChallenge("Sem humor", humor: nil, in: sut.repository)
+        sut.interactor.openSummary(activity)
+        sut.interactor.openMood()
+        sut.interactor.previousHumor()   // neutro -> desagradável
+
+        sut.interactor.saveHumor()
+
+        #expect(activity.result?.humor == .unpleasant)
+        #expect(sut.presenter.moodStates == [true, false])
+        #expect(sut.presenter.summaries.last! === activity)   // o resumo continua aberto, agora com humor
+        #expect(sut.presenter.challengesCalls.isEmpty == false)
+    }
+
+    @Test func testingChallengesSaveHumorCreatesResultWhenMissing() throws {
+        let sut = makeChallengesSUT()
+        let activity = Activity(category: .physical, result: nil, name: "Sem resultado", description: "-", archived: false)
+        try sut.repository.add(activity)
+        sut.interactor.openSummary(activity)
+        sut.interactor.openMood()
+
+        sut.interactor.saveHumor()
+
+        #expect(activity.result != nil)
+        #expect(activity.result?.humor == .neutral)
+    }
+
+    @Test func testingChallengesSaveHumorKeepsThePhoto() throws {
+        let sut = makeChallengesSUT()
+        let activity = try addChallenge("Sem humor", humor: nil, in: sut.repository)
+        activity.result?.photo = Data([7])
+        sut.interactor.openSummary(activity)
+        sut.interactor.openMood()
+
+        sut.interactor.saveHumor()
+
+        #expect(activity.result?.photo == Data([7]))
+    }
+
+    @Test func testingChallengesCloseMoodDoesNotSaveHumor() throws {
+        let sut = makeChallengesSUT()
+        let activity = try addChallenge("Sem humor", humor: nil, in: sut.repository)
+        sut.interactor.openSummary(activity)
+        sut.interactor.openMood()
+        sut.interactor.nextHumor()
+
+        sut.interactor.closeMood()
+
+        #expect(activity.result?.humor == nil)
+        #expect(sut.presenter.moodStates == [true, false])
+    }
+
+    @Test func testingChallengesReopeningMoodStartsAtNeutralAgain() throws {
+        let sut = makeChallengesSUT()
+        let activity = try addChallenge("Sem humor", humor: nil, in: sut.repository)
+        sut.interactor.openSummary(activity)
+        sut.interactor.openMood()
+        sut.interactor.nextHumor()
+        sut.interactor.closeMood()
+
+        sut.interactor.openMood()
+
+        #expect(sut.interactor.reflectionHumor == .neutral)
     }
     
     // MARK: ChallengesInteractor (ordenação)

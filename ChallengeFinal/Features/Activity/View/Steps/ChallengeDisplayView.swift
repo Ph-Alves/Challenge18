@@ -15,6 +15,8 @@ import SwiftUI
 struct ChallengeDisplayView: View {
 
     // MARK: - Variables
+    /// Categoria atual
+    let currentCategory: ActivityCategory
     /// Título do desafio sorteado, exibido dentro do círculo.
     let challengeTitle: String
     /// Um novo desafio está sendo gerado por baixo dos panos (reroll).
@@ -26,6 +28,20 @@ struct ChallengeDisplayView: View {
     /// "Outra opção": pede um novo desafio.
     let refuseAction: () -> Void
 
+    /// valor do offset da imagem
+    var imageOffset: CGSize {
+        switch currentCategory {
+        case .physical:
+            return CGSize(width: 0, height: -135)
+        case .cognitive:
+            return CGSize(width: 0, height: -120)
+        case .sensorial:
+            return CGSize(width: -30, height: -105)
+        case .social:
+            return CGSize(width: 0, height: -120)
+        }
+    }
+    
     // MARK: - Estado interno (só de animação)
     /// O círculo sobe para abrir espaço para o diálogo embaixo.
     @State private var elevateCircle = false
@@ -38,29 +54,36 @@ struct ChallengeDisplayView: View {
 
     var body: some View {
         VStack(alignment: .center) {
-            ZStack {
-                // O círculo com o desafio aparece primeiro, centralizado.
-                // Durante o reroll ele mostra uma mensagem de busca no lugar do título.
-                ChallengeCircle(text: isSearching ? "Procurando um novo desafio..." : challengeTitle, size: .big)
-                    .offset(y: elevateCircle ? -120 : 0)
-
-                // Depois do círculo, entram o diálogo e o botão.
-                // O `padding(.top, 250)` posiciona o bloco abaixo do círculo já elevado.
-                VStack(spacing: 24) {
-                    ActionDialogComponent(title: "Gostaria de iniciar esse desafio?", firstOptionText: "Outra opção", secondOptionText: "aceitar", firstAction: refuseAction, secondAction: acceptAction)
-                        .padding(.horizontal)
-                    
-                    CustomButtonComponent(title: "Arquivar desafio da lista", icon: "archivebox.fill", action: {
-                        showArchiveConfirmation = true
-                    })
-                        .padding(.horizontal, 70)
+            // `Color.clear` ocupa a tela toda e define o tamanho do layout. A arte e as ações
+            // ficam em `overlay`, que não altera esse tamanho: assim a arte, que é mais larga
+            // que a tela em algumas categorias, não alarga o diálogo.
+            Color.clear
+                .overlay {
+                    // O círculo com o desafio aparece primeiro, centralizado.
+                    // Durante o reroll ele mostra uma mensagem de busca no lugar do título.
+                    ChallengeCircle(category: currentCategory, text: challengeTitle, isOpen: true)
+                        .offset(elevateCircle ? imageOffset : .zero)
                 }
-                .padding(.top, 250)
-                .opacity(showActions ? 1 : 0)
-                .offset(y: showActions ? 0 : 20)
-                // Invisível não pode receber toque.
-                .allowsHitTesting(showActions)
-            }
+                // Depois do círculo, entram o diálogo e o botão.
+                // O bloco fica ancorado embaixo, e o diálogo cobre a base da arte como no design.
+                .overlay(alignment: .bottom) {
+                    VStack(spacing: 17) {
+                        ActionDialogComponent(title: "Gostaria de iniciar esse desafio?", firstOptionText: "Outra opção", secondOptionText: "aceitar", firstAction: refuseAction, secondAction: acceptAction)
+                            .padding(.horizontal, 17)
+
+                        CustomButtonComponent(title: "Arquivar desafio da lista", icon: "archivebox.fill", action: {
+                            showArchiveConfirmation = true
+                        })
+                        .padding(.horizontal, 47)
+                    }
+                    .padding(.bottom, 184)
+                    .opacity(showActions ? 1 : 0)
+                    .offset(y: showActions ? 0 : 20)
+                    // Invisível não pode receber toque.
+                    .allowsHitTesting(showActions)
+                }
+                // A arte que passa da tela é cortada na borda, como no design.
+                .clipped()
             // Esconde as ações enquanto procura e mostra de novo quando o desafio chega.
             // `id: isSearching` reinicia a task a cada mudança, cancelando o `sleep` anterior.
             .task(id: isSearching) {
@@ -98,6 +121,22 @@ struct ChallengeDisplayView: View {
 }
 
 // MARK: - Preview
-#Preview {
-    ChallengeDisplayView(challengeTitle: "teste", isSearching: false, archiveAction: {}, acceptAction: {}, refuseAction: {})
+#Preview("Mente") {
+    ChallengeDisplayView(currentCategory: .cognitive, challengeTitle: "faça o seu cárdio sem abrir redes sociais", isSearching: false, archiveAction: {}, acceptAction: {}, refuseAction: {})
+        .environment(DesignSystem.shared)
+}
+
+#Preview("Movimento") {
+    ChallengeDisplayView(currentCategory: .physical, challengeTitle: "faça o seu cárdio sem abrir redes sociais", isSearching: false, archiveAction: {}, acceptAction: {}, refuseAction: {})
+        .environment(DesignSystem.shared)
+}
+
+#Preview("Sentidos") {
+    ChallengeDisplayView(currentCategory: .sensorial, challengeTitle: "faça o seu cárdio sem abrir redes sociais", isSearching: false, archiveAction: {}, acceptAction: {}, refuseAction: {})
+        .environment(DesignSystem.shared)
+}
+
+#Preview("Conexão") {
+    ChallengeDisplayView(currentCategory: .social, challengeTitle: "faça o seu cárdio sem abrir redes sociais", isSearching: false, archiveAction: {}, acceptAction: {}, refuseAction: {})
+        .environment(DesignSystem.shared)
 }

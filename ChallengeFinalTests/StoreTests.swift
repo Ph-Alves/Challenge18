@@ -472,6 +472,23 @@ struct StoreTests {
         #expect(store.shareItem == nil)
         #expect(store.errorMessage == nil)
     }
+    
+    @Test func testingChallengesStoreReflectionState() {
+        let store = ChallengesStore()
+
+        #expect(store.reflectionHumor == .neutral)
+        #expect(store.isMoodPresented == false)
+
+        store.displayHumor(.unpleasant)
+        store.displayMood(isPresented: true)
+
+        #expect(store.reflectionHumor == .unpleasant)
+        #expect(store.isMoodPresented)
+
+        store.displayMood(isPresented: false)
+
+        #expect(store.isMoodPresented == false)
+    }
 
     // Cada estado vazio precisa de título e mensagem próprios (a View só mostra o que vem daqui).
     @Test func testingChallengesEmptyStatesHaveDistinctTexts() {

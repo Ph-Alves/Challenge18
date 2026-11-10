@@ -8,8 +8,8 @@
 import Foundation
 
 struct TabBarIcons {
-    let challenge: String
-    let home: String
-    let feelings: String
-    let profile: String
+    let challenge: (base: String, fill: String)
+    let home: (base: String, fill: String)
+    let feelings: (base: String, fill: String)
+    let profile: (base: String, fill: String)
 }

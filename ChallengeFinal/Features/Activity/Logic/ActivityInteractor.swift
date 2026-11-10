@@ -858,13 +858,8 @@ final class ActivityInteractor: ActivityInteractorProtocol {
     /// Anda `offset` posições na roleta, dando a volta nas pontas
     /// (depois do último vem o primeiro, e vice-versa).
     private func moveHumor(by offset: Int) {
-        let humors = Humor.allCases
-        let current = selectedHumor ?? .neutral
-
-        guard let index = humors.firstIndex(of: current) else { return }
-
-        let newIndex = (index + offset + humors.count) % humors.count
-        let humor = humors[newIndex]
+        
+        let humor = (selectedHumor ?? .neutral).moved(by: offset)
 
         selectedHumor = humor
         presenter.presentHumor(humor)
