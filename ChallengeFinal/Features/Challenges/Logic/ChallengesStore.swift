@@ -14,7 +14,7 @@ protocol ChallengesStoreProtocol: AnyObject {
     func displayChallenges(_ challenges: [Activity], selectedCategory: ActivityCategory?, emptyState: ChallengesEmptyState?) //quem decide qual estado vazio mostrar é o Presenter, e a Store só guarda o que recebe, e um estado vazio pode ser ou de não ter nada ou de não ter achado nada na busca.
     func displayArchivedChallenges(_ challenges: [Activity], emptyState: ChallengesEmptyState?) //lista de conteúdos dentro da sheet
     func displayArchivedSheet(isPresented: Bool) //bool pra ativar a sheet.
-    func displaySummary(_ activity: Activity?, photo: Image?)
+    func displaySummary(_ activity: Activity?, photo: Image?, createdAt: String?)
     func displayShareSheet(_ item: ShareItem?)
     func displayError(_ message: String?)
     // MARK: Câmera
@@ -56,6 +56,8 @@ final class ChallengesStore: ChallengesStoreProtocol {
     /// Foto do desafio aberto, já pronta para exibir. `nil` = card vazio.
     private(set) var selectedPhoto: Image?
     
+    private(set) var selectedCreatedAt: String?
+    
     // Compartilhar
     /// Controla o `.sheet(item:)` do share sheet. `nil` = fechado.
     private(set) var shareItem: ShareItem?
@@ -91,9 +93,10 @@ final class ChallengesStore: ChallengesStoreProtocol {
     }
     
     
-    func displaySummary(_ activity: Activity?, photo: Image?) {
+    func displaySummary(_ activity: Activity?, photo: Image?, createdAt: String?) {
         selectedChallenge = activity
         selectedPhoto = photo
+        selectedCreatedAt = createdAt
     }
     
     func displayShareSheet(_ item: ShareItem?) {

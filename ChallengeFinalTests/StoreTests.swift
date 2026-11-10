@@ -445,15 +445,17 @@ struct StoreTests {
         let store = ChallengesStore()
         let walk = makeFeelingActivity(named: "Caminhada", humor: .pleasant)
 
-        store.displaySummary(walk, photo: Image(systemName: "photo"))
+        store.displaySummary(walk, photo: Image(systemName: "photo"), createdAt: "5 de novembro de 2026")
 
         #expect(store.selectedChallenge === walk)
         #expect(store.selectedPhoto != nil)
+        #expect(store.selectedCreatedAt == "5 de novembro de 2026")
 
-        store.displaySummary(nil, photo: nil)
+        store.displaySummary(nil, photo: nil, createdAt: nil)
 
         #expect(store.selectedChallenge == nil)
         #expect(store.selectedPhoto == nil)
+        #expect(store.selectedCreatedAt == nil)
     }
 
     @Test func testingChallengesStoreShareAndErrorState() {
