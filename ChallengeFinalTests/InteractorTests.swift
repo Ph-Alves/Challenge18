@@ -98,7 +98,7 @@ final class ActivityPresenterSpy: ActivityPresenterProtocol {
     // Erros
     func presentError(_ error: Error) { presentedErrors.append(error) }
     // Resumo e compartilhamento
-    func presentStory(_ result: ActivityResult, title: String?, subtitle: String?, description: String?) { storyCount += 1 }
+    func presentStory(_ result: ActivityResult, title: String?, subtitle: String?, description: String?, challengeIcon: String) { storyCount += 1 }
     func presentShareSheet(fileURL: URL) { shareSheetURL = fileURL }
     func presentShareFinished(completed: Bool) { shareFinished = completed }
 }
@@ -144,11 +144,14 @@ final class HapticsWorkerMock: HapticsWorkerProtocol {
     private(set) var stopLoopCount = 0
     private(set) var selectionTickCount = 0
     private(set) var categoryChangeCount = 0
+    // Timeouts recebidos do timer de inatividade do Interactor (é ele que, no worker real,
+    // faz a sessão terminar quando a pessoa para antes do passo final da contagem).
+    private(set) var idleTimeouts: [TimeInterval] = []
     
     func prepareHaptics() { prepareCount += 1 }
     func startShakeLoop() { startLoopCount += 1 }
     func updateShakeIntensity(_ magnitude: Double) { intensities.append(magnitude) }
-    func stopShakeLoopIfIdle(timeout: TimeInterval) {}
+    func stopShakeLoopIfIdle(timeout: TimeInterval) { idleTimeouts.append(timeout) }
     func stopShakeLoop() { stopLoopCount += 1 }
     func playSelectionTick() { selectionTickCount += 1 }
     func playCategoryChange() { categoryChangeCount += 1 }
@@ -465,6 +468,31 @@ struct InteractorTests {
         #expect((0...1).contains(feel.intensity))
         #expect((0...1).contains(feel.sharpness))
         #expect(feel.sharpness < HapticFeel.selectionTick.sharpness)
+    }
+    
+    // O zumbido final do chacoalhar precisa ser o toque mais forte do loop: é ele que
+    // avisa que o sorteio vai acontecer. Valores também dentro da faixa da CoreHaptics (0...1).
+    @Test func testingShakeFinishHapticFeel() {
+        let finish = HapticFeel.shakeFinish
+        
+        #expect((0...1).contains(finish.intensity))
+        #expect((0...1).contains(finish.sharpness))
+        #expect(finish.intensity >= HapticFeel.shakeTick.intensity)
+        #expect(finish.intensity >= HapticFeel.selectionTick.intensity)
+    }
+    
+    // Sem hardware de haptics (simulador/CI) o worker real não abre sessão. Mesmo assim,
+    // stop manual e checagem de inatividade nunca podem avisar "sessão terminou",
+    // senão sairíamos da tela ou ficaríamos parados e sortearia sem ninguém chacoalhar.
+    @Test func testingManualStopAndIdleCheckDoNotEndShakeSession() {
+        let worker = HapticsWorker()
+        var endedCount = 0
+        worker.onShakeSessionEnded = { endedCount += 1 }
+        
+        worker.stopShakeLoop()                     // stop manual: sem zumbido e sem sorteio
+        worker.stopShakeLoopIfIdle(timeout: 0)     // sem sessão em andamento: nada a encerrar
+        
+        #expect(endedCount == 0)
     }
     
     @Test func testingIfInteractorCatchesWeekCorrectly() throws {
@@ -910,6 +938,52 @@ struct InteractorTests {
         try? await Task.sleep(for: .milliseconds(100))
         
         #expect(sut.foundation.generateCalls.count == 1)
+    }
+    
+    // Com a contagem por passos, a sessão pode terminar no passo final mesmo com a pessoa
+    // ainda sacudindo. O callback é o mesmo, então o sorteio acontece do mesmo jeito.
+    @Test func testingShakeSessionEndedWhileStillShakingRaffles() async {
+        let sut = makeActivitySUT()
+        sut.interactor.detectMotion(for: .physical)
+        defer { sut.interactor.finishDetection() }
+        
+        sut.motion.onMotionUpdate?(5)
+        sut.motion.onMotionUpdate?(5)             // continua sacudindo até o passo final
+        sut.haptics.onShakeSessionEnded?()
+        await wait { sut.presenter.events.count >= 2 }
+        
+        #expect(sut.foundation.generateCalls.count == 1)
+        #expect(sut.presenter.events == [.searching, .challenge(title: "título")])
+    }
+    
+    // Depois do zumbido final, o worker só libera um novo chacoalhar quando a pessoa para.
+    // Quando isso acontece, uma nova sessão forte tem que poder sortear de novo.
+    @Test func testingNewStrongShakeAfterSessionEndedCanRaffleAgain() async {
+        let sut = makeActivitySUT()
+        sut.interactor.detectMotion(for: .social)
+        defer { sut.interactor.finishDetection() }
+        
+        sut.motion.onMotionUpdate?(5)
+        sut.haptics.onShakeSessionEnded?()
+        await wait { sut.foundation.generateCalls.count == 1 }
+        
+        sut.motion.onMotionUpdate?(5)             // nova sessão
+        sut.haptics.onShakeSessionEnded?()
+        await wait { sut.foundation.generateCalls.count == 2 }
+        
+        #expect(sut.foundation.generateCalls.count == 2)
+    }
+    
+    // O Interactor é quem "bate o ponto" da inatividade: o timer chama o worker com o
+    // timeout de 0.25s, e é o worker que encerra a sessão (zumbido final + sorteio).
+    @Test func testingIdleTimerPollsHapticsWorkerWithTimeout() async {
+        let sut = makeActivitySUT()
+        sut.interactor.detectMotion(for: .physical)
+        defer { sut.interactor.finishDetection() }
+        
+        await wait { !sut.haptics.idleTimeouts.isEmpty }
+        
+        #expect(sut.haptics.idleTimeouts.allSatisfy { $0 == 0.25 })
     }
     
     @Test func testingFinishDetectionStopsMotionAndHaptics() {

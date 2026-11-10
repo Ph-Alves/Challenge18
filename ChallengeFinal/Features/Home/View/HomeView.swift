@@ -82,7 +82,7 @@ struct HomeView: View {
             
             VStack {
                 // Circulo de desafio
-                Image(store.currentCategory.closedIcon)
+                ChallengeCircle(category: store.currentCategory, text: nil, isOpen: false)
                 // Gesture para o swipe (esquerda/direita)
                     .gesture(
                         DragGesture(minimumDistance: 20)

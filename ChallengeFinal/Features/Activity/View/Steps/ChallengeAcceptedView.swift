@@ -18,6 +18,7 @@ struct ChallengeAcceptedView: View {
     let challengeTitle: String
     let challengeSubTitle: String
     let challengeDescription: String
+    let challengeIcon: String
 
     // MARK: - Ações (closures)
     /// "iniciar": segue para o step `.inProgress`.
@@ -30,7 +31,7 @@ struct ChallengeAcceptedView: View {
         VStack(alignment: .center) {
 
             // Título, subtítulo e descrição do desafio aceito
-            ChallengeDescription(challengeTitle: challengeTitle, challengeSubTitle: challengeSubTitle, challengeDescription: challengeDescription)
+            ChallengeDescription(challengeIcon: challengeIcon, challengeTitle: challengeTitle, challengeSubTitle: challengeSubTitle, challengeDescription: challengeDescription)
             
             CustomButtonComponent(title: "iniciar", icon: nil, action: startAction)
                 .padding(.horizontal, 113)
@@ -42,5 +43,5 @@ struct ChallengeAcceptedView: View {
 }
 
 #Preview {
-    ChallengeAcceptedView(challengeTitle: "você consegue :)", challengeSubTitle: "menos distração, mais foco", challengeDescription: "sem redes sociais, seu cardio vira um momento para cuidar do corpo e desacelerar a mente.", startAction: {}, cancelAction: {})
+    ChallengeAcceptedView(challengeTitle: "você consegue :)", challengeSubTitle: "menos distração, mais foco", challengeDescription: "sem redes sociais, seu cardio vira um momento para cuidar do corpo e desacelerar a mente.", challengeIcon: ActivityCategory.physical.rawValue, startAction: {}, cancelAction: {})
 }

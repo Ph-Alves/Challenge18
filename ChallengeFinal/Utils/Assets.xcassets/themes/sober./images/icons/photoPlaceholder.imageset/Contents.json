@@ -1,7 +1,7 @@
 {
   "images" : [
     {
-      "filename" : "polaroid 1.png",
+      "filename" : "Polaroid.png",
       "idiom" : "universal"
     },
     {
@@ -11,7 +11,7 @@
           "value" : "light"
         }
       ],
-      "filename" : "polaroid 2.png",
+      "filename" : "Polaroid 1.png",
       "idiom" : "universal"
     },
     {
@@ -21,7 +21,7 @@
           "value" : "dark"
         }
       ],
-      "filename" : "polaroid 3.png",
+      "filename" : "Polaroid 2.png",
       "idiom" : "universal"
     }
   ],

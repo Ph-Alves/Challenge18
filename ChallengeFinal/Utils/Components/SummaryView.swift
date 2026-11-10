@@ -78,7 +78,7 @@ struct SummaryView: View {
     
     private var header: some View {
         VStack(spacing: 0) {
-            ChallengeCircle(text: "você conseguiu!", size: .small)
+//            ChallengeCircle(text: "você conseguiu!", size: .small)
 
             Text(title)
                 .font(.system(size: 22, weight: .bold))
@@ -165,4 +165,5 @@ struct SummaryView: View {
 
 #Preview {
     SummaryView(style: .activity,title: "testee", description: "teste", humor: .veryPleasant, onFinish: {}, onShare: {})
+        .environment(DesignSystem.shared)
 }

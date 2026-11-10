@@ -20,6 +20,7 @@ struct InProgressView: View {
     let message: String
     let challengeSubTitle: String
     let challengeDescription: String
+    let challengeIcon: String
 
     /// Tempo já formatado ("hh:mm:ss"). A View só exibe; quem calcula é o Interactor.
     let timeText: String
@@ -29,6 +30,7 @@ struct InProgressView: View {
 
     /// Confirmou o cancelamento no alerta: avisa o Interactor, que descarta o tempo e sai do fluxo.
     let cancelAction: () -> Void
+    
 
     /// Controla o alerta de confirmação do cancelamento.
     /// É estado só de apresentação (nasce de um toque, sem regra de negócio),
@@ -37,7 +39,7 @@ struct InProgressView: View {
 
     var body: some View {
         VStack(alignment: .center) {
-            ChallengeDescription(challengeTitle: message, challengeSubTitle: challengeSubTitle, challengeDescription: challengeDescription)
+            ChallengeDescription(challengeIcon: challengeIcon, challengeTitle: message, challengeSubTitle: challengeSubTitle, challengeDescription: challengeDescription)
 
             // "cancelar" só abre o alerta de confirmação; "encerrar" termina a atividade.
             ActionDialogComponent(title: timeText, titleStyle: .large, firstOptionText: "cancelar", secondOptionText: "encerrar",     firstAction: { isCancelAlertPresented = true },
@@ -57,5 +59,5 @@ struct InProgressView: View {
 }
 
 #Preview {
-    InProgressView(message: "voce consegue", challengeSubTitle: "menos distração, mais foco", challengeDescription: "sem redes sociais, seu cardio vira um momento para cuidar do corpo e desacelerar a mente.", timeText: "00:00:00", finishAction: { }, cancelAction: { })
+    InProgressView(message: "voce consegue", challengeSubTitle: "menos distração, mais foco", challengeDescription: "sem redes sociais, seu cardio vira um momento para cuidar do corpo e desacelerar a mente.", challengeIcon: ActivityCategory.physical.closedIcon, timeText: "00:00:00", finishAction: { }, cancelAction: { })
 }

@@ -122,6 +122,7 @@ struct ActivityView: View {
         // A seta de voltar encerra o fluxo e devolve o usuário à Home.
         case .draw:
             DrawChallengeView(
+                selectedCategory: currentCategory,
                 isSearching: store.isSearching,
                 isChallengeReady: store.isChallengeReady,
                 swipeRaffle: { interactor.raffle(for: currentCategory) },
@@ -142,7 +143,7 @@ struct ActivityView: View {
                 InProgressView(
                     message: store.activityTitle ?? "",
                     challengeSubTitle: store.activitySubtitle ?? "",
-                    challengeDescription: store.activityDescription ?? "",
+                    challengeDescription: store.activityDescription ?? "", challengeIcon: currentCategory.cardIcon,
                     timeText: store.timeText,
                     finishAction: {
                         interactor.completeActivity(currentCategory: currentCategory, title: title, subTitle: subtitle, Description: description)
@@ -176,6 +177,7 @@ struct ActivityView: View {
             // (o arquivar salva antes) e continuam nesta tela.
             if !store.isChallengeAccepted {
                 ChallengeDisplayView(
+                    currentCategory: currentCategory,
                     challengeTitle: title,
                     isSearching: store.isSearching,
                     archiveAction: {
@@ -191,7 +193,7 @@ struct ActivityView: View {
                 ChallengeAcceptedView(
                     challengeTitle: title,
                     challengeSubTitle: subtitle,
-                    challengeDescription: description,
+                    challengeDescription: description, challengeIcon: currentCategory.cardIcon,
                     startAction: { interactor.startActivity() },
                     cancelAction: { interactor.reroll(for: currentCategory) }
                 )
@@ -219,7 +221,8 @@ struct ActivityView: View {
             interactor.loadSummary(
                 title: store.activityTitle,
                 subtitle: store.activitySubtitle,
-                description: store.activityDescription
+                description: store.activityDescription,
+                challengeIcon: currentCategory.closedIcon
             )
         }
     }
@@ -304,4 +307,5 @@ struct ActivityView: View {
         context: container.mainContext,
         currentCategory: .cognitive
     )
+    .environment(DesignSystem.shared)
 }
