@@ -39,6 +39,18 @@ struct PhotoStepView: View {
     private var continueButtonTitle: String {
         hasPhoto ? "continuar" : "continuar sem foto"
     }
+    
+    private var title: String {
+        hasPhoto ? "ótimo take!" : "sorria! você será\n fotografado :)"
+    }
+    
+    private var description: String {
+        hasPhoto ? "mais um desafio, mais uma memória\n pra guardar. bora continuar?" : "fotos ajudam a recordar mais um\n desafio completo, tire a sua!"
+    }
+    
+    private var contentSpacing: CGFloat {
+        hasPhoto ? 0 : 120
+    }
 
     // MARK: - Ações (closures)
     
@@ -60,34 +72,10 @@ struct PhotoStepView: View {
 
     // MARK: - View
     var body: some View {
-        VStack(spacing: 77) {
-            VStack(spacing: 120) {
-                header
-                
-                if let photo {
-                    PhotoCard(photo: photo)
-                    // O botão de câmera fica "encaixado" na borda de baixo do card.
-                        .overlay(alignment: .bottom) {
-                            takePictureButton
-                                .offset(y: 1)
-                        }
-                        .padding(.top, 28)
-                    
-                    galleryButton
-                        .padding(.top, 10)
-                } else {
-                    VStack(spacing: 24) {
-                        takePictureButton
-                        
-                        galleryButton
-                    }
-                    .padding(.horizontal, 90)
-                }
-            }
-            VStack {
-                continueButton
-                    .padding(.horizontal, 90)
-            }
+        VStack(spacing: contentSpacing) {
+            header
+            
+            content
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         // PhotosPicker não pede permissão: o sistema só entrega a foto escolhida.
@@ -105,23 +93,52 @@ struct PhotoStepView: View {
 
     private var header: some View {
         VStack(spacing: 17) {
-            if photo == nil {
+            if !hasPhoto {
                 Image(designSystem.style.icons.camera)
                     .resizable()
                     .frame(width: 145, height: 94.45)
                     .padding(.bottom, 21)
             }
             
-            Text("sorria! você será\nfotografado :)")
+            Text(title)
                 .font(designSystem.style.typography.title2)
                 .multilineTextAlignment(.center)
 
-            Text("fotos ajudam a recordar mais\num desafio completo, tire a sua")
+            Text(description)
                 .font(designSystem.style.typography.text2)
                 .multilineTextAlignment(.center)
         }
         .multilineTextAlignment(.center)
         .foregroundStyle(designSystem.style.colors.textPrimary)
+    }
+    
+    private var content: some View {
+        VStack(spacing: 0) {
+            if hasPhoto {
+                PhotoCard(photo: photo, height: 282)
+                    .padding(.horizontal, 48)
+                    .padding(.top, 62)
+                    .padding(.bottom, 45)
+                
+                VStack(spacing: 24) {
+                    continueButton
+                    takePictureButton
+                }
+                .padding(.horizontal, 90)
+                
+            } else {
+                VStack(spacing: 24) {
+                    takePictureButton
+                    
+                    galleryButton
+                }
+                .padding(.horizontal, 90)
+                
+                continueButton
+                    .padding(.horizontal, 90)
+                    .padding(.top, 77)
+            }
+        }
     }
 
     // MARK: - Botões
@@ -129,8 +146,8 @@ struct PhotoStepView: View {
     private var takePictureButton: some View {
         CustomButtonComponent(
             title: captureButtonTitle,
-            icon: nil,
-            type: .primary,
+            icon: hasPhoto ? designSystem.style.icons.retryIcon : nil,
+            type: hasPhoto ? .secondary : .primary,
             action: onTakePhoto
         )
     }
@@ -148,7 +165,7 @@ struct PhotoStepView: View {
         CustomButtonComponent(
             title: continueButtonTitle,
             icon: nil,
-            type: .tertiary,
+            type: hasPhoto ? .primary : .tertiary,
             action: onContinue)
     }
 }
