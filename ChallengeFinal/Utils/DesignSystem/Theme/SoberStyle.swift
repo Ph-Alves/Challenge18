@@ -60,6 +60,7 @@ struct SoberStyle: ThemeStyleProtocol {
         placeholderCheckIcon: "placeholderCheckIcon",
         photoPlaceholder: "photoPlaceholder",
         archivedChallengeIcon: "archiveIcon",
+        archivedInvertedChallengeIcon: "archiveInvertedIcon",
         profilePlaceholder: "profilePlaceholder",
         camera: "camera",
         cameraIcon: "cameraIcon",

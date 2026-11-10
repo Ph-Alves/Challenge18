@@ -57,7 +57,7 @@ struct CustomButtonComponent: View {
         Button(action: action) {
             HStack(spacing: 6) {
                 if let icon {
-                    Image(systemName: icon)
+                    Image(icon)
                 }
                 
                 Text(title)

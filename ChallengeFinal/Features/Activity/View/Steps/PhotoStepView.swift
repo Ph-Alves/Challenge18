@@ -36,10 +36,6 @@ struct PhotoStepView: View {
         hasPhoto ? "tirar outra foto" : "tire uma foto!"
     }
 
-    private var captureButtonIcon: String {
-        hasPhoto ? "arrow.clockwise" : "camera.fill"
-    }
-
     private var continueButtonTitle: String {
         hasPhoto ? "continuar" : "continuar sem foto"
     }
@@ -65,7 +61,6 @@ struct PhotoStepView: View {
     // MARK: - View
     var body: some View {
         VStack(spacing: 77) {
-            Spacer()
             VStack(spacing: 120) {
                 header
                 
@@ -83,21 +78,18 @@ struct PhotoStepView: View {
                 } else {
                     VStack(spacing: 24) {
                         takePictureButton
-                            .offset(y: 1)
                         
                         galleryButton
-                            .padding(.top, 10)
                     }
+                    .padding(.horizontal, 90)
                 }
             }
-            
-            continueButton
-                .padding(.horizontal, 80) //gambiarra para deixar a width menor, CHANGE esse botao para sumir esses magic numbers.
-                .padding(.bottom, 60)
+            VStack {
+                continueButton
+                    .padding(.horizontal, 90)
+            }
         }
-        .padding(.horizontal, 48)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.white)
         // PhotosPicker não pede permissão: o sistema só entrega a foto escolhida.
         .photosPicker(isPresented: $isShowingGallery, selection: $galleryItem, matching: .images)
         // Quando o usuário escolhe uma foto na galeria, avisa e limpa a seleção,
@@ -122,12 +114,14 @@ struct PhotoStepView: View {
             
             Text("sorria! você será\nfotografado :)")
                 .font(designSystem.style.typography.title2)
+                .multilineTextAlignment(.center)
 
             Text("fotos ajudam a recordar mais\num desafio completo, tire a sua")
                 .font(designSystem.style.typography.text2)
+                .multilineTextAlignment(.center)
         }
         .multilineTextAlignment(.center)
-        .foregroundStyle(.black)
+        .foregroundStyle(designSystem.style.colors.textPrimary)
     }
 
     // MARK: - Botões
@@ -135,8 +129,8 @@ struct PhotoStepView: View {
     private var takePictureButton: some View {
         CustomButtonComponent(
             title: captureButtonTitle,
-            icon: captureButtonIcon,
-            type: .secondary,
+            icon: nil,
+            type: .primary,
             action: onTakePhoto
         )
     }
@@ -144,7 +138,7 @@ struct PhotoStepView: View {
     private var galleryButton: some View {
         CustomButtonComponent(
             title: "importar da galeria",
-            icon: "photo.fill",
+            icon: designSystem.style.icons.archivedInvertedChallengeIcon,
             type: .secondary,
             action: { isShowingGallery = true }
         )
@@ -154,7 +148,7 @@ struct PhotoStepView: View {
         CustomButtonComponent(
             title: continueButtonTitle,
             icon: nil,
-            type: .secondary,
+            type: .tertiary,
             action: onContinue)
     }
 }
