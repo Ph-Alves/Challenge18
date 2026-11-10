@@ -221,7 +221,7 @@ struct PresenterTests {
         let (presenter, store) = createActivityPresenterAndStore()
         let result = ActivityResult(time: 0, humor: .veryPleasant)
 
-        presenter.presentStory(result, title: "faça o seu cardio", subtitle: "menos distração", description: "sem redes sociais")
+        presenter.presentStory(result, title: "faça o seu cardio", subtitle: "menos distração", description: "sem redes sociais", challengeIcon: ActivityCategory.physical.closedIcon)
         
         // O story sai em 1080x1920 px (360x640 pt com scale 3).
         let image = try #require(store.storyImage)

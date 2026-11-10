@@ -13,6 +13,7 @@ struct SoberStyle: ThemeStyleProtocol {
         title1: .custom("Bodoni 72", size: 36, relativeTo: .largeTitle),
         title2: .custom("Bodoni 72", size: 32, relativeTo: .title),
         title3: .custom("Bodoni 72", size: 24, relativeTo: .title3),
+        title4: .custom("Bodoni 72", size: 18, relativeTo: .title3),
         subtitle1:.custom("SpecialGothic-Bold", size: 22, relativeTo: .title2),
         subtitle2: .custom("SpecialGothic-SemiBold", size: 18, relativeTo: .title3),
         subtitle3: .custom("SpecialGothic-Bold", size: 14, relativeTo: .subheadline),
@@ -37,22 +38,24 @@ struct SoberStyle: ThemeStyleProtocol {
         emotionPessimo: .soberEmotionPessimo,
         emotionStroke: .soberEmotionStroke,
         overlaySoft: .soberOverlaySoft,
-        overlayStrong: .soberOverlayStrong)
+        overlayStrong: .soberOverlayStrong,
+        emotionBGFill: .soberEmotionBGFill)
+        
     
     let icons = IconsSet(
         activityIcons: [
-            .cognitive: (closed: "coffee",    open: "openCoffee"),
-            .physical:  (closed: "eightBall", open: "openBall"),
-            .sensorial: (closed: "coockie",   open: "openCookie"),
-            .social:    (closed: "telephone", open: "openPhone")
+            .cognitive: (closed: "coffee", open: "openCoffee",   card: "coffeeCard"),
+            .physical:  (closed: "eightBall",    open: "openBall", card: "eightCard"),
+            .sensorial: (closed: "cookie",   open: "openCookie", card: "cookieCard"),
+            .social:    (closed: "telephone", open: "openPhone",  card: "telephoneCard")
         ],
         
         feelingIcons: [
-            .veryUnpleasant: (base: "veryUnpleasantBase", humor: "veryUnpleasantHumor"),
-            .unpleasant: (base: "unpleasantBase", humor: "unpleasantHumor"),
-            .neutral: (base: "neutralBase", humor: "neutralHumor"),
-            .pleasant: (base: "plesantBase", humor: "plesantHumor"),
-            .veryPleasant: (base: "veryPleasantBase", humor: "veryPleasantHumor")
+            .veryUnpleasant: (base: "veryUnpleasantBase", humor: "veryUnpleasantHumor", card: "veryUnpleasantCard"),
+            .unpleasant: (base: "unpleasantBase", humor: "unpleasantHumor", card: "unpleasantCard"),
+            .neutral: (base: "neutralBase", humor: "neutralHumor", card: "neutralCard"),
+            .pleasant: (base: "plesantBase", humor: "plesantHumor", card: "pleasantCard"),
+            .veryPleasant: (base: "veryPleasantBase", humor: "veryPleasantHumor", card: "veryPleasantCard")
         ],
         placeholderCheckIcon: "placeholderCheckIcon",
         photoPlaceholder: "photoPlaceholder",
@@ -71,6 +74,6 @@ struct SoberStyle: ThemeStyleProtocol {
     let photoFilter: PhotoFilter? = PhotoFilter(
         saturation: 0,
         overlayColor: .black,
-        overlayOpacity: 0.4)
+        overlayOpacity: 0.6)
     
 }

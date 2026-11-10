@@ -98,7 +98,7 @@ final class ActivityPresenterSpy: ActivityPresenterProtocol {
     // Erros
     func presentError(_ error: Error) { presentedErrors.append(error) }
     // Resumo e compartilhamento
-    func presentStory(_ result: ActivityResult, title: String?, subtitle: String?, description: String?) { storyCount += 1 }
+    func presentStory(_ result: ActivityResult, title: String?, subtitle: String?, description: String?, challengeIcon: String) { storyCount += 1 }
     func presentShareSheet(fileURL: URL) { shareSheetURL = fileURL }
     func presentShareFinished(completed: Bool) { shareFinished = completed }
 }
