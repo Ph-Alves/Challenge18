@@ -301,7 +301,7 @@ final class ChallengesInteractor: ChallengesInteractorProtocol {
         let story = StoryCard(
             challengeTitle: name.isEmpty ? "desafio concluído" : name,
             challengeDescription: activity.activityDescription.trimmingCharacters(in: .whitespacesAndNewlines),
-            challengePhoto: photo
+            challengePhoto: photo, challengeIcon: activity.category.closedIcon
         )
         return ShareImageRenderer.render(story)
     }

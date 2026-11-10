@@ -74,6 +74,6 @@ struct SoberStyle: ThemeStyleProtocol {
     let photoFilter: PhotoFilter? = PhotoFilter(
         saturation: 0,
         overlayColor: .black,
-        overlayOpacity: 0.4)
+        overlayOpacity: 0.6)
     
 }

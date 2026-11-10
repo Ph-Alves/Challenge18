@@ -218,7 +218,8 @@ struct ActivityView: View {
             interactor.loadSummary(
                 title: store.activityTitle,
                 subtitle: store.activitySubtitle,
-                description: store.activityDescription
+                description: store.activityDescription,
+                challengeIcon: currentCategory.closedIcon
             )
         }
     }

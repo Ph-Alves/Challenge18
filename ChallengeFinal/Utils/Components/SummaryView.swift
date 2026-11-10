@@ -35,6 +35,7 @@ struct SummaryView: View {
     /// Toque em "compartilhar".
     let onShare: () -> Void
     
+    
     var body: some View {
         VStack(spacing: 0) {
             header
@@ -119,4 +120,5 @@ struct SummaryView: View {
 
 #Preview {
     SummaryView(style: .activity,title: "testee", description: "teste", humor: .veryPleasant, onFinish: {}, onShare: {})
+        .environment(DesignSystem.shared)
 }
