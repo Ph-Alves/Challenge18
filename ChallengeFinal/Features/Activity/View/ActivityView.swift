@@ -109,13 +109,6 @@ struct ActivityView: View {
     @ViewBuilder
     private var stepView: some View {
         switch store.currentStep {
-        case .photo:
-            PhotoStepView(
-                photo: store.photo,
-                onTakePhoto: { interactor.openCamera() },
-                onGalleryItemSelected: { item in interactor.didSelectFromGallery(item) },
-                onContinue: { interactor.continueFromPhoto() }
-            )
 
         // Sorteio: a tela liga o acelerômetro ao aparecer e desliga ao sair.
         // Quando o desafio fica pronto, a bola cresce e `growFinished` avança para `.challenge`.
@@ -161,6 +154,14 @@ struct ActivityView: View {
             )
             .transition(.opacity)
             
+        case .photo:
+            PhotoStepView(
+                photo: store.photo,
+                onTakePhoto: { interactor.openCamera() },
+                onGalleryItemSelected: { item in interactor.didSelectFromGallery(item) },
+                onContinue: { interactor.continueFromPhoto() }
+            )
+        
         case .summary:
             summaryStepView
         }

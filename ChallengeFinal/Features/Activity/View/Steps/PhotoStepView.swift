@@ -20,6 +20,7 @@ import PhotosUI
 /// Os textos dos botões dependem só de ter foto ou não, por isso são calculados aqui mesmo.
 ///
 struct PhotoStepView: View {
+    @Environment(DesignSystem.self) private var designSystem
 
     // MARK: - Dados
     /// A foto escolhida (da câmera ou da galeria).
@@ -63,23 +64,33 @@ struct PhotoStepView: View {
 
     // MARK: - View
     var body: some View {
-        VStack(spacing: 0) {
-            header
-                .padding(.top, 24)
-
-            PhotoCard(photo: photo)
-                // O botão de câmera fica "encaixado" na borda de baixo do card.
-                .overlay(alignment: .bottom) {
-                    takePictureButton
-                        .offset(y: 1)
-                }
-                .padding(.top, 28)
-
-            galleryButton
-                .padding(.top, 10)
-
+        VStack(spacing: 77) {
             Spacer()
-
+            VStack(spacing: 120) {
+                header
+                
+                if let photo {
+                    PhotoCard(photo: photo)
+                    // O botão de câmera fica "encaixado" na borda de baixo do card.
+                        .overlay(alignment: .bottom) {
+                            takePictureButton
+                                .offset(y: 1)
+                        }
+                        .padding(.top, 28)
+                    
+                    galleryButton
+                        .padding(.top, 10)
+                } else {
+                    VStack(spacing: 24) {
+                        takePictureButton
+                            .offset(y: 1)
+                        
+                        galleryButton
+                            .padding(.top, 10)
+                    }
+                }
+            }
+            
             continueButton
                 .padding(.horizontal, 80) //gambiarra para deixar a width menor, CHANGE esse botao para sumir esses magic numbers.
                 .padding(.bottom, 60)
@@ -101,12 +112,19 @@ struct PhotoStepView: View {
     // MARK: - Título
 
     private var header: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 17) {
+            if photo == nil {
+                Image(designSystem.style.icons.camera)
+                    .resizable()
+                    .frame(width: 145, height: 94.45)
+                    .padding(.bottom, 21)
+            }
+            
             Text("sorria! você será\nfotografado :)")
-                .font(.system(size: 28, weight: .bold))
+                .font(designSystem.style.typography.title2)
 
             Text("fotos ajudam a recordar mais\num desafio completo, tire a sua")
-                .font(.system(size: 15))
+                .font(designSystem.style.typography.text2)
         }
         .multilineTextAlignment(.center)
         .foregroundStyle(.black)
@@ -150,6 +168,7 @@ struct PhotoStepView: View {
         onGalleryItemSelected: { _ in print("galeria") },
         onContinue: { print("continuar") }
     )
+    .environment(DesignSystem.shared)
 }
 
 #Preview("Com foto") {
@@ -159,4 +178,5 @@ struct PhotoStepView: View {
         onGalleryItemSelected: { _ in print("galeria") },
         onContinue: { print("continuar") }
     )
+    .environment(DesignSystem.shared)
 }
