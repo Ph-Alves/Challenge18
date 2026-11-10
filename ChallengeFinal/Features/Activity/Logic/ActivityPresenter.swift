@@ -40,7 +40,7 @@ protocol ActivityPresenterProtocol: AnyObject {
     func presentAlertsDismissed()
     
     // MARK: Step .summary
-    func presentStory(_ result: ActivityResult, title: String?, subtitle: String?, description: String?)
+    func presentStory(_ result: ActivityResult, title: String?, subtitle: String?, description: String?, challengeIcon: String)
     func presentShareSheet(fileURL: URL)
     func presentShareFinished(completed: Bool)
     
@@ -203,7 +203,7 @@ final class ActivityPresenter: ActivityPresenterProtocol {
     ///
     /// Funciona com um resultado recém-criado no fluxo OU com um já salvo
     /// no banco (ex.: futura tela de histórico), porque só lê o `ActivityResult`.
-    func presentStory(_ result: ActivityResult, title: String?, subtitle: String?, description: String?) {
+    func presentStory(_ result: ActivityResult, title: String?, subtitle: String?, description: String?, challengeIcon: String) {
         // TODO: o story ainda usa o nome e a descrição do DESAFIO (`activity.name`), enquanto o
         // summary na tela mostra a CONQUISTA. Trocar por `result.achievementTitle` e
         // `result.achievementDescription` para o story compartilhado ficar igual ao summary.
@@ -215,7 +215,7 @@ final class ActivityPresenter: ActivityPresenterProtocol {
         let story = StoryCard(
             challengeTitle: title,
             challengeDescription: Self.description(for: result),
-            challengePhoto: photo
+            challengePhoto: photo, challengeIcon: challengeIcon
         )
 
         store?.displayStoryImage(ShareImageRenderer.render(story))

@@ -21,8 +21,11 @@ enum Humor: String, Codable, CaseIterable { //CaseIterable: a roleta monta as op
     var baseIcon: String {
         DesignSystem.shared.style.icons.feelingIcons[self]?.base ?? ""
     }
+    
+    var cardIcon: String { DesignSystem.shared.style.icons.feelingIcons[self]?.card ?? ""
+    }
+    
 }
-
 
 extension Humor {
     func moved(by offset: Int) -> Humor {

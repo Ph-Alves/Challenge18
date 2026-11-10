@@ -9,15 +9,16 @@ import Foundation
 import SwiftUI
 
 enum TitleStyle {
-    
     case large
-    case title2
+    case timer
     
 }
 
 struct ActionDialogComponent: View {
+    @Environment(DesignSystem.self) private var designSystem
+
     var title: String
-    var titleStyle: TitleStyle = .title2
+    var titleStyle: TitleStyle = .large
 
     var firstOptionText: String
     var secondOptionText: String
@@ -26,20 +27,18 @@ struct ActionDialogComponent: View {
     var secondAction: () -> Void
     
     var body: some View {
-        VStack(spacing: 20) {
+        VStack(spacing: 22) {
             Text(title)
-                .font(titleStyle == .large ? .largeTitle : .title2)
-                .fontWeight(.bold)
+                .font(titleStyle == .large ? designSystem.style.typography.title3 : designSystem.style.typography.text1)
                 .multilineTextAlignment(.center)
+                .padding(.horizontal)
             
-            HStack(spacing: 18) {
-                
+            HStack(spacing: 20) {
                 CustomButtonComponent(
                     title: firstOptionText,
                     icon: nil,
                     type: .secondary,
                     action: firstAction
-                    
                 )
                 
                 CustomButtonComponent(
@@ -47,17 +46,19 @@ struct ActionDialogComponent: View {
                     icon: nil,
                     type: .primary,
                     action: secondAction
-                    
                 )
                 
             }
+
         }
-        .padding(30)
-        .background(Color.white)
+        .padding(.vertical,24)
+        .padding(.horizontal,30)
+        .background(designSystem.style.colors.backgroundPrimary)
+
         .clipShape(RoundedRectangle(cornerRadius: 12))
         .overlay(
             RoundedRectangle(cornerRadius: 12)
-                .stroke(Color.black, lineWidth: 1)
+                .stroke(designSystem.style.colors.strokeDefault, lineWidth: 1)
         )
         
     }
@@ -66,12 +67,13 @@ struct ActionDialogComponent: View {
 #Preview {
     ActionDialogComponent(
         title: "gostaria de iniciar esse desafio?",
-        firstOptionText: "Cancelar desafio",
-        secondOptionText: "Arquivar",
+        firstOptionText: "outro desafio",
+        secondOptionText: "aceitar",
         firstAction: {
         },
         secondAction: {
         }
     )
     .padding()
+    .environment(DesignSystem.shared)
 }

@@ -94,7 +94,7 @@ protocol ActivityInteractorProtocol: AnyObject {
     func cacheData(title: String, subtitle: String, description: String)
 
     // MARK: Step .summary
-    func loadSummary(title: String?, subtitle: String?, description: String?)
+    func loadSummary(title: String?, subtitle: String?, description: String?, challengeIcon: String)
     func shareStory(_ image: UIImage?)
     func didFinishSharing(completed: Bool)
 
@@ -781,12 +781,13 @@ final class ActivityInteractor: ActivityInteractorProtocol {
     ///
     /// Os textos do desafio vêm da View, que os lê da Store
     /// (preenchidos no step `.draw`).
-    func loadSummary(title: String?, subtitle: String?, description: String?) {
+    func loadSummary(title: String?, subtitle: String?, description: String?, challengeIcon: String) {
         presenter.presentStory(
             makeResultIfNeeded(),
             title: title,
             subtitle: subtitle,
-            description: description
+            description: description,
+            challengeIcon: challengeIcon
         )
     }
 

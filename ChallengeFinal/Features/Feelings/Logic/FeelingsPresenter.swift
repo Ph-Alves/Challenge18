@@ -171,7 +171,7 @@ final class FeelingsPresenter: FeelingsPresenterProtocol {
         let story = StoryCard(
             challengeTitle: name.isEmpty ? "desafio concluído" : name,
             challengeDescription: activity.activityDescription.trimmingCharacters(in: .whitespacesAndNewlines),
-            challengePhoto: photo
+            challengePhoto: photo, challengeIcon: activity.category.closedIcon
         )
         
         store?.presentStoryImage(ShareImageRenderer.render(story))

@@ -165,4 +165,5 @@ struct SummaryView: View {
 
 #Preview {
     SummaryView(style: .activity,title: "testee", description: "teste", humor: .veryPleasant, onFinish: {}, onShare: {})
+        .environment(DesignSystem.shared)
 }
