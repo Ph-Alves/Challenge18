@@ -75,7 +75,7 @@ final class FeelingsPresenter: FeelingsPresenterProtocol {
     }
     
     func presentSelectedActivity(activity: Activity) {
-        store?.presentActivityDetails(activity: activity, photo: image(from: activity.result?.photo))
+        store?.presentActivityDetails(activity: activity, photo: image(from: activity.result?.photo), createdAt: Formatters.createdAt(activity.createdAt))
         presentStory(for: activity)
     }
     

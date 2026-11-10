@@ -18,14 +18,10 @@ struct ActivityDetailView: View {
     /// Foto já pronta para exibir. `nil` = card vazio.
     var photo: Image? = nil
     
-    @State private var openAlert: Bool = false
+    /// Data de criação já formatada. `nil` = não exibe.
+    var createdAt: String? = nil
     
-    private var dateFormatter: DateFormatter {
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "pt_BR")
-        formatter.dateFormat = "dd 'de' MMMM 'de' YYYY"
-        return formatter
-    }
+    @State private var openAlert: Bool = false
     
     var body: some View {
         VStack {
@@ -43,7 +39,7 @@ struct ActivityDetailView: View {
                 
                 
                 Spacer()
-                Text(dateFormatter.string(from: selected.createdAt))
+                Text(createdAt ?? "")
                 Spacer()
                 
                 Button {

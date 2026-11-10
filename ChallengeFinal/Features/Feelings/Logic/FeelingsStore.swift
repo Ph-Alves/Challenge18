@@ -14,7 +14,7 @@ import SwiftUI
 protocol FeelingsStoreProtocol: AnyObject {
     // MARK: Carregamento
     func presentFeelingsLoaded(feelings: [Humor: [(activity: Activity, image: Image?)]])
-    func presentActivityDetails(activity: Activity, photo: Image?)
+    func presentActivityDetails(activity: Activity, photo: Image?, createdAt: String)
     func returnToFeelings()
     // MARK: Câmera
     func presentCamera(isPresented: Bool)
@@ -47,6 +47,9 @@ final class FeelingsStore: FeelingsStoreProtocol {
     /// Foto da atividade selecionada, já pronta para exibir. `nil` = sem foto.
     var selectedPhoto: Image? = nil
     
+    /// Data de criação da atividade selecionada, já formatada.
+    var selectedCreatedAt: String? = nil
+    
     // MARK: Câmera (a foto nova da atividade selecionada)
     
     var isCameraPresented: Bool = false
@@ -78,9 +81,10 @@ final class FeelingsStore: FeelingsStoreProtocol {
         self.feelings = feelings
     }
     
-    func presentActivityDetails(activity: Activity, photo: Image?) {
+    func presentActivityDetails(activity: Activity, photo: Image?, createdAt: String) {
         self.selectedActivity = activity
         self.selectedPhoto = photo
+        self.selectedCreatedAt = createdAt
         self.presentDetail = true
     }
     
