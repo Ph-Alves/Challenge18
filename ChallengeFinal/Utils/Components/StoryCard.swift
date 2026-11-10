@@ -40,8 +40,8 @@ struct StoryCard: View {
     
     private var content: some View {
         VStack(spacing: 12) {
-            ChallengeCircle(text: "você conseguiu!", size: .small)
-                .padding(.bottom, 20)
+//            ChallengeCircle(text: "você conseguiu!", size: .small)
+//                .padding(.bottom, 20)
             
             Text(challengeTitle)
                 .font(.system(size: 22, weight: .bold))

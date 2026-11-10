@@ -7,46 +7,68 @@
 
 import SwiftUI
 
-enum CircleSize {
-    case big
-    case medium
-    case small
-}
-
 struct ChallengeCircle: View {
     // MARK: - Variables
-    let text: String
-    let size: CircleSize
-    var frameSize: CGFloat {
-        switch size {
-        case .big:
-            return 300
-        case .medium:
-            return 250
-        case .small:
-            return 177
+    @Environment(DesignSystem.self) private var designSystem
+    
+    let category: ActivityCategory
+    let text: String?
+    let isOpen: Bool
+    
+    private var textLayout: CGSize {
+        switch category {
+        case .cognitive:
+            return CGSize(width: -50, height: 20)
+        case .physical:
+            return CGSize(width: 0, height: 0)
+        case .sensorial:
+            return CGSize(width: 30, height: -35)
+        case .social:
+            return CGSize(width: 60, height: -70)
+        }
+    }
+    
+    private var textColor: Color {
+        switch category {
+        case .cognitive:
+            return designSystem.style.colors.textInverse
+        case .physical, .sensorial, .social:
+            return designSystem.style.colors.textPrimary
+        }
+    }
+    
+    private var textWidth: CGFloat {
+        switch category {
+        case .physical:
+            return 216
+        case .cognitive, .sensorial, .social:
+            return 224
         }
     }
 
     // MARK: - View
     var body: some View {
-        ZStack {
-            Circle()
-                .stroke(LinearGradient(colors: [.black, .gray], startPoint: UnitPoint(x: 1, y: 1), endPoint: UnitPoint(x: 0, y: 1)), lineWidth: 35)
-                .frame(width: frameSize, height: frameSize)
-
-            Text(text)
-                .multilineTextAlignment(.center)
-                .frame(maxWidth: 190)
+        ZStack(alignment: .center) {
+            if isOpen {
+                Image(category.openIcon)
+            } else {
+                Image(category.closedIcon)
+            }
+            
+            if let text, isOpen {
+                Text(text)
+                    .font(designSystem.style.typography.text1)
+                    .foregroundStyle(textColor)
+                    .frame(maxWidth: textWidth)
+                    .multilineTextAlignment(.center)
+                    .offset(textLayout)
+            }
         }
     }
 }
 
 // MARK: - Preview
 #Preview {
-    VStack(spacing: 40) {
-        ChallengeCircle(text: "Escolha as escadas: Na próxima oportunidade, use as escadas em vez do elevador, se for seguro e viável.", size: .big)
-        ChallengeCircle(text: "Descubra sua própria mão.", size: .medium)
-        ChallengeCircle(text: "abc", size: .small)
-    }
+    ChallengeCircle(category: .sensorial, text: "faça o seu cárdio sem abrir redes sociais", isOpen: true)
+        .environment(DesignSystem.shared)
 }
