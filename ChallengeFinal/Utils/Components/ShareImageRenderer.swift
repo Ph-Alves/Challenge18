@@ -34,7 +34,10 @@ enum ShareImageRenderer {
         scale: CGFloat = ShareImageSpecification.scale
     ) -> UIImage? {
         let renderer = ImageRenderer(
-            content: content.frame(width: size.width, height: size.height)
+            // O ImageRenderer roda fora da hierarquia do app: o environment precisa ser injetado aqui.
+            content: content
+                .frame(width: size.width, height: size.height)
+                .environment(DesignSystem.shared)
         )
         renderer.proposedSize = ProposedViewSize(size)
         renderer.scale = scale

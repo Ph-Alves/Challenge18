@@ -143,7 +143,7 @@ struct ActivityView: View {
                 InProgressView(
                     message: store.activityTitle ?? "",
                     challengeSubTitle: store.activitySubtitle ?? "",
-                    challengeDescription: store.activityDescription ?? "",
+                    challengeDescription: store.activityDescription ?? "", challengeIcon: currentCategory.cardIcon,
                     timeText: store.timeText,
                     finishAction: {
                         interactor.completeActivity(currentCategory: currentCategory, title: title, subTitle: subtitle, Description: description)
@@ -193,7 +193,7 @@ struct ActivityView: View {
                 ChallengeAcceptedView(
                     challengeTitle: title,
                     challengeSubTitle: subtitle,
-                    challengeDescription: description,
+                    challengeDescription: description, challengeIcon: currentCategory.cardIcon,
                     startAction: { interactor.startActivity() },
                     cancelAction: { interactor.reroll(for: currentCategory) }
                 )
@@ -221,7 +221,8 @@ struct ActivityView: View {
             interactor.loadSummary(
                 title: store.activityTitle,
                 subtitle: store.activitySubtitle,
-                description: store.activityDescription
+                description: store.activityDescription,
+                challengeIcon: currentCategory.closedIcon
             )
         }
     }
