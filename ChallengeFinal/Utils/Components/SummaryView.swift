@@ -12,6 +12,27 @@ enum SummaryStyle {
     case display
 }
 
+enum HumorBadgePosition {
+    /// Canto inferior direito, dentro do card (posição atual)
+    case topHumorPosition
+    /// Canto superior direito, "vazando" para fora do card
+    case bottomHumorPosition
+
+    var alignment: Alignment {
+        switch self {
+        case .topHumorPosition: return .bottomTrailing
+        case .bottomHumorPosition:    return .topTrailing
+        }
+    }
+
+    var offset: CGSize {
+        switch self {
+        case .topHumorPosition: return CGSize(width: 50, height: -180)
+        case .bottomHumorPosition:    return CGSize(width: 16, height: -20)
+        }
+    }
+}
+
 struct SummaryView: View {
     
     //MARK: Design System
@@ -37,6 +58,15 @@ struct SummaryView: View {
         return .withPhoto
     }
     
+    /// Com foto o humor sobe para o canto superior direito.
+    /// Nos outros casos ele fica no canto inferior direito.
+    private var humorPosition: HumorBadgePosition {
+        guard style == .display, displayState == .withPhoto else {
+            return .bottomHumorPosition
+        }
+        return .topHumorPosition
+    }
+    
     /// Estilo do componente (para mudar com base no fluxo)
     let style: SummaryStyle
     
@@ -57,6 +87,9 @@ struct SummaryView: View {
     
     /// Humor registrado
     let humor: Humor?
+    
+    /// Onde o card de humor aparece sobre a foto.
+//    var humorPosition: HumorBadgePosition = .bottomTrailing
     
     /// Toque em "finalizar".
     let onFinish: () -> Void
@@ -124,7 +157,7 @@ struct SummaryView: View {
             .overlay(alignment: .bottomTrailing) {
                 if let humor {
                     EmojiLabelComponent(humor: humor, highlighted: true)
-                        .offset(x: -20, y: 0)
+                        .offset(humorPosition.offset)
                 }
             }
     }
@@ -190,29 +223,15 @@ struct SummaryView: View {
     }
 }
     
-#Preview("display com data") {
+#Preview("display com foto") {
     SummaryView(
         style: .display,
         category: .physical,
         createdAt: "9 de outubro de 2026",
         title: "mestre offline",
         description: "você passou 1h se exercitando sem entrar em nenhuma rede social",
-        humor: .veryPleasant,
-        onFinish: {},
-        onShare: {}
-    )
-    .environment(DesignSystem.shared)
-}
-
-#Preview("display add foto e humor") {
-    SummaryView(
-        style: .display,
-        category: .physical,
-        createdAt: "9 de outubro de 2026",
-        title: "mestre offline",
-        description: "você passou 1h se exercitando sem entrar em nenhuma rede social",
-        photo: nil,
-        humor: nil,
+        photo: Image(systemName: "photo"),
+        humor: .unpleasant,
         onFinish: {},
         onShare: {}
     )
