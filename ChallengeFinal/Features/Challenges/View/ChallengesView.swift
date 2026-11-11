@@ -19,6 +19,9 @@ struct ChallengesView: View {
     /// Texto digitado. Fica na View porque o TextField precisa de binding;
     /// a cada mudança, o Interactor recalcula a lista.
     @State private var searchText = ""
+    
+    /// Controla o alerta "realmente deseja apagar?" do "…" no resumo.
+    @State private var isDeleteAlertPresented = false
 
     private let columns = [
         GridItem(.flexible(), spacing: 28),
@@ -77,6 +80,19 @@ struct ChallengesView: View {
                     ToolbarItem(placement: .topBarLeading) {
                         Button(role: .close) { interactor.closeSummary() }
                     }
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button("mais opções", systemImage: "ellipsis") {
+                            isDeleteAlertPresented = true
+                        }
+                    }
+                }
+                .alert("Realmente deseja apagar?", isPresented: $isDeleteAlertPresented) {
+                    Button("Cancelar", role: .cancel) { }
+                    Button("Arquivar", role: .destructive) {
+                        interactor.deleteChallenge()
+                    }
+                } message: {
+                    Text("Ao apagar os dados, seus registros serão excluídos e o desafio voltará para a lista do grupo.")
                 }
             }
             .presentationDragIndicator(.visible)

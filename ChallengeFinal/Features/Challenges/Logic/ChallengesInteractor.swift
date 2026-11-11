@@ -35,7 +35,7 @@ protocol ChallengesInteractorProtocol: AnyObject {
     func previousHumor()                              // swipe para a direita na roleta
     func saveHumor()                                  // "salvar" no MoodStepView
     func closeMood()                                  // X do MoodStepView
-    
+    func deleteChallenge()                            // "arquivar" no menu "…" do resumo
 }
 
 //MARK: - Class
@@ -129,6 +129,22 @@ final class ChallengesInteractor: ChallengesInteractorProtocol {
             selectedActivity = nil
         }
         presenter.presentSummary(nil)
+    }
+    
+    /// "Arquivar" no alerta do "…": apaga os registros do desafio aberto,
+    /// fecha o resumo e recarrega a lista. 
+    func deleteChallenge() {
+        guard let selectedActivity else { return }
+        
+        do {
+            try repository.delete(selectedActivity)
+        } catch {
+            presenter.presentError("não foi possível apagar o desafio. tente de novo.")
+            return
+        }
+        
+        closeSummary()
+        refreshCompleted()
     }
     
     //MARK: - Compartilhar
