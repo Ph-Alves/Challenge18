@@ -29,7 +29,10 @@ enum Formatters {
     /// .autoupdatingCurrent acompanha o idioma e a região configurados no aparelho.
     static func createdAt(_ date: Date, locale: Locale = .autoupdatingCurrent) -> String {
         date.formatted(
-            Date.FormatStyle(date: .long, time: .omitted)
+            .dateTime
+                .day(.twoDigits)
+                .month(.wide)
+                .year()
                 .locale(locale)
         )
     }
