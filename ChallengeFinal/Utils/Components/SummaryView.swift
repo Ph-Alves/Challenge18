@@ -14,8 +14,11 @@ enum SummaryStyle {
 
 struct SummaryView: View {
     
-    // MARK: - Estado do desafio aberto
+    //MARK: Design System
+    @Environment(DesignSystem.self) private var designSystem
 
+    // MARK: - Estado do desafio aberto
+    
     /// Os três jeitos de visualizar um desafio já aberto.
     private enum DisplayState {
         /// Sem foto → botão "adicionar foto".
@@ -25,7 +28,7 @@ struct SummaryView: View {
         /// Sem humor registrado → ganha o botão "reflita!".
         case withoutFeeling
     }
-
+    
     /// Calculado a partir do que a view já recebe.
     /// Sem humor tem prioridade, porque é o único que muda o layout.
     private var displayState: DisplayState {
@@ -37,21 +40,27 @@ struct SummaryView: View {
     /// Estilo do componente (para mudar com base no fluxo)
     let style: SummaryStyle
     
+    /// Categoria do desafio (define o ícone do círculo).
+    let category: ActivityCategory
+    
+    /// Data de criação já formatada. `nil` = não exibe.
+    var createdAt: String? = nil
+    
     /// Título do desafio
     let title: String
-
+    
     /// Descrição do desafio.
     var description: String
-
+    
     /// Foto do resultado. `nil` = card vazio (pontilhado).
     var photo: Image? = nil
-
+    
     /// Humor registrado
     let humor: Humor?
-
+    
     /// Toque em "finalizar".
     let onFinish: () -> Void
-
+    
     /// Toque em "compartilhar".
     let onShare: () -> Void
     
@@ -61,54 +70,69 @@ struct SummaryView: View {
     var body: some View {
         VStack(spacing: 0) {
             header
-                .padding(.top, 40)
-
+            
             photoCard
                 .padding(.top, 36)
-
-            Spacer(minLength: 24)
-
+                .padding(.bottom, 72)
+            
             buttons
-                .padding(.bottom, 32)
+                .padding(.bottom, 28)
         }
         .padding(.horizontal, 40)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.white)
+        .navigationTitle(createdAt ?? "")
+        .navigationBarTitleDisplayMode(.inline)
     }
     
     private var header: some View {
         VStack(spacing: 0) {
-//            ChallengeCircle(text: "você conseguiu!", size: .small)
-
+            
+            ChallengeCircle(category: category, text: nil, isOpen: false)
+                .scaleEffect(72 / 346)
+                .frame(width: 72, height: 72)
+            
             Text(title)
-                .font(.system(size: 22, weight: .bold))
+                .font(designSystem.currentTheme.style.typography.title3)
                 .padding(.top, 16)
-
+            
             Text(description)
-                .font(.system(size: 16))
-                .fixedSize(horizontal: false, vertical: true)   // quebra linha em vez de cortar
-                .padding(.top, 8)
+                .font(designSystem.currentTheme.style.typography.text2)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.top, 12)
         }
         .multilineTextAlignment(.center)
-        .foregroundStyle(.black)
     }
-
+    
+    /// Data de criação no centro da navigation bar. `nil` = não exibe nada.
+    @ToolbarContentBuilder
+    private var titleToolbar: some ToolbarContent {
+        if let createdAt {
+            ToolbarItem(placement: .principal) {
+                Text(createdAt)
+                    .font(designSystem.currentTheme.style.typography.text2)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+            }
+        }
+    }
+    
     // MARK: - Foto + humor
-
+    
     private var photoCard: some View {
-        PhotoCard(photo: photo, height: 228)
-            .overlay(alignment: .topTrailing) {
+        PhotoCard(photo: photo, height: 260)
+            .frame(width: 260)
+            .overlay(alignment: .bottomTrailing) {
                 if let humor {
                     EmojiLabelComponent(humor: humor, highlighted: true)
-                        .offset(x: 24, y: -28)
+                        .offset(x: -20, y: 0)
                 }
             }
     }
-
+    
     // MARK: - Botões
     @ViewBuilder
     private var buttons: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 24) {
             switch style {
             case .activity:
                 activityButtons
@@ -121,6 +145,7 @@ struct SummaryView: View {
                 }
             }
         }
+        .frame(width: 213)
     }
     
     //MARK: - Grupos de botões utilizados em cada caso.
@@ -130,40 +155,66 @@ struct SummaryView: View {
             .bold()
         shareButton(type: .secondary)
     }
-
+    
     @ViewBuilder
     private var photoButtons: some View {
         shareButton(type: .primary)
         photoButton(type: .secondary)
     }
-
+    
     @ViewBuilder
     private var withoutFeelingButtons: some View {
         CustomButtonComponent(title: "reflita!", icon: nil, type: .primary, action: onReflect)
             .bold()
-        shareButton(type: .secondary)
-        photoButton(type: .tertiary)
+//            .padding(.bottom, 24)
+        photoButton(type: .secondary)
+//            .padding(.bottom, 24)
+        shareButton(type: .tertiary)
     }
     
     //MARK: - Botões reutilizáveis ao longo das subviews
     
     private func shareButton(type: CustomButtonType) -> some View {
-        CustomButtonComponent(title: "compartilhar", icon: "arrow.clockwise", type: type, action: onShare)
+        CustomButtonComponent(title: "compartilhar", icon: "square.and.arrow.up", type: type, action: onShare)
             .bold()
     }
     
     private func photoButton(type: CustomButtonType) -> some View {
         CustomButtonComponent(
             title: photo == nil ? "adicionar foto" : "substituir foto",
-            icon: nil,
+            icon: photo == nil ? nil : "arrow.clockwise",
             type: type,
             action: onFinish
         )
         .bold()
     }
 }
+    
+#Preview("display com data") {
+    SummaryView(
+        style: .display,
+        category: .physical,
+        createdAt: "9 de outubro de 2026",
+        title: "mestre offline",
+        description: "você passou 1h se exercitando sem entrar em nenhuma rede social",
+        humor: .veryPleasant,
+        onFinish: {},
+        onShare: {}
+    )
+    .environment(DesignSystem.shared)
+}
 
-#Preview {
-    SummaryView(style: .activity,title: "testee", description: "teste", humor: .veryPleasant, onFinish: {}, onShare: {})
-        .environment(DesignSystem.shared)
+#Preview("display add foto e humor") {
+    SummaryView(
+        style: .display,
+        category: .physical,
+        createdAt: "9 de outubro de 2026",
+        title: "mestre offline",
+        description: "você passou 1h se exercitando sem entrar em nenhuma rede social",
+        photo: nil,
+        humor: nil,
+        onFinish: {},
+        onShare: {}
+    )
+    .environment(DesignSystem.shared)
 }
