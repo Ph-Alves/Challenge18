@@ -17,7 +17,7 @@ enum CustomButtonType {
 struct CustomButtonComponent: View {
     @Environment(DesignSystem.self) private var designSystem
 
-    let title: String
+    let title: String?
     let icon: String?
     var type: CustomButtonType = .primary
     var action: () -> Void
@@ -57,11 +57,13 @@ struct CustomButtonComponent: View {
         Button(action: action) {
             HStack(spacing: 6) {
                 if let icon {
-                    Image(systemName: icon)
+                    Image(icon)
                 }
                 
-                Text(title)
-                    .font(designSystem.style.typography.text2)
+                if let title {
+                    Text(title)
+                        .font(designSystem.style.typography.text2)
+                }
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 8)

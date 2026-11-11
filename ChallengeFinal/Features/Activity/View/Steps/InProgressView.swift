@@ -30,7 +30,8 @@ struct InProgressView: View {
 
     /// Confirmou o cancelamento no alerta: avisa o Interactor, que descarta o tempo e sai do fluxo.
     let cancelAction: () -> Void
-    
+    @Environment(DesignSystem.self) private var designSystem
+
 
     /// Controla o alerta de confirmação do cancelamento.
     /// É estado só de apresentação (nasce de um toque, sem regra de negócio),
@@ -39,13 +40,14 @@ struct InProgressView: View {
 
     var body: some View {
         VStack(alignment: .center) {
-            ChallengeDescription(challengeIcon: challengeIcon, challengeTitle: message, challengeSubTitle: challengeSubTitle, challengeDescription: challengeDescription)
+            ChallengeDescription(challengeIcon: challengeIcon, challengeTitle: message, challengeSubTitle: challengeSubTitle, challengeDescription: challengeDescription, spacingBetween: 36)
 
             // "cancelar" só abre o alerta de confirmação; "encerrar" termina a atividade.
-            ActionDialogComponent(title: timeText, titleStyle: .large, firstOptionText: "cancelar", secondOptionText: "encerrar",     firstAction: { isCancelAlertPresented = true },
-                secondAction: finishAction)
-                .padding(. top, 52)
-                .padding(.horizontal)
+            ActionDialogComponent(title: timeText, titleStyle: .timer,  secondOptionText: "encerrar", firstAction: { isCancelAlertPresented = true }, secondAction: finishAction, firstIcon: designSystem.style.icons.pauseIcon)
+                .padding(. top, 86)
+                .padding(.horizontal, 22)
+            
+            
         }
         // Confirmação antes de cancelar: só o botão destrutivo avisa o Interactor.
         // O cronômetro continua contando enquanto o alerta está aberto.
@@ -59,5 +61,5 @@ struct InProgressView: View {
 }
 
 #Preview {
-    InProgressView(message: "voce consegue", challengeSubTitle: "menos distração, mais foco", challengeDescription: "sem redes sociais, seu cardio vira um momento para cuidar do corpo e desacelerar a mente.", challengeIcon: ActivityCategory.physical.closedIcon, timeText: "00:00:00", finishAction: { }, cancelAction: { })
+    InProgressView(message: "faça o seu cárdio sem abrir redes sociais", challengeSubTitle: "menos distração, mais foco", challengeDescription: "sem redes sociais, seu cardio vira um momento para cuidar do corpo e desacelerar a mente.", challengeIcon: ActivityCategory.physical.cardIcon, timeText: "00:00:00", finishAction: { }, cancelAction: { }).environment(DesignSystem.shared)
 }
