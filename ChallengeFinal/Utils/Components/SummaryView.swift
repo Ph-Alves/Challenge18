@@ -183,6 +183,7 @@ struct SummaryView: View {
     
     //MARK: - Grupos de botões utilizados em cada caso.
     @ViewBuilder
+    //botoes da tela summary view no fluxo de atividade
     private var activityButtons: some View {
         CustomButtonComponent(title: "finalizar", icon: nil, type: .secondary, action: onFinish)
             .bold()
@@ -190,18 +191,18 @@ struct SummaryView: View {
     }
     
     @ViewBuilder
+    //botoes da summaryview quando um desafio é aberto e possui foto e humor.
     private var photoButtons: some View {
-        shareButton(type: .primary)
-        photoButton(type: .secondary)
+        photoButton(type: .primary)
+        shareButton(type: .secondary)
     }
     
     @ViewBuilder
+    //botoes da summaryview quando um desafio é aberto e nao possui humor.
     private var withoutFeelingButtons: some View {
         CustomButtonComponent(title: "reflita!", icon: nil, type: .primary, action: onReflect)
             .bold()
-//            .padding(.bottom, 24)
         photoButton(type: .secondary)
-//            .padding(.bottom, 24)
         shareButton(type: .tertiary)
     }
     
