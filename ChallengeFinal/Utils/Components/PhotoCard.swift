@@ -47,35 +47,10 @@ struct PhotoCard: View {
         } else {
             Image(designSystem.style.icons.photoPlaceholder)
                 .resizable()
+                .scaledToFit()
         }
     }
 }
-
-// MARK: - Fundo pontilhado
-
-/// O fundo de pontinhos do card vazio.
-/// `Canvas` desenha tudo de uma vez, sem criar uma view para cada ponto. Fiz em código e não coloquei o asset em si porque talvez mude conforme o tema do projeto, mas qualquer coisa podemos trocar para um asset.
-//struct DotGridBackground: View {
-//    var spacing: CGFloat = 23
-//    var dotSize: CGFloat = 3
-//
-//    var body: some View {
-//        Canvas { context, size in
-//            var y = spacing / 2
-//            while y < size.height {
-//                var x = spacing / 2
-//                while x < size.width {
-//                    let dot = CGRect(x: x - dotSize / 2, y: y - dotSize / 2,
-//                                     width: dotSize, height: dotSize)
-//                    context.fill(Path(ellipseIn: dot), with: .color(.gray.opacity(0.25)))
-//                    x += spacing
-//                }
-//                y += spacing
-//            }
-//        }
-//        .background(Color.white)
-//    }
-//}
 
 // MARK: - Previews
 
