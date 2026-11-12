@@ -186,7 +186,7 @@ struct SummaryView: View {
     private var activityButtons: some View {
         CustomButtonComponent(title: "finalizar", icon: nil, type: .secondary, action: onFinish)
             .bold()
-        shareButton(type: .secondary)
+        shareButton(type: .primary)
     }
     
     @ViewBuilder
@@ -199,9 +199,7 @@ struct SummaryView: View {
     private var withoutFeelingButtons: some View {
         CustomButtonComponent(title: "reflita!", icon: nil, type: .primary, action: onReflect)
             .bold()
-//            .padding(.bottom, 24)
         photoButton(type: .secondary)
-//            .padding(.bottom, 24)
         shareButton(type: .tertiary)
     }
     
