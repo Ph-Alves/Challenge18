@@ -19,6 +19,9 @@ struct ChallengesView: View {
     /// Texto digitado. Fica na View porque o TextField precisa de binding;
     /// a cada mudança, o Interactor recalcula a lista.
     @State private var searchText = ""
+    
+    /// Controla o alerta "realmente deseja apagar?" do "…" no resumo.
+    @State private var isDeleteAlertPresented = false
 
     private let columns = [
         GridItem(.flexible(), spacing: 28),
@@ -59,16 +62,39 @@ struct ChallengesView: View {
                 .presentationDragIndicator(.visible)
         }
         .sheet(item: summaryBinding, onDismiss: interactor.summaryDismissed) { activity in
-            SummaryView(
-                style: .display,
-                title: activity.name,
-                description: activity.activityDescription,
-                photo: store.selectedPhoto,
-                humor: activity.result?.humor,
-                onFinish: { interactor.retakePhoto() },
-                onShare: { interactor.shareStory() },
-                onReflect: { interactor.openMood() }
-            )
+            // Sheet não tem navigation bar própria: o NavigationStack é o que faz a data da SummaryView aparecer lá em cima.
+            NavigationStack {
+                SummaryView(
+                    style: .display,
+                    category: activity.category,
+                    createdAt: store.selectedCreatedAt,
+                    title: activity.name,
+                    description: activity.activityDescription,
+                    photo: store.selectedPhoto,
+                    humor: activity.result?.humor,
+                    onFinish: { interactor.retakePhoto() },
+                    onShare: { interactor.shareStory() },
+                    onReflect: { interactor.openMood() }
+                )
+                .toolbar {
+                    ToolbarItem(placement: .topBarLeading) {
+                        Button(role: .close) { interactor.closeSummary() }
+                    }
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button("mais opções", systemImage: "ellipsis") {
+                            isDeleteAlertPresented = true
+                        }
+                    }
+                }
+                .alert("Realmente deseja apagar?", isPresented: $isDeleteAlertPresented) {
+                    Button("Cancelar", role: .cancel) { }
+                    Button("Arquivar", role: .destructive) {
+                        interactor.deleteChallenge()
+                    }
+                } message: {
+                    Text("Ao apagar os dados, seus registros serão excluídos e o desafio voltará para a lista do grupo.")
+                }
+            }
             .presentationDragIndicator(.visible)
             // "reflita!": a roleta abre por cima do resumo (que continua aberto por baixo).
             .fullScreenCover(isPresented: isMoodPresented) {
@@ -227,4 +253,55 @@ struct ChallengesView: View {
             set: { if !$0 { interactor.closeMood() } }
         )
     }
+}
+
+
+// MARK: - Preview
+import SwiftData
+
+@MainActor
+private func makeChallengesPreview(seeded: Bool) -> some View {
+    // Container em memória: nada vai para o banco de verdade.
+    let container = try! ModelContainer(
+        for: Activity.self, ActivityResult.self,
+        configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+    )
+    let context = container.mainContext
+
+    if seeded {
+        let samples: [(ActivityCategory, String, String, Humor?, Bool, Int)] = [
+            (.physical,  "caminhar 10 minutos", "dê uma volta no quarteirão sem o celular.", .pleasant,     false, 0),
+            (.cognitive, "ler um capítulo",     "escolha um livro e leia um capítulo inteiro.", .veryPleasant, false, 1),
+            (.sensorial, "ouvir os sons",       "feche os olhos e conte 5 sons ao seu redor.", nil,          false, 2), // sem humor -> "reflita!"
+            (.social,    "mandar uma mensagem", "fale com alguém que você não vê há tempo.", .neutral,       false, 3),
+            (.physical,  "alongar",             "faça 5 minutos de alongamento.", .unpleasant,              false, 4),
+            (.social,    "ligar para a família","um desafio que ficou arquivado.", nil,                     true,  5)
+        ]
+
+        for (category, name, description, humor, archived, daysAgo) in samples {
+            let result = ActivityResult(time: 600, humor: humor)
+            let activity = Activity(
+                category: category,
+                result: result,
+                createdAt: Calendar.current.date(byAdding: .day, value: -daysAgo, to: .now)!,
+                name: name,
+                description: description,
+                archived: archived
+            )
+            context.insert(activity)
+        }
+        try? context.save()
+    }
+
+    return ChallengesBuilder.build(context: context)
+        .environment(DesignSystem.shared)
+        .modelContainer(container)
+}
+
+#Preview("com desafios") {
+    makeChallengesPreview(seeded: true)
+}
+
+#Preview("vazio") {
+    makeChallengesPreview(seeded: false)
 }

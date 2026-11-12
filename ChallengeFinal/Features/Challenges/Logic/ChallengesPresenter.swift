@@ -70,12 +70,12 @@ final class ChallengesPresenter: ChallengesPresenterProtocol {
 
     func presentSummary(_ activity: Activity?) {
         guard let activity else {
-            store?.displaySummary(nil, photo: nil)
+            store?.displaySummary(nil, photo: nil, createdAt: nil)
             store?.displayShareSheet(nil)
             return
         }
         // Bytes -> Image: a View recebe a foto pronta para exibir.
-        store?.displaySummary(activity, photo: Image(data: activity.result?.photo))
+        store?.displaySummary(activity, photo: Image(data: activity.result?.photo), createdAt: Formatters.createdAt(activity.createdAt))
     }
 
     // MARK: - Compartilhar

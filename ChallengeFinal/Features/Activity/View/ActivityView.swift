@@ -209,6 +209,7 @@ struct ActivityView: View {
     private var summaryStepView: some View {
         SummaryView(
             style: .activity,
+            category: currentCategory,
             title: store.achievementTitle ?? "",
             description: store.achievementDescription ?? "",
             photo: store.photo,

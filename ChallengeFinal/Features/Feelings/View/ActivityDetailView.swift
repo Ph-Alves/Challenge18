@@ -18,69 +18,55 @@ struct ActivityDetailView: View {
     /// Foto já pronta para exibir. `nil` = card vazio.
     var photo: Image? = nil
     
+    /// Data de criação já formatada. `nil` = não exibe.
+    var createdAt: String? = nil
+    
     @State private var openAlert: Bool = false
     
-    private var dateFormatter: DateFormatter {
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "pt_BR")
-        formatter.dateFormat = "dd 'de' MMMM 'de' YYYY"
-        return formatter
-    }
-    
     var body: some View {
-        VStack {
-            HStack {
-                Button {
-                    returnAction()
-                } label: {
-                    Image(systemName: "xmark")
-                        .font(.system(size: 17))
-                }
-                .buttonStyle(.plain)
-                .padding(10)
-                .background(.gray)
-                .clipShape(.circle)
-                
-                
-                Spacer()
-                Text(dateFormatter.string(from: selected.createdAt))
-                Spacer()
-                
-                Button {
-                    openAlert = true
-                } label: {
-                    Image(systemName: "ellipsis")
-                        .font(.system(size: 17))
-                }
-                .buttonStyle(.plain)
-                .padding()
-                .background(.gray)
-                .clipShape(.circle)
-            }
-            .padding()
-            
+        NavigationStack {
             SummaryView(
                 style: .display,
+                category: selected.category,
+                createdAt: createdAt,
                 title: selected.name,
                 description: selected.activityDescription,
                 photo: photo,
                 humor: selected.result?.humor,
                 onFinish: retakeAction,
-                onShare: shareAction)
-        }
-        .alert("Realmente deseja apagar?", isPresented: $openAlert, actions: {
-            Button("Cancelar", role: .cancel) { openAlert = false
+                onShare: shareAction
+            )
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button(role: .close, action: returnAction)
+                }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("mais opções", systemImage: "ellipsis") {
+                        openAlert = true
+                    }
+                }
             }
+        }
+        .alert("Realmente deseja apagar?", isPresented: $openAlert) {
+            Button("Cancelar", role: .cancel) { openAlert = false }
             Button("Arquivar", role: .destructive) {
                 deleteAction(selected)
                 returnAction()
             }
-        }, message: {
-            Text("Ao apagar os dados, seus registros serão excluídos e o desafio voltará para a lista do grupo.")
-        })
+        } message: {
+            Text("Ao apagar os dados, seus registros serão excluídos e o desafio voltará para a lista do grupo.")
+        }
     }
 }
 
 #Preview {
-    ActivityDetailView(returnAction: {}, deleteAction: {_ in}, retakeAction: {}, shareAction: {}, selected: Activity(category: .cognitive, result: nil, name: "", description: "", archived: false))
+    ActivityDetailView(
+        returnAction: {},
+        deleteAction: { _ in },
+        retakeAction: {},
+        shareAction: {},
+        selected: Activity(category: .cognitive, result: nil, name: "", description: "", archived: false),
+        createdAt: "9 de outubro de 2026"
+    )
+    .environment(DesignSystem.shared)
 }

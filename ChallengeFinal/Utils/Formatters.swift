@@ -22,4 +22,18 @@ enum Formatters {
 
         return String(format: "%02d:%02d:%02d", hours, minutes, seconds)
     }
+    
+    /// Data de criação por extenso, no idioma do aparelho.
+    /// date: .long pede a data por extenso. Quem decide a ordem e as palavras (“de”, vírgula, mês antes ou depois do dia) é o sistema, conforme o idioma.
+    /// time: .omitted deixa a hora de fora.
+    /// .autoupdatingCurrent acompanha o idioma e a região configurados no aparelho.
+    static func createdAt(_ date: Date, locale: Locale = .autoupdatingCurrent) -> String {
+        date.formatted(
+            .dateTime
+                .day(.twoDigits)
+                .month(.wide)
+                .year()
+                .locale(locale)
+        )
+    }
 }
