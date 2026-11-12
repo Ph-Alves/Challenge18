@@ -13,6 +13,8 @@ struct IconsSet {
     let placeholderCheckIcon: String // foi
     let photoPlaceholder: String //foi
     let archivedChallengeIcon: String  //foi//foi
+    let archivedInvertedChallengeIcon: String
+    let retryIcon: String
     let profilePlaceholder: String // foi
     let camera: String // foi
     let cameraIcon: String // foi

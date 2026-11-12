@@ -1,7 +1,7 @@
 {
   "images" : [
     {
-      "filename" : "Mode=Light.svg",
+      "filename" : "Mode=Light 3.svg",
       "idiom" : "universal"
     },
     {
@@ -11,7 +11,7 @@
           "value" : "light"
         }
       ],
-      "filename" : "Mode=Light 1.svg",
+      "filename" : "Mode=Light 2.svg",
       "idiom" : "universal"
     },
     {
@@ -21,7 +21,7 @@
           "value" : "dark"
         }
       ],
-      "filename" : "Archived Icon.svg",
+      "filename" : "Archived Icon 3.svg",
       "idiom" : "universal"
     }
   ],
