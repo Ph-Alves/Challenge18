@@ -11,17 +11,18 @@ struct ArchivedChallengeRow: View {
     let activity: Activity
     let onRestore: () -> Void
     @Environment(DesignSystem.self) private var designSystem
-
+    @State private var isRestoreAlertPresented = false
+    
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 17) {
             HStack(spacing: 10) {
                 Image(activity.category.closedIcon)
                     .resizable()
-                    .frame(width: 63, height: 63)
+                    .frame(width: 44, height: 44)
                     .accessibilityHidden(true)
 
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(activity.name)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(activity.result?.achievementTitle ?? activity.name)
                         .font(designSystem.style.typography.subtitle3)
                         .lineLimit(1)
 
@@ -41,16 +42,30 @@ struct ArchivedChallengeRow: View {
             .padding(.horizontal, 18)
             .padding(.vertical, 11)
             .overlay(
-                RoundedRectangle(cornerRadius: 12)
+                RoundedRectangle(cornerRadius: 9)
                     .stroke(.black, lineWidth: 2)
             )
             .accessibilityElement(children: .combine)
 
             CircleIconButton(
-                icon: designSystem.style.icons.retryIcon,
-                size: 54,
-                action: onRestore
+                icon: designSystem.style.icons.retryIcon.card,
+                size: 20,
+                padding: 10,
+                action: {
+                    isRestoreAlertPresented = true
+                },
+                background: designSystem.style.colors.fillPrimary
             )
+        }
+        .alert("Restaurar desafio?", isPresented: $isRestoreAlertPresented) {
+            
+            Button("Cancelar", role: .cancel) {}
+            Button("Restaurar") {
+                onRestore()
+            }
+            
+        } message: {
+            Text("Deseja restaurar este desafio?")
         }
     }
 }
@@ -59,7 +74,7 @@ struct ArchivedChallengeRow: View {
     let activity = Activity(
         category: .physical,
         result: nil,
-        name: "Caminhada ao ar livre",
+        name: "Caminhada livre",
         description: "Faça uma caminhada de 20 minutos em um parque perto de você.",
         archived: true
     )

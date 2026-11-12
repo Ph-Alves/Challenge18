@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct CategoryFilterButton: View {
+    @Environment(DesignSystem.self) private var designSystem
+    
     let category: ActivityCategory
     let isSelected: Bool
     let action: () -> Void
@@ -17,18 +19,13 @@ struct CategoryFilterButton: View {
             VStack(spacing: 6) {
                 // vai quebrar por conta do asset de alta, se quiser testar precisa comentar a imagem ou ajustar o tamanho
                 Image(category.closedIcon)
-
-                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundStyle(.black)
-                    .frame(width: 44, height: 44)
-                    .background(
-                        Circle().fill(Color.E_0_E_0_E_0)
-                    )
+                    .resizable()
+                    .frame(width: 63, height: 63)
 
                 Text(category.text)
-                    .font(.caption)
+                    .font(designSystem.style.typography.text3)
+                    .foregroundStyle(designSystem.style.colors.textPrimary)
                     .fontWeight(isSelected ? .semibold : .regular)
-                    .foregroundStyle(.black)
             }
             .frame(maxWidth: .infinity)
             .contentShape(Rectangle())
@@ -37,4 +34,9 @@ struct CategoryFilterButton: View {
         .accessibilityLabel("filtrar por \(category.text)")
         .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
+}
+
+#Preview {
+    CategoryFilterButton(category: .cognitive, isSelected: false, action: { print("click") })
+        .environment(DesignSystem.shared)
 }

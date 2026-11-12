@@ -9,6 +9,7 @@ import SwiftUI
 
 
 struct ChallengesView: View {
+    @Environment(DesignSystem.self) private var designSystem
 
     // MARK: - Variables
     let interactor: ChallengesInteractorProtocol
@@ -33,19 +34,17 @@ struct ChallengesView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 header
-                    .padding(.top, 24)
+                    .padding(.bottom, 15)
 
                 ChallengesSearchBar(text: $searchText)
-                    .padding(.top, 30)
+                    .padding(.bottom, 23)
 
                 filters
-                    .padding(.top, 20)
+                    .padding(.bottom, 27)
 
                 content
-                    .padding(.top, 40)
             }
             .padding(.horizontal, 30)
-            .padding(.bottom, 32)
         }
         .scrollDismissesKeyboard(.immediately)
         .background(Color.white)
@@ -81,14 +80,19 @@ struct ChallengesView: View {
                         Button(role: .close) { interactor.closeSummary() }
                     }
                     ToolbarItem(placement: .topBarTrailing) {
-                        Button("mais opções", systemImage: "ellipsis") {
-                            isDeleteAlertPresented = true
+                        Menu {
+                            Button("Apagar", systemImage: "trash", role: .destructive) {
+                                isDeleteAlertPresented = true
+                            }
+                        } label: {
+                            Image(systemName: "ellipsis")
                         }
+                        .accessibilityLabel("mais opções")
                     }
                 }
                 .alert("Realmente deseja apagar?", isPresented: $isDeleteAlertPresented) {
                     Button("Cancelar", role: .cancel) { }
-                    Button("Arquivar", role: .destructive) {
+                    Button("Apagar", role: .destructive) {
                         interactor.deleteChallenge()
                     }
                 } message: {
@@ -153,20 +157,28 @@ struct ChallengesView: View {
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 2) {
                 Text("desafios")
-                    .font(.system(size: 34, weight: .bold))
+                    .font(designSystem.style.typography.title1)
+                    .foregroundStyle(designSystem.style.colors.textPrimary)
                     .accessibilityAddTraits(.isHeader)
 
                 Text("desafios que você concluiu")
-                    .font(.subheadline)
+                    .font(designSystem.style.typography.text2)
+                    .foregroundStyle(designSystem.style.colors.textPrimary)
             }
             .foregroundStyle(.black)
 
             Spacer()
 
             CircleIconButton(
-                icon: "archivebox",
-                action: { interactor.openArchived() }
+                icon: designSystem.style.icons.archivedChallengeIcon,
+                size: 20,
+                padding: 10,
+                action: { interactor.openArchived() },
+                background: designSystem.style.colors.fillPrimary,
+                
             )
+            
+          
         }
     }
 
@@ -300,8 +312,10 @@ private func makeChallengesPreview(seeded: Bool) -> some View {
 
 #Preview("com desafios") {
     makeChallengesPreview(seeded: true)
+        .environment(DesignSystem.shared)
 }
 
 #Preview("vazio") {
     makeChallengesPreview(seeded: false)
+        .environment(DesignSystem.shared)
 }

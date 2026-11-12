@@ -11,17 +11,22 @@ import SwiftUI
 // Usado no botão de arquivados (topo da lista) e no "devolver" de cada arquivado.
 struct CircleIconButton: View {
     @Environment(DesignSystem.self) private var designSystem
-
     let icon: String
-    var size: CGFloat = 44
+    var size: CGFloat = 40
+    var padding: CGFloat = 10
     let action: () -> Void
+    let background: Color
 
     var body: some View {
         Button(action: action) {
             Image(icon)
+                .resizable()
                 .frame(width: size, height: size)
-
-            .background(designSystem.style.colors.fillPrimary, in: Circle())        }
+                .padding(padding)
+        }
         .buttonStyle(.plain)
+        .background(background)
+        .clipShape(Circle())
+
     }
 }
