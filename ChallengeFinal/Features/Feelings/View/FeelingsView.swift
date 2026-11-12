@@ -14,6 +14,8 @@ struct FeelingsView: View {
     
     // MARK: - Variables
     
+    @Environment(DesignSystem.self) private var designSystem
+    
     /// Pelo protocolo, para dar para passar um Interactor falso no preview.
     let interactor: FeelingsInteractorProtocol
     
@@ -27,7 +29,18 @@ struct FeelingsView: View {
     
     var body: some View {
         ScrollView {
-            VStack(spacing: 37) {
+            VStack(spacing: 30) {
+                
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("seus sentimentos")
+                        .font(designSystem.currentTheme.style.typography.title1)
+                        .padding(.top, 24)
+                    Text("acompanhe como tem se sentido")
+                        .font(designSystem.currentTheme.style.typography.text2)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 12)
+                
                 // O gráfico recebe só dados e uma closure, sem conhecer Store nem Interactor.
                 FeelingsGraphView(feelings: store.feelings, loadAction: interactor.loadFeelings)
                 
@@ -125,4 +138,5 @@ private final class FeelingsInteractorPreviewMock: FeelingsInteractorProtocol {
         store: FeelingsStore(),
         cameraPreview: CameraPreview(session: AVCaptureSession())
     )
+    .environment(DesignSystem.shared)
 }

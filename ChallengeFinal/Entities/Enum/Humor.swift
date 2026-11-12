@@ -7,11 +7,13 @@
 
 // MARK: - Tipo de humor do usuário ao realizar uma atividade
 enum Humor: String, Codable, CaseIterable { //CaseIterable: a roleta monta as opções na ordem em que os cases foram declarados.
-    case veryUnpleasant = "Péssimo"
-    case unpleasant = "Desagradável"
-    case neutral = "Neutro"
-    case pleasant = "Agradável"
     case veryPleasant = "Ótimo"
+    case pleasant = "Agradável"
+    case neutral = "Neutro"
+    case unpleasant = "Desagradável"
+    case veryUnpleasant = "Péssimo"
+
+
     
     // Vêm do tema ativo (sem valor próprio no enum)
     var icon: String {
@@ -23,6 +25,10 @@ enum Humor: String, Codable, CaseIterable { //CaseIterable: a roleta monta as op
     }
     
     var cardIcon: String { DesignSystem.shared.style.icons.feelingIcons[self]?.card ?? ""
+    }
+    
+    var whiteIcon: String {
+        DesignSystem.shared.style.icons.feelingIcons[self]?.white ?? ""
     }
     
 }

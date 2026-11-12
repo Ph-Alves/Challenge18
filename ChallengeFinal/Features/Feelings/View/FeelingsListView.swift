@@ -28,42 +28,47 @@ struct FeelingsListView: View {
         
         //Variables
         @Environment(DesignSystem.self) private var designSystem
+        
         var humor: Humor
         var activities: [(activity: Activity, image: Image?)]?
         var count: Int
         var redirectAction: (Activity) -> Void
         @State private var isSelected: Bool = false
         
+        //MARK: - Atalho para usar apenas color.token
+        private var colors: ColorPalette { designSystem.currentTheme.style.colors }
+        
         var body: some View {
             Button {
                 isSelected.toggle()
             } label: {
                 HStack {
-                    Image(humor.icon)
-//                        .renderingMode(.template)
+                    Image(isSelected ? humor.whiteIcon : humor.icon)
                         .resizable()
                         .frame(width: 27, height: 27)
-//                        .foregroundStyle(designSystem.currentTheme.style.colors.textInverse)
+                    
                     Text(humor.rawValue)
                         .font(designSystem.currentTheme.style.typography.subtitle1)
-                        .foregroundStyle(designSystem.currentTheme.style.colors.textInverse)
                         .bold()
                     
                     Text("(\(count))")
-                        .foregroundStyle(designSystem.currentTheme.style.colors.textInverse)
                     
                     Spacer()
                     
                     Image(systemName: isSelected ? "chevron.up" : "chevron.down")
-                        .foregroundStyle(designSystem.currentTheme.style.colors.textInverse)
                 }
             }
+            .foregroundStyle(isSelected ? colors.textInverse : colors.textPrimary)
             .contentShape(RoundedRectangle(cornerRadius: 12))
             .buttonStyle(.plain)
             .padding(.horizontal, 24)
             .padding(.vertical, 19)
-            .background(designSystem.currentTheme.style.colors.fillPrimary)
+            .background(isSelected ? colors.backgroundInverse: colors.backgroundPrimary)
             .clipShape(RoundedRectangle(cornerRadius: 12))
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(colors.backgroundInverse)
+            )
             
             if let activities, isSelected {
                 ScrollView([.horizontal]) {

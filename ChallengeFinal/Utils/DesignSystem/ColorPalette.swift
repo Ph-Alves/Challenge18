@@ -10,6 +10,7 @@ import SwiftUI
 
 struct ColorPalette {
     let backgroundPrimary: Color
+    let backgroundInverse: Color
     let fillPrimary: Color
     let fillPlaceholder: Color
     let textPrimary: Color
