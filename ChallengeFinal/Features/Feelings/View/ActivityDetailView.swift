@@ -60,13 +60,5 @@ struct ActivityDetailView: View {
 }
 
 #Preview {
-    ActivityDetailView(
-        returnAction: {},
-        deleteAction: { _ in },
-        retakeAction: {},
-        shareAction: {},
-        selected: Activity(category: .cognitive, result: nil, name: "", description: "", archived: false),
-        createdAt: "9 de outubro de 2026"
-    )
-    .environment(DesignSystem.shared)
+    ActivityDetailView(returnAction: {}, deleteAction: {_ in}, retakeAction: {}, shareAction: {}, selected: Activity(category: .cognitive, result: nil, name: "", description: "", archived: false))
 }

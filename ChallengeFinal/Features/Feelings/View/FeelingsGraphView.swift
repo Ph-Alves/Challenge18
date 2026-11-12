@@ -13,6 +13,8 @@ struct FeelingsGraphView: View {
     
     // MARK: - Variables
     
+    @Environment(DesignSystem.self) private var designSystem
+    
     /// Activities agrupadas por humor, vindas da Store.
     let feelings: [Humor: [(activity: Activity, image: Image?)]]
     
@@ -29,13 +31,13 @@ struct FeelingsGraphView: View {
             // Cabeçalho
             VStack(alignment: .leading, spacing: 2) {
                 Text("seus sentimentos")
-                    .font(.largeTitle.bold())
+                    .font(designSystem.currentTheme.style.typography.title1)
                 Text("acompanhe como tem se sentido")
-                    .font(.title3)
+                    .font(designSystem.currentTheme.style.typography.text2)
             }
             VStack(spacing: 16) {
                 Text("Top emoções")
-                    .font(.title2.bold())
+                    .font(designSystem.currentTheme.style.typography.subtitle1)
                     .padding(.top, 24)
                     .contentTransition(.opacity)
                     
@@ -70,7 +72,7 @@ struct FeelingsGraphView: View {
                             
                             // Quantidade com dois dígitos, ex.: "(03)".
                             Text("(\(String(format: "%02d", count)))")
-                                .font(.caption)
+                                .font(designSystem.currentTheme.style.typography.text3)
                         }
                         .frame(maxWidth: .infinity)
                     }
@@ -94,4 +96,5 @@ struct FeelingsGraphView: View {
 
 #Preview {
     FeelingsGraphView(feelings: [:], loadAction: {})
+        .environment(DesignSystem.shared)
 }

@@ -26,6 +26,8 @@ struct FeelingsListView: View {
     
     private struct listSection: View {
         
+        //Variables
+        @Environment(DesignSystem.self) private var designSystem
         var humor: Humor
         var activities: [(activity: Activity, image: Image?)]?
         var count: Int
@@ -38,27 +40,29 @@ struct FeelingsListView: View {
             } label: {
                 HStack {
                     Image(humor.icon)
+//                        .renderingMode(.template)
                         .resizable()
                         .frame(width: 27, height: 27)
+//                        .foregroundStyle(designSystem.currentTheme.style.colors.textInverse)
                     Text(humor.rawValue)
-                        .font(.system(size: 24))
-                        .foregroundStyle(.white)
+                        .font(designSystem.currentTheme.style.typography.subtitle1)
+                        .foregroundStyle(designSystem.currentTheme.style.colors.textInverse)
                         .bold()
                     
                     Text("(\(count))")
-                        .foregroundStyle(.white)
+                        .foregroundStyle(designSystem.currentTheme.style.colors.textInverse)
                     
                     Spacer()
                     
                     Image(systemName: isSelected ? "chevron.up" : "chevron.down")
-                        .foregroundStyle(.white)
+                        .foregroundStyle(designSystem.currentTheme.style.colors.textInverse)
                 }
             }
             .contentShape(RoundedRectangle(cornerRadius: 12))
             .buttonStyle(.plain)
             .padding(.horizontal, 24)
             .padding(.vertical, 19)
-            .background(.black)
+            .background(designSystem.currentTheme.style.colors.fillPrimary)
             .clipShape(RoundedRectangle(cornerRadius: 12))
             
             if let activities, isSelected {
@@ -82,4 +86,5 @@ struct FeelingsListView: View {
 
 #Preview {
     FeelingsListView(feelings: [.unpleasant: [(activity: Activity(category: .cognitive, result: nil, name: "teste", description: "", archived: false), image: nil)]], redirectAction: {_ in})
+        .environment(DesignSystem.shared)
 }
