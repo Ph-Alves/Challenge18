@@ -274,6 +274,7 @@ struct StoreTests {
         #expect(store.presentDetail == false)
         #expect(store.selectedActivity == nil)
         #expect(store.selectedPhoto == nil)
+        #expect(store.selectedCreatedAt == nil)
         #expect(store.isCameraPresented == false)
         #expect(store.cameraFlashIcon == "bolt.slash")
         #expect(store.errorMessage == nil)
@@ -285,16 +286,17 @@ struct StoreTests {
         let store = FeelingsStore()
         let walk = makeFeelingActivity(named: "Caminhada", humor: .pleasant)
 
-        store.presentActivityDetails(activity: walk, photo: Image(systemName: "photo"))
+        store.presentActivityDetails(activity: walk, photo: Image(systemName: "photo"), createdAt: "5 de novembro de 2026")
 
         #expect(store.presentDetail)
         #expect(store.selectedActivity === walk)
         #expect(store.selectedPhoto != nil)
+        #expect(store.selectedCreatedAt == "5 de novembro de 2026")
     }
 
     @Test func testingReturnToFeelingsClosesDetail() {
         let store = FeelingsStore()
-        store.presentActivityDetails(activity: makeFeelingActivity(named: "Caminhada", humor: .pleasant), photo: nil)
+        store.presentActivityDetails(activity: makeFeelingActivity(named: "Caminhada", humor: .pleasant), photo: nil, createdAt: "5 de novembro de 2026")
 
         store.returnToFeelings()
 
@@ -307,7 +309,7 @@ struct StoreTests {
         let walk = makeFeelingActivity(named: "Caminhada", humor: .pleasant)
         let read = makeFeelingActivity(named: "Leitura", humor: .veryPleasant)
         store.presentFeelingsLoaded(feelings: [.pleasant: [(walk, nil)], .veryPleasant: [(read, nil)]])
-        store.presentActivityDetails(activity: walk, photo: nil)
+        store.presentActivityDetails(activity: walk, photo: nil, createdAt: "5 de novembro de 2026")
 
         store.presentPhoto(Image(systemName: "photo"))
 
@@ -331,12 +333,13 @@ struct StoreTests {
     @Test func testingPresentDetailVisibilityKeepsSelectedActivity() {
         let store = FeelingsStore()
         let walk = makeFeelingActivity(named: "Caminhada", humor: .pleasant)
-        store.presentActivityDetails(activity: walk, photo: nil)
+        store.presentActivityDetails(activity: walk, photo: nil, createdAt: "5 de novembro de 2026")
 
         store.presentDetailVisibility(isVisible: false)
 
         #expect(store.presentDetail == false)
         #expect(store.selectedActivity === walk)
+        #expect(store.selectedCreatedAt == "5 de novembro de 2026")
 
         store.presentDetailVisibility(isVisible: true)
 
@@ -445,15 +448,17 @@ struct StoreTests {
         let store = ChallengesStore()
         let walk = makeFeelingActivity(named: "Caminhada", humor: .pleasant)
 
-        store.displaySummary(walk, photo: Image(systemName: "photo"))
+        store.displaySummary(walk, photo: Image(systemName: "photo"), createdAt: "5 de novembro de 2026")
 
         #expect(store.selectedChallenge === walk)
         #expect(store.selectedPhoto != nil)
+        #expect(store.selectedCreatedAt == "5 de novembro de 2026")
 
-        store.displaySummary(nil, photo: nil)
+        store.displaySummary(nil, photo: nil, createdAt: nil)
 
         #expect(store.selectedChallenge == nil)
         #expect(store.selectedPhoto == nil)
+        #expect(store.selectedCreatedAt == nil)
     }
 
     @Test func testingChallengesStoreShareAndErrorState() {

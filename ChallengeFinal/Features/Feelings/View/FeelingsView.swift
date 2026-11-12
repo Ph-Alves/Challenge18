@@ -47,7 +47,8 @@ struct FeelingsView: View {
                     retakeAction: interactor.retakePhoto,
                     shareAction: { interactor.shareStory(store.storyImage) },
                     selected: activity,
-                    photo: store.selectedPhoto
+                    photo: store.selectedPhoto,
+                    createdAt: store.selectedCreatedAt
                 )
                 .presentationDetents([.large])
                 .presentationDragIndicator(.visible)
