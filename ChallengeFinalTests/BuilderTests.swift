@@ -252,7 +252,7 @@ struct BuilderTests {
     @Test(arguments: [
         (ActivityStep.draw, ActivityNavigationButton.back),
         (.challenge, .close),
-        (.inProgress, .back),
+        (.inProgress, .close),
         (.mood, .close),
         (.photo, .back),
         (.summary, .back)
@@ -261,12 +261,28 @@ struct BuilderTests {
         #expect(step.navigationButton == expected)
     }
 
-    // Só o X abre o alerta "deseja sair do desafio?", então só os steps com X têm mensagem.
-    @Test(arguments: [ActivityStep.draw, .challenge, .inProgress, .mood, .photo, .summary])
-    func testingExitMessageExistsOnlyForStepsWithCloseButton(step: ActivityStep) {
+    // Só o X abre o alerta "deseja sair do desafio?". Nele, `.challenge` e `.mood` explicam o que acontece ao sair;
+    // `.inProgress` também tem X, mas mostra só o título e os botões, sem mensagem.
+    @Test(arguments: [
+        (ActivityStep.draw, false),
+        (.challenge, true),
+        (.inProgress, false),
+        (.mood, true),
+        (.photo, false),
+        (.summary, false)
+    ])
+    func testingExitMessageForEachStep(step: ActivityStep, expectsMessage: Bool) {
         let hasMessage = step.exitMessage?.isEmpty == false
 
-        #expect(hasMessage == (step.navigationButton == .close))
+        #expect(hasMessage == expectsMessage)
+    }
+
+    // Todo step sem X não abre alerta, então não pode ter mensagem de saída.
+    @Test(arguments: [ActivityStep.draw, .challenge, .inProgress, .mood, .photo, .summary])
+    func testingStepsWithoutCloseButtonHaveNoExitMessage(step: ActivityStep) {
+        guard step.navigationButton != .close else { return }
+
+        #expect(step.exitMessage == nil)
     }
 
 //    @Test func testingProfileBuilding() async throws {
