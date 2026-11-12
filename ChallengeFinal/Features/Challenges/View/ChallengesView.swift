@@ -80,14 +80,19 @@ struct ChallengesView: View {
                         Button(role: .close) { interactor.closeSummary() }
                     }
                     ToolbarItem(placement: .topBarTrailing) {
-                        Button("mais opções", systemImage: "ellipsis") {
-                            isDeleteAlertPresented = true
+                        Menu {
+                            Button("Apagar", systemImage: "trash", role: .destructive) {
+                                isDeleteAlertPresented = true
+                            }
+                        } label: {
+                            Image(systemName: "ellipsis")
                         }
+                        .accessibilityLabel("mais opções")
                     }
                 }
                 .alert("Realmente deseja apagar?", isPresented: $isDeleteAlertPresented) {
                     Button("Cancelar", role: .cancel) { }
-                    Button("Arquivar", role: .destructive) {
+                    Button("Apagar", role: .destructive) {
                         interactor.deleteChallenge()
                     }
                 } message: {
@@ -166,9 +171,14 @@ struct ChallengesView: View {
 
             CircleIconButton(
                 icon: designSystem.style.icons.archivedChallengeIcon,
+                size: 20,
+                padding: 10,
                 action: { interactor.openArchived() },
-                background: designSystem.style.colors.fillPrimary
+                background: designSystem.style.colors.fillPrimary,
+                
             )
+            
+          
         }
     }
 
