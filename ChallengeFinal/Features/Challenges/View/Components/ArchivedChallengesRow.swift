@@ -49,7 +49,8 @@ struct ArchivedChallengeRow: View {
             CircleIconButton(
                 icon: "arrow.clockwise",
                 size: 54,
-                action: onRestore
+                action: onRestore,
+                background: .black
             )
         }
     }

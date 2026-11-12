@@ -33,7 +33,7 @@ struct RegisteredActivityCard: View {
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 20)
-                    .stroke(designSystem.style.colors.strokeDefault, lineWidth: 1.5)
+                    .stroke(designSystem.style.colors.strokeDefault, lineWidth: 1)
             )
 
             if let humor {

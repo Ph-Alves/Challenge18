@@ -198,7 +198,6 @@ struct SummaryView: View {
     //botoes da summaryview quando um desafio é aberto e nao possui humor.
     private var withoutFeelingButtons: some View {
         CustomButtonComponent(title: "reflita!", icon: nil, type: .primary, action: onReflect)
-            .bold()
         photoButton(type: .secondary)
         shareButton(type: .tertiary)
     }
@@ -206,18 +205,16 @@ struct SummaryView: View {
     //MARK: - Botões reutilizáveis ao longo das subviews
     
     private func shareButton(type: CustomButtonType) -> some View {
-        CustomButtonComponent(title: "compartilhar", icon: "square.and.arrow.up", type: type, action: onShare)
-            .bold()
+        CustomButtonComponent(title: "compartilhar", icon: designSystem.style.icons.shareIcon, type: type, action: onShare)
     }
     
     private func photoButton(type: CustomButtonType) -> some View {
         CustomButtonComponent(
-            title: photo == nil ? "adicionar foto" : "substituir foto",
-            icon: photo == nil ? nil : "arrow.clockwise",
+            title: photo == nil ? "adicionar foto" : "trocar foto",
+            icon: photo == nil ? nil : designSystem.style.icons.retryIcon.card,
             type: type,
             action: onFinish
         )
-        .bold()
     }
 }
     
@@ -239,6 +236,36 @@ struct SummaryView: View {
 #Preview("display sem foto") {
     SummaryView(
         style: .display,
+        category: .physical,
+        createdAt: "9 de outubro de 2026",
+        title: "mestre offline",
+        description: "você passou 1h se exercitando sem entrar em nenhuma rede social",
+        photo: nil,
+        humor: .unpleasant,
+        onFinish: {},
+        onShare: {}
+    )
+    .environment(DesignSystem.shared)
+}
+
+#Preview("activity com foto") {
+    SummaryView(
+        style: .activity,
+        category: .physical,
+        createdAt: "9 de outubro de 2026",
+        title: "mestre offline",
+        description: "você passou 1h se exercitando sem entrar em nenhuma rede social",
+        photo: Image(systemName: "photo"),
+        humor: .unpleasant,
+        onFinish: {},
+        onShare: {}
+    )
+    .environment(DesignSystem.shared)
+}
+
+#Preview("activity sem foto") {
+    SummaryView(
+        style: .activity,
         category: .physical,
         createdAt: "9 de outubro de 2026",
         title: "mestre offline",
