@@ -550,6 +550,7 @@ final class ActivityInteractor: ActivityInteractorProtocol {
     /// O sorteio usa os arquivados para não repetir esse tipo de desafio.
     func archiveActivity(title: String, description: String, in category: ActivityCategory) {
         let activity = Activity(category: category, result: nil, name: title, description: description, archived: true)
+        activity.archivedAt = Date()
         do {
             try activityRepository.add(activity)
             prepare(for: category)

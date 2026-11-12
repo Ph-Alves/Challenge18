@@ -26,6 +26,8 @@ final class Activity {
     
     var archived: Bool = false
     
+    var archivedAt: Date?
+    
     init(category: ActivityCategory, result: ActivityResult?, createdAt: Date = Date(), name: String, description: String, archived: Bool) {
         self.category = category
         self.result = result
