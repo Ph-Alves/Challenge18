@@ -71,7 +71,7 @@ struct ChallengeDisplayView: View {
                         ActionDialogComponent(title: "Gostaria de iniciar esse desafio?", firstOptionText: "Outra opção", secondOptionText: "aceitar", firstAction: refuseAction, secondAction: acceptAction)
                             .padding(.horizontal, 17)
 
-                        CustomButtonComponent(title: "Arquivar desafio da lista", icon: "archivebox.fill", action: {
+                        CustomButtonComponent(title: "Arquivar desafio da lista", icon: "archivebox.fill", type: .tertiary, action: {
                             showArchiveConfirmation = true
                         })
                         .padding(.horizontal, 47)

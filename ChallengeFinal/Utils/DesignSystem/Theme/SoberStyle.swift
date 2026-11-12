@@ -14,12 +14,15 @@ struct SoberStyle: ThemeStyleProtocol {
         title2: .custom("Bodoni 72", size: 32, relativeTo: .title),
         title3: .custom("Bodoni 72", size: 24, relativeTo: .title3),
         title4: .custom("Bodoni 72", size: 18, relativeTo: .title3),
+        
         subtitle1:.custom("SpecialGothic-Bold", size: 22, relativeTo: .title2),
         subtitle2: .custom("SpecialGothic-SemiBold", size: 18, relativeTo: .title3),
         subtitle3: .custom("SpecialGothic-Bold", size: 14, relativeTo: .subheadline),
         text1: .custom("SpecialGothic-Regular", size: 22, relativeTo: .title2),
         text2: .custom("SpecialGothic-Regular", size: 16, relativeTo: .callout),
-        text3: .custom("SpecialGothic-Regular", size: 12, relativeTo: .caption))
+        text3: .custom("SpecialGothic-Regular", size: 12, relativeTo: .caption),
+        text4: .custom("SpecialGothic-Bold", size: 36, relativeTo: .title))
+
     
     let colors = ColorPalette(
         backgroundPrimary: .soberBackgroundPrimary,
@@ -60,6 +63,8 @@ struct SoberStyle: ThemeStyleProtocol {
         placeholderCheckIcon: "placeholderCheckIcon",
         photoPlaceholder: "photoPlaceholder",
         archivedChallengeIcon: "archiveIcon",
+        archivedInvertedChallengeIcon: "archiveInvertedIcon",
+        retryIcon: "retryIcon",
         profilePlaceholder: "profilePlaceholder",
         camera: "camera",
         cameraIcon: "cameraIcon",

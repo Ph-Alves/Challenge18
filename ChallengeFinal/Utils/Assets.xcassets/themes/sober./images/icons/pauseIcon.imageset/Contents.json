@@ -1,7 +1,7 @@
 {
   "images" : [
     {
-      "filename" : "pid.svg",
+      "filename" : "pid 3.svg",
       "idiom" : "universal"
     },
     {
@@ -11,7 +11,7 @@
           "value" : "light"
         }
       ],
-      "filename" : "pid 1.svg",
+      "filename" : "pid 4.svg",
       "idiom" : "universal"
     },
     {
@@ -21,7 +21,7 @@
           "value" : "dark"
         }
       ],
-      "filename" : "pil.svg",
+      "filename" : "pil 3.svg",
       "idiom" : "universal"
     }
   ],
