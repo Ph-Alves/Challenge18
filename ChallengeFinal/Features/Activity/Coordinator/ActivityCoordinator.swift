@@ -17,8 +17,8 @@ enum ActivityStep: Codable {
     /// Qual botão cada step mostra 
     var navigationButton: ActivityNavigationButton {
         switch self {
-        case .draw, .photo, .summary, .inProgress: .back
-        case .challenge, .mood: .close
+        case .draw, .photo, .summary: .back
+        case .challenge, .mood, .inProgress: .close
         }
     }
     

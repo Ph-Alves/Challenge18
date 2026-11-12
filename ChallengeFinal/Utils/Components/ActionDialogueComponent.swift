@@ -20,30 +20,34 @@ struct ActionDialogComponent: View {
     var title: String
     var titleStyle: TitleStyle = .large
 
-    var firstOptionText: String
-    var secondOptionText: String
+    var firstOptionText: String?
+    var secondOptionText: String?
     
     var firstAction: () -> Void
     var secondAction: () -> Void
     
+    var firstIcon: String? = nil
+    var secondIcon: String? = nil
+    
     var body: some View {
         VStack(spacing: 22) {
             Text(title)
-                .font(titleStyle == .large ? designSystem.style.typography.title3 : designSystem.style.typography.text1)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal)
+                .font(titleStyle == .large ? designSystem.style.typography.title3 : designSystem.style.typography.text4.bold())
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal)
             
+
             HStack(spacing: 20) {
                 CustomButtonComponent(
                     title: firstOptionText,
-                    icon: nil,
+                    icon: firstIcon,
                     type: .secondary,
                     action: firstAction
                 )
                 
                 CustomButtonComponent(
-                    title: secondOptionText,
-                    icon: nil,
+                    title: secondOptionText ,
+                    icon: secondIcon,
                     type: .primary,
                     action: secondAction
                 )

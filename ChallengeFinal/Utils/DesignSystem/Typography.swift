@@ -19,4 +19,6 @@ struct Typography {
     let text1: Font
     let text2: Font
     let text3: Font
+    let text4: Font
+
 }
