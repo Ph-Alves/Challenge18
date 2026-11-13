@@ -146,7 +146,7 @@ struct PhotoStepView: View {
     private var takePictureButton: some View {
         CustomButtonComponent(
             title: captureButtonTitle,
-            icon: hasPhoto ? designSystem.style.icons.retryIcon : nil,
+            icon: hasPhoto ? designSystem.style.icons.retryIcon.base : nil,
             type: hasPhoto ? .secondary : .primary,
             action: onTakePhoto
         )

@@ -18,6 +18,7 @@ struct SoberStyle: ThemeStyleProtocol {
         subtitle1:.custom("SpecialGothic-Bold", size: 22, relativeTo: .title2),
         subtitle2: .custom("SpecialGothic-SemiBold", size: 18, relativeTo: .title3),
         subtitle3: .custom("SpecialGothic-Bold", size: 14, relativeTo: .subheadline),
+        
         text1: .custom("SpecialGothic-Regular", size: 22, relativeTo: .title2),
         text2: .custom("SpecialGothic-Regular", size: 16, relativeTo: .callout),
         text3: .custom("SpecialGothic-Regular", size: 12, relativeTo: .caption),
@@ -65,7 +66,8 @@ struct SoberStyle: ThemeStyleProtocol {
         photoPlaceholder: "photoPlaceholder",
         archivedChallengeIcon: "archiveIcon",
         archivedInvertedChallengeIcon: "archiveInvertedIcon",
-        retryIcon: "retryIcon",
+        shareIcon: "shareIcon",
+        retryIcon: (base: "retryIcon", card: "retryIconCard"),
         profilePlaceholder: "profilePlaceholder",
         camera: "camera",
         cameraIcon: "cameraIcon",
