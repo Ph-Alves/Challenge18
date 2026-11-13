@@ -41,15 +41,24 @@ struct ActivityDetailView: View {
                     Button(role: .close, action: returnAction)
                 }
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("mais opções", systemImage: "ellipsis") {
-                        openAlert = true
+                    Menu {
+                        Button("Apagar", systemImage: "trash", role: .destructive) {
+                            
+                            openAlert = true
+                            
+                        }
+                        .tint(.red)
+                    }label: {
+                        
+                        Image(systemName: "ellipsis")
+                        
                     }
                 }
             }
         }
         .alert("Realmente deseja apagar?", isPresented: $openAlert) {
             Button("Cancelar", role: .cancel) { openAlert = false }
-            Button("Arquivar", role: .destructive) {
+            Button("Apagar", role: .destructive) {
                 deleteAction(selected)
                 returnAction()
             }
@@ -60,13 +69,5 @@ struct ActivityDetailView: View {
 }
 
 #Preview {
-    ActivityDetailView(
-        returnAction: {},
-        deleteAction: { _ in },
-        retakeAction: {},
-        shareAction: {},
-        selected: Activity(category: .cognitive, result: nil, name: "", description: "", archived: false),
-        createdAt: "9 de outubro de 2026"
-    )
-    .environment(DesignSystem.shared)
+    ActivityDetailView(returnAction: {}, deleteAction: {_ in}, retakeAction: {}, shareAction: {}, selected: Activity(category: .cognitive, result: nil, name: "", description: "", archived: false))
 }

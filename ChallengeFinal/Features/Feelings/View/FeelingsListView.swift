@@ -26,40 +26,49 @@ struct FeelingsListView: View {
     
     private struct listSection: View {
         
+        //Variables
+        @Environment(DesignSystem.self) private var designSystem
+        
         var humor: Humor
         var activities: [(activity: Activity, image: Image?)]?
         var count: Int
         var redirectAction: (Activity) -> Void
         @State private var isSelected: Bool = false
         
+        //MARK: - Atalho para usar apenas color.token
+        private var colors: ColorPalette { designSystem.currentTheme.style.colors }
+        
         var body: some View {
             Button {
                 isSelected.toggle()
             } label: {
                 HStack {
-                    Image(humor.icon)
+                    Image(isSelected ? humor.whiteIcon : humor.icon)
                         .resizable()
                         .frame(width: 27, height: 27)
+                    
                     Text(humor.rawValue)
-                        .font(.system(size: 24))
-                        .foregroundStyle(.white)
+                        .font(designSystem.currentTheme.style.typography.subtitle1)
                         .bold()
                     
                     Text("(\(count))")
-                        .foregroundStyle(.white)
                     
                     Spacer()
                     
                     Image(systemName: isSelected ? "chevron.up" : "chevron.down")
-                        .foregroundStyle(.white)
                 }
             }
+            .foregroundStyle(isSelected ? colors.textInverse : colors.textPrimary)
             .contentShape(RoundedRectangle(cornerRadius: 12))
             .buttonStyle(.plain)
             .padding(.horizontal, 24)
             .padding(.vertical, 19)
-            .background(.black)
+            .background(isSelected ? colors.backgroundInverse: colors.backgroundPrimary)
             .clipShape(RoundedRectangle(cornerRadius: 12))
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(colors.backgroundInverse)
+            )
             
             if let activities, isSelected {
                 ScrollView([.horizontal]) {
@@ -82,4 +91,5 @@ struct FeelingsListView: View {
 
 #Preview {
     FeelingsListView(feelings: [.unpleasant: [(activity: Activity(category: .cognitive, result: nil, name: "teste", description: "", archived: false), image: nil)]], redirectAction: {_ in})
+        .environment(DesignSystem.shared)
 }

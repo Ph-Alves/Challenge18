@@ -423,7 +423,7 @@ final class ChallengesInteractor: ChallengesInteractorProtocol {
         do {
             let archived = try repository.getAll()
                 .filter(\.archived)
-//                .sorted { $0.createdAt > $1.createdAt } //CHANGE: descomentar após o ph inserir a data de criação na model
+                .sorted { $0.createdAt > $1.createdAt } //CHANGE: descomentar após o ph inserir a data de criação na model
             presenter.presentArchivedChallenges(archived)
         } catch {
             presenter.presentError("não foi possível carregar os arquivados.")

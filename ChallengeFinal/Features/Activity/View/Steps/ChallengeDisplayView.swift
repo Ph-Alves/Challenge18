@@ -104,7 +104,7 @@ struct ChallengeDisplayView: View {
         }
         .alert("Deseja arquivar o desafio do grupo?", isPresented: $showArchiveConfirmation) {
             Button("Cancelar", role: .cancel) {}
-            Button("Excluir") {
+            Button("Arquivar") {
                 archiveAction()
                 showArchivedNotice = true
             }

@@ -1378,22 +1378,26 @@ struct InteractorTests {
 
     @Test func testingNextHumorWrapsFromLastToFirst() {
         let sut = makeActivitySUT()
-        sut.interactor.selectedHumor = .veryPleasant   // último da roleta
+        let first = Humor.allCases.first!
+        let last = Humor.allCases.last!
+        sut.interactor.selectedHumor = last   // último da roleta
 
         sut.interactor.nextHumor()
 
-        #expect(sut.interactor.selectedHumor == .veryUnpleasant)
-        #expect(sut.presenter.presentedHumors == [.veryUnpleasant])
+        #expect(sut.interactor.selectedHumor == first)
+        #expect(sut.presenter.presentedHumors == [first])
     }
 
     @Test func testingPreviousHumorWrapsFromFirstToLast() {
         let sut = makeActivitySUT()
-        sut.interactor.selectedHumor = .veryUnpleasant   // primeiro da roleta
+        let first = Humor.allCases.first!
+        let last = Humor.allCases.last!
+        sut.interactor.selectedHumor = first   // primeiro da roleta
 
         sut.interactor.previousHumor()
 
-        #expect(sut.interactor.selectedHumor == .veryPleasant)
-        #expect(sut.presenter.presentedHumors == [.veryPleasant])
+        #expect(sut.interactor.selectedHumor == last)
+        #expect(sut.presenter.presentedHumors == [last])
     }
     
     @Test func testingEachHumorChangePlaysOneSelectionTick() {
@@ -1409,14 +1413,15 @@ struct InteractorTests {
     // MARK: - Humor (roleta)
 
     @Test(arguments: [
-        (Humor.veryUnpleasant, 1, Humor.unpleasant),
-        (Humor.veryPleasant, 1, Humor.veryUnpleasant),   // dá a volta no fim
-        (Humor.veryUnpleasant, -1, Humor.veryPleasant),  // dá a volta no começo
-        (Humor.neutral, 0, Humor.neutral),
-        (Humor.neutral, 5, Humor.neutral)                // uma volta inteira
+        (0, 1, 1),     // anda uma fatia
+        (4, 1, 0),     // dá a volta no fim
+        (0, -1, 4),    // dá a volta no começo
+        (2, 0, 2),     // não anda
+        (2, 5, 2)      // uma volta inteira
     ])
-    func testingHumorMovedWrapsAroundTheWheel(start: Humor, offset: Int, expected: Humor) {
-        #expect(start.moved(by: offset) == expected)
+    func testingHumorMovedWrapsAroundTheWheel(startIndex: Int, offset: Int, expectedIndex: Int) {
+        let all = Humor.allCases
+        #expect(all[startIndex].moved(by: offset) == all[expectedIndex])
     }
 
     // MARK: - ActivityInteractor (compartilhamento)
@@ -1905,8 +1910,10 @@ struct InteractorTests {
         sut.interactor.nextHumor()
         sut.interactor.previousHumor()
 
-        #expect(sut.interactor.reflectionHumor == .pleasant)
-        #expect(sut.presenter.presentedHumors == [.neutral, .pleasant, .veryPleasant, .pleasant])
+        // Abre no neutro, anda +1, +1, -1: termina uma fatia depois do neutro.
+        let afterNeutral = Humor.neutral.moved(by: 1)
+        #expect(sut.interactor.reflectionHumor == afterNeutral)
+        #expect(sut.presenter.presentedHumors == [.neutral, afterNeutral, Humor.neutral.moved(by: 2), afterNeutral])
         #expect(sut.haptics.selectionTickCount == 3)
     }
 
@@ -1915,11 +1922,11 @@ struct InteractorTests {
         let activity = try addChallenge("Sem humor", humor: nil, in: sut.repository)
         sut.interactor.openSummary(activity)
         sut.interactor.openMood()
-        sut.interactor.previousHumor()   // neutro -> desagradável
+        sut.interactor.previousHumor()   // neutro -> uma fatia para trás
 
         sut.interactor.saveHumor()
 
-        #expect(activity.result?.humor == .unpleasant)
+        #expect(activity.result?.humor == Humor.neutral.moved(by: -1))
         #expect(sut.presenter.moodStates == [true, false])
         #expect(sut.presenter.summaries.last! === activity)   // o resumo continua aberto, agora com humor
         #expect(sut.presenter.challengesCalls.isEmpty == false)

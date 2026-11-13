@@ -18,6 +18,7 @@ struct SoberStyle: ThemeStyleProtocol {
         subtitle1:.custom("SpecialGothic-Bold", size: 22, relativeTo: .title2),
         subtitle2: .custom("SpecialGothic-SemiBold", size: 18, relativeTo: .title3),
         subtitle3: .custom("SpecialGothic-Bold", size: 14, relativeTo: .subheadline),
+        
         text1: .custom("SpecialGothic-Regular", size: 22, relativeTo: .title2),
         text2: .custom("SpecialGothic-Regular", size: 16, relativeTo: .callout),
         text3: .custom("SpecialGothic-Regular", size: 12, relativeTo: .caption),
@@ -26,6 +27,7 @@ struct SoberStyle: ThemeStyleProtocol {
     
     let colors = ColorPalette(
         backgroundPrimary: .soberBackgroundPrimary,
+        backgroundInverse: .soberBackgroundInverse,
         fillPrimary: .soberFillPrimary,
         fillPlaceholder: .soberFillPlaceholder,
         textPrimary: .soberTextPrimary,
@@ -54,11 +56,11 @@ struct SoberStyle: ThemeStyleProtocol {
         ],
         
         feelingIcons: [
-            .veryUnpleasant: (base: "veryUnpleasantBase", humor: "veryUnpleasantHumor", card: "veryUnpleasantCard"),
-            .unpleasant: (base: "unpleasantBase", humor: "unpleasantHumor", card: "unpleasantCard"),
-            .neutral: (base: "neutralBase", humor: "neutralHumor", card: "neutralCard"),
-            .pleasant: (base: "plesantBase", humor: "plesantHumor", card: "pleasantCard"),
-            .veryPleasant: (base: "veryPleasantBase", humor: "veryPleasantHumor", card: "veryPleasantCard")
+            .veryUnpleasant: (base: "veryUnpleasantBase", humor: "veryUnpleasantHumor", card: "veryUnpleasantCard", white: "veryUnpleasantWhite"),
+            .unpleasant:     (base: "unpleasantBase",     humor: "unpleasantHumor",     card: "unpleasantCard",     white: "unpleasantWhite"),
+            .neutral:        (base: "neutralBase",        humor: "neutralHumor",        card: "neutralCard",        white: "neutralWhite"),
+            .pleasant:       (base: "plesantBase",        humor: "plesantHumor",        card: "pleasantCard",       white: "plesantWhite"),
+            .veryPleasant:   (base: "veryPleasantBase",   humor: "veryPleasantHumor",   card: "veryPleasantCard",   white: "veryPleasantWhite")
         ],
         placeholderCheckIcon: "placeholderCheckIcon",
         photoPlaceholder: "photoPlaceholder",

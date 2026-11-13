@@ -13,6 +13,8 @@ struct FeelingsGraphView: View {
     
     // MARK: - Variables
     
+    @Environment(DesignSystem.self) private var designSystem
+    
     /// Activities agrupadas por humor, vindas da Store.
     let feelings: [Humor: [(activity: Activity, image: Image?)]]
     
@@ -26,16 +28,9 @@ struct FeelingsGraphView: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 40) {
-            // Cabeçalho
-            VStack(alignment: .leading, spacing: 2) {
-                Text("seus sentimentos")
-                    .font(.largeTitle.bold())
-                Text("acompanhe como tem se sentido")
-                    .font(.title3)
-            }
             VStack(spacing: 16) {
                 Text("Top emoções")
-                    .font(.title2.bold())
+                    .font(designSystem.currentTheme.style.typography.subtitle1)
                     .padding(.top, 24)
                     .contentTransition(.opacity)
                     
@@ -48,7 +43,14 @@ struct FeelingsGraphView: View {
                         // `max(totalCount, 1)` evita dividir por zero quando não há dados.
                         let fraction = Double(count) / Double(max(totalCount, 1))
                         
-                        VStack(spacing: 8) {
+                        VStack(spacing: 9) {
+                            
+                            // Ícone do humor abaixo da barra.
+                            Image(emotion.icon)
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 54, height: 54)
+                            
                             // A barra: o preenchimento cresce de baixo para cima
                             // dentro do contorno, que tem sempre a altura total.
                             ZStack(alignment: .bottom) {
@@ -58,19 +60,19 @@ struct FeelingsGraphView: View {
                                     .frame(height: height)
                                 
                                 Capsule()
-                                    .stroke(.black, lineWidth: 2)
+                                    .stroke(designSystem.currentTheme.style.colors.backgroundInverse, lineWidth: 2)
                             }
                             .frame(width: 48, height: barHeight)
                             
-                            // Ícone do humor abaixo da barra.
-                            Image(emotion.icon)
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 54, height: 54)
+                            //Nome do humor
+                            Text(emotion.rawValue.lowercased())
+                                .font(designSystem.currentTheme.style.typography.text3)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.7)
                             
                             // Quantidade com dois dígitos, ex.: "(03)".
                             Text("(\(String(format: "%02d", count)))")
-                                .font(.caption)
+                                .font(designSystem.currentTheme.style.typography.text3)
                         }
                         .frame(maxWidth: .infinity)
                     }
@@ -80,11 +82,10 @@ struct FeelingsGraphView: View {
                 Spacer()
             }
             .frame(maxWidth: .infinity)
-            .frame(minHeight: 560)
+//            .frame(minHeight: 560)
             .background(RoundedRectangle(cornerRadius: 28).fill(.background))
-            .overlay(RoundedRectangle(cornerRadius: 28).stroke(.black, lineWidth: 2))
+            .overlay(RoundedRectangle(cornerRadius: 28).stroke(designSystem.currentTheme.style.colors.backgroundInverse, lineWidth: 2))
         }
-        .padding(.top, 24)
         // Recarrega toda vez que a tela aparece, para refletir novas Activities.
         .onAppear {
             loadAction()
@@ -94,4 +95,5 @@ struct FeelingsGraphView: View {
 
 #Preview {
     FeelingsGraphView(feelings: [:], loadAction: {})
+        .environment(DesignSystem.shared)
 }
