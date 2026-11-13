@@ -9,6 +9,7 @@ import SwiftUI
 
 // Pega um array da semana e mostra os circulos com base
 struct WeeklyHumor: View {
+    @Environment(DesignSystem.self) private var designSystem
     
     // MARK: - Variables
     var week: [String]
@@ -20,7 +21,7 @@ struct WeeklyHumor: View {
             ForEach(week, id: \.self) { day in
                 VStack {
                     Text(day)
-                    Circle().stroke(.black, lineWidth: 2)
+                    Circle().stroke(designSystem.style.colors.textPrimary, lineWidth: 2)
                         .frame(width: 34, height: 34)
                 }
             }
@@ -32,4 +33,5 @@ struct WeeklyHumor: View {
 #Preview {
     let week = ["D", "S", "T", "Q", "Q", "S", "S"]
     WeeklyHumor(week: week)
+        .environment(DesignSystem.shared)
 }
