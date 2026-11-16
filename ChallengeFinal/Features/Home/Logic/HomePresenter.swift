@@ -12,7 +12,7 @@ import Foundation
 @MainActor
 protocol HomePresenterProtocol: AnyObject {
     func presentCategory(_ category: ActivityCategory)
-    func presentWeek(days: [Date])
+    func presentWeek(days: [(date: Date, humor: Humor?)])
     func presentActivityFlow()
 }
 
@@ -45,17 +45,25 @@ final class HomePresenter: HomePresenterProtocol {
         store?.displayCategory(category)
     }
     
-    // Converte cada Date na letra do dia ("D", "S", "T"...) em pt_BR.
-    func presentWeek(days: [Date]) {
+    // Converte cada Date na letra do dia ("D", "S", "T"...) em pt_BR e monta o WeekDay de cada um.
+    // Regras de exibição:
+    //  - dias anteriores a hoje: levam o humor recebido (nil = círculo vazio);
+    //  - hoje: marcado com isToday (a View mostra o placeholderCheckIcon) e sem humor;
+    //  - dias seguintes: sempre sem humor (círculo vazio).
+    func presentWeek(days: [(date: Date, humor: Humor?)]) {
         let symbols = dateFormatter.veryShortWeekdaySymbols ?? []
+        let calendar = Calendar.current
+        let startOfToday = calendar.startOfDay(for: Date())
         
-        let weekLabels = days.map { date -> String in
+        let week = days.map { date, humor -> WeekDay in
             // weekday vai de 1 (domingo) a 7; o array de símbolos começa em 0.
-            let weekdayIndex = Calendar.current.component(.weekday, from: date) - 1
-            return symbols[weekdayIndex]
+            let weekdayIndex = calendar.component(.weekday, from: date) - 1
+            // Compara pelo início do dia para ignorar a hora de `date`.
+            let isPast = calendar.startOfDay(for: date) < startOfToday
+            return WeekDay(label: symbols[weekdayIndex], humor: isPast ? humor : nil, isToday: calendar.isDateInToday(date))
         }
         
-        store?.displayWeek(days: weekLabels)
+        store?.displayWeek(days: week)
     }
     
     // Só repassa: quem abre a tela é a Store, via Coordinator.

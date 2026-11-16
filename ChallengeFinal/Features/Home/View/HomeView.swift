@@ -154,7 +154,7 @@ extension HomeStore {
     static var preview: HomeStore {
         let state = HomeStore(coordinator: HomeCoordinator())
         
-        state.daysOfWeek = ["D", "S", "T", "Q", "Q", "S", "S"]
+        state.daysOfWeek = ["D", "S", "T", "Q", "Q", "S", "S"].map { WeekDay(label: $0, humor: nil) }
         return state
     }
 }

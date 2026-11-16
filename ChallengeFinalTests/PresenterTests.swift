@@ -76,11 +76,45 @@ struct PresenterTests {
         // 18/10/2026 é domingo, então a semana vai de domingo a sábado.
         let calendar = Calendar.current
         let sunday = calendar.date(from: DateComponents(year: 2026, month: 10, day: 18))!
-        let days = (0..<7).compactMap { calendar.date(byAdding: .day, value: $0, to: sunday) }
+        let days = (0..<7).compactMap { calendar.date(byAdding: .day, value: $0, to: sunday) }.map { (date: $0, humor: Humor?.none) }
         
         presenter.presentWeek(days: days)
         
-        #expect(store.daysOfWeek == ["D", "S", "T", "Q", "Q", "S", "S"])
+        #expect(store.daysOfWeek.map(\.label) == ["D", "S", "T", "Q", "Q", "S", "S"])
+    }
+    
+    // Hoje a semana depende da data atual, então montamos os dias relativos a hoje (ontem, hoje, amanhã).
+    @Test func testingPresentWeekShowsHumorOnlyOnPastDays() throws {
+        let (presenter, store) = createPresenterAndStore()
+        let calendar = Calendar.current
+        let today = Date()
+        let yesterday = try #require(calendar.date(byAdding: .day, value: -1, to: today))
+        let tomorrow = try #require(calendar.date(byAdding: .day, value: 1, to: today))
+        
+        presenter.presentWeek(days: [
+            (date: yesterday, humor: .veryPleasant),
+            (date: today, humor: .neutral),
+            (date: tomorrow, humor: .pleasant)
+        ])
+        
+        // Ontem mantém o humor; hoje e amanhã são descartados.
+        #expect(store.daysOfWeek.map(\.humor) == [.veryPleasant, nil, nil])
+    }
+    
+    @Test func testingPresentWeekMarksOnlyTodayAsToday() throws {
+        let (presenter, store) = createPresenterAndStore()
+        let calendar = Calendar.current
+        let today = Date()
+        let yesterday = try #require(calendar.date(byAdding: .day, value: -1, to: today))
+        let tomorrow = try #require(calendar.date(byAdding: .day, value: 1, to: today))
+        
+        presenter.presentWeek(days: [
+            (date: yesterday, humor: nil),
+            (date: today, humor: nil),
+            (date: tomorrow, humor: nil)
+        ])
+        
+        #expect(store.daysOfWeek.map(\.isToday) == [false, true, false])
     }
     
     // MARK: - ActivityPresenter (sorteio de desafios)
