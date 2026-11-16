@@ -83,13 +83,18 @@ struct PresenterTests {
         #expect(store.daysOfWeek.map(\.label) == ["D", "S", "T", "Q", "Q", "S", "S"])
     }
     
-    // Hoje a semana depende da data atual, então montamos os dias relativos a hoje (ontem, hoje, amanhã).
-    @Test func testingPresentWeekShowsHumorOnlyOnPastDays() throws {
-        let (presenter, store) = createPresenterAndStore()
+    // A semana depende da data atual, então montamos os dias relativos a hoje (ontem, hoje, amanhã).
+    private func yesterdayTodayTomorrow() throws -> (yesterday: Date, today: Date, tomorrow: Date) {
         let calendar = Calendar.current
         let today = Date()
         let yesterday = try #require(calendar.date(byAdding: .day, value: -1, to: today))
         let tomorrow = try #require(calendar.date(byAdding: .day, value: 1, to: today))
+        return (yesterday, today, tomorrow)
+    }
+    
+    @Test func testingPresentWeekKeepsHumorOnPastAndTodayButDropsFuture() throws {
+        let (presenter, store) = createPresenterAndStore()
+        let (yesterday, today, tomorrow) = try yesterdayTodayTomorrow()
         
         presenter.presentWeek(days: [
             (date: yesterday, humor: .veryPleasant),
@@ -97,16 +102,26 @@ struct PresenterTests {
             (date: tomorrow, humor: .pleasant)
         ])
         
-        // Ontem mantém o humor; hoje e amanhã são descartados.
-        #expect(store.daysOfWeek.map(\.humor) == [.veryPleasant, nil, nil])
+        // Ontem e hoje mantêm o humor; amanhã é descartado.
+        #expect(store.daysOfWeek.map(\.humor) == [.veryPleasant, .neutral, nil])
+    }
+    
+    @Test func testingPresentWeekMarksOnlyDaysAfterTodayAsFuture() throws {
+        let (presenter, store) = createPresenterAndStore()
+        let (yesterday, today, tomorrow) = try yesterdayTodayTomorrow()
+        
+        presenter.presentWeek(days: [
+            (date: yesterday, humor: nil),
+            (date: today, humor: nil),
+            (date: tomorrow, humor: nil)
+        ])
+        
+        #expect(store.daysOfWeek.map(\.isFuture) == [false, false, true])
     }
     
     @Test func testingPresentWeekMarksOnlyTodayAsToday() throws {
         let (presenter, store) = createPresenterAndStore()
-        let calendar = Calendar.current
-        let today = Date()
-        let yesterday = try #require(calendar.date(byAdding: .day, value: -1, to: today))
-        let tomorrow = try #require(calendar.date(byAdding: .day, value: 1, to: today))
+        let (yesterday, today, tomorrow) = try yesterdayTodayTomorrow()
         
         presenter.presentWeek(days: [
             (date: yesterday, humor: nil),

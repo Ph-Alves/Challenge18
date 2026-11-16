@@ -13,8 +13,9 @@ import SwiftUI
 // É struct (e não tupla) porque o ForEach da View precisa de um tipo Hashable.
 struct WeekDay: Hashable {
     let label: String      // letra do dia ("D", "S", "T"...)
-    let humor: Humor?      // humor a mostrar; nil = círculo vazio (futuro ou sem registro)
-    var isToday: Bool = false // hoje mostra o placeholderCheckIcon, não importa o humor
+    let humor: Humor?      // humor registrado no dia; nil = ainda sem registro
+    var isToday: Bool = false  // hoje sem humor: círculo com stroke preto (ainda dá para registrar)
+    var isFuture: Bool = false // dia depois de hoje: círculo apagado, ainda não pode ter registro
 }
 
 // MARK: - Protocol
