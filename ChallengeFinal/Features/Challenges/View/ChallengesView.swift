@@ -47,7 +47,7 @@ struct ChallengesView: View {
             .padding(.horizontal, 30)
         }
         .scrollDismissesKeyboard(.immediately)
-        .background(Color.white)
+        .background(designSystem.style.colors.backgroundPrimary)
         .toolbarVisibility(.hidden, for: .navigationBar)
         .onAppear {
             // Recarrega sempre: um desafio pode ter sido concluído em outra aba.
