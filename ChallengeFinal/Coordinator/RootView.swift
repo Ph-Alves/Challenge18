@@ -35,11 +35,11 @@ struct RootView: View {
             } label: {
                 Label("Feelings", image: coordinator.selectedTab == .feelings ? designSystem.style.icons.tabBar.feelings.fill: designSystem.style.icons.tabBar.feelings.base)
             }
-            Tab(value: AppTab.profile) {
-                // feature ainda não existe
-            }  label: {
-                Label("Profile", image: coordinator.selectedTab == .profile ? designSystem.style.icons.tabBar.profile.fill: designSystem.style.icons.tabBar.profile.base)
-            }
+//            Tab(value: AppTab.profile) {
+//                // feature ainda não existe
+//            }  label: {
+//                Label("Profile", image: coordinator.selectedTab == .profile ? designSystem.style.icons.tabBar.profile.fill: designSystem.style.icons.tabBar.profile.base)
+//            }
         }
         .tint(.primary)
     }

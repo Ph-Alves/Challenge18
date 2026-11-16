@@ -8,13 +8,14 @@
 import SwiftUI
 
 struct ChallengesSearchBar: View {
+    @Environment(DesignSystem.self) private var designSystem
     @Binding var text: String
 
     var body: some View {
         HStack(spacing: 8) {
             Image(systemName: "magnifyingglass")
                 .font(.title3)
-                .foregroundStyle(.black)
+                .foregroundStyle(designSystem.style.colors.backgroundInverse)
 
             TextField("placeholder...", text: $text)
                 .textInputAutocapitalization(.never)
@@ -36,8 +37,8 @@ struct ChallengesSearchBar: View {
         .frame(height: 44)
         .background(
             Capsule()
-                .fill(.white)
-                .shadow(color: .black.opacity(0.12), radius: 8, y: 2)
+                .fill(designSystem.style.colors.backgroundPrimary)
+                .shadow(color: designSystem.style.colors.backgroundInverse.opacity(0.12), radius: 8, y: 2)
         )
     }
 }
