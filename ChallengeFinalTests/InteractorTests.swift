@@ -56,7 +56,11 @@ final class ActivityPresenterSpy: ActivityPresenterProtocol {
     private(set) var flowFinishedCount = 0
 
     func presentTime(_ elapsed: TimeInterval) { presentedTimes.append(elapsed) }
-    
+
+    /// Valores de pausa que o Interactor mandou para a Store, em ordem.
+    private(set) var pausedValues: [Bool] = []
+    func presentPaused(_ isPaused: Bool) { pausedValues.append(isPaused) }
+
     // Humor e compartilhamento
     private(set) var presentedHumors: [Humor] = []
     private(set) var presentedErrors: [Error] = []
@@ -226,10 +230,14 @@ final class WidgetWorkerMock: WidgetWorkerProtocol {
     private(set) var startCalls: [(name: String, startDate: Date)] = []
     private(set) var stopElapsed: [TimeInterval] = []
     private(set) var cancelCount = 0
+    private(set) var pauseElapsed: [TimeInterval] = []
+    private(set) var resumeCalls: [Date] = []
 
     func startLiveActivity(name: String, startDate: Date) async { startCalls.append((name, startDate)) }
     func stopLiveActivity(elapsed: TimeInterval) async { stopElapsed.append(elapsed) }
     func cancelLiveActivity() async { cancelCount += 1 }
+    func pauseLiveActivity(elapsed: TimeInterval) async { pauseElapsed.append(elapsed) }
+    func resumeLiveActivity(startDate: Date) async { resumeCalls.append(startDate) }
 }
 
 /// Anota o que o Interactor de Feelings entregou ao Presenter, uma entrada por chamada.
@@ -1561,6 +1569,83 @@ struct InteractorTests {
 
         #expect(sut.liveActivity.cancelCount == 1)
         #expect(sut.liveActivity.stopElapsed.isEmpty)
+    }
+
+    // Pausar congela o tempo acumulado e avisa a ilha e a tela com ele.
+    @Test func testingPauseTimerSendsElapsedToLiveActivity() async throws {
+        let sut = makeActivitySUT()
+        sut.interactor.timerStartDate = Date().addingTimeInterval(-30)
+
+        sut.interactor.pauseTimer()
+        defer { sut.interactor.cancelTimer() }
+        await wait { sut.liveActivity.pauseElapsed.count == 1 }
+
+        let elapsed = try #require(sut.liveActivity.pauseElapsed.first)
+        #expect(elapsed >= 30)
+        #expect(elapsed < 31)
+        #expect(sut.interactor.isTimerPaused)
+        #expect(sut.interactor.timerStartDate == nil)
+        #expect(sut.presenter.pausedValues == [true])
+    }
+
+    // Pausar sem o cronômetro rodando não faz nada.
+    @Test func testingPauseTimerWithoutRunningTimerDoesNothing() async {
+        let sut = makeActivitySUT()
+
+        sut.interactor.pauseTimer()
+        try? await Task.sleep(for: .milliseconds(50))
+
+        #expect(!sut.interactor.isTimerPaused)
+        #expect(sut.liveActivity.pauseElapsed.isEmpty)
+        #expect(sut.presenter.pausedValues.isEmpty)
+    }
+
+    // Retomar desloca o início: o tempo continua de onde parou, sem contar a pausa.
+    @Test func testingResumeTimerContinuesFromPausedTime() async throws {
+        let sut = makeActivitySUT()
+        sut.interactor.timerStartDate = Date().addingTimeInterval(-30)
+        sut.interactor.pauseTimer()
+        defer { sut.interactor.cancelTimer() }
+
+        sut.interactor.resumeTimer()
+        // Mede logo após retomar, antes de esperar o mock: `currentElapsed()` cresce com o relógio,
+        // e em CI lento a espera poderia passar de 1s e estourar o limite superior.
+        let elapsed = sut.interactor.currentElapsed()
+        await wait { sut.liveActivity.resumeCalls.count == 1 }
+
+        #expect(!sut.interactor.isTimerPaused)
+        #expect(elapsed >= 30)
+        #expect(elapsed < 31)
+        #expect(sut.liveActivity.resumeCalls.first == sut.interactor.timerStartDate)
+        #expect(sut.presenter.pausedValues == [true, false])
+    }
+
+    // O botão da ilha alterna: rodando pausa, pausado retoma.
+    @Test func testingTogglePauseAlternatesBetweenPauseAndResume() async {
+        let sut = makeActivitySUT()
+        sut.interactor.timerStartDate = Date().addingTimeInterval(-30)
+        defer { sut.interactor.cancelTimer() }
+
+        sut.interactor.togglePause()
+        #expect(sut.interactor.isTimerPaused)
+
+        sut.interactor.togglePause()
+        #expect(!sut.interactor.isTimerPaused)
+    }
+
+    // Parar enquanto pausado mantém o tempo congelado, sem zerar nem contar a pausa.
+    @Test func testingStopTimerWhilePausedKeepsPausedTime() async throws {
+        let sut = makeActivitySUT()
+        sut.interactor.timerStartDate = Date().addingTimeInterval(-30)
+        sut.interactor.pauseTimer()
+
+        sut.interactor.stopTimer()
+        await wait { sut.liveActivity.stopElapsed.count == 1 }
+
+        let elapsed = try #require(sut.liveActivity.stopElapsed.first)
+        #expect(elapsed >= 30)
+        #expect(elapsed < 31)
+        #expect(!sut.interactor.isTimerPaused)
     }
 
     @Test func testingStartActivityStartsLiveActivity() async {

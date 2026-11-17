@@ -38,6 +38,7 @@ protocol ActivityPresenterProtocol: AnyObject {
     func presentFlash(isOn: Bool)
     func presentError(_ error: Error)
     func presentAlertsDismissed()
+    func presentPaused(_ isPaused: Bool)
     
     // MARK: Step .summary
     func presentStory(_ result: ActivityResult, title: String?, subtitle: String?, description: String?, challengeIcon: String)
@@ -169,6 +170,10 @@ final class ActivityPresenter: ActivityPresenterProtocol {
         let minutes = (total % 3600) / 60
         let seconds = total % 60
         store?.displayTimer(String(format: "%02d:%02d:%02d", hours, minutes, seconds))
+    }
+    
+    func presentPaused(_ isPaused: Bool) {
+        store?.displayPaused(isPaused)
     }
     
     // MARK: Steps .draw e .challenge

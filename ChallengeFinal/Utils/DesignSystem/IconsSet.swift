@@ -22,6 +22,7 @@ struct IconsSet {
     let nextIcon: String // foi
     let pauseIcon: String //foi
     let tabBar: TabBarIcons
+    let playIcon: String
 
 }
 

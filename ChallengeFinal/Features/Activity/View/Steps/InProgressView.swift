@@ -21,7 +21,9 @@ struct InProgressView: View {
     let challengeSubTitle: String
     let challengeDescription: String
     let challengeIcon: String
-
+    let isPaused: Bool
+    /// Tocou no botão de pausa: avisa o Interactor, que pausa ou retoma (alterna).
+    let pauseAction: () -> Void
     /// Tempo já formatado ("hh:mm:ss"). A View só exibe; quem calcula é o Interactor.
     let timeText: String
 
@@ -43,7 +45,14 @@ struct InProgressView: View {
             ChallengeDescription(challengeIcon: challengeIcon, challengeTitle: message, challengeSubTitle: challengeSubTitle, challengeDescription: challengeDescription, spacingBetween: 36)
 
             // "cancelar" só abre o alerta de confirmação; "encerrar" termina a atividade.
-            ActionDialogComponent(title: timeText, titleStyle: .timer,  secondOptionText: "encerrar", firstAction: { isCancelAlertPresented = true }, secondAction: finishAction, firstIcon: designSystem.style.icons.pauseIcon)
+            ActionDialogComponent(
+                title: timeText,
+                titleStyle: .timer,
+                secondOptionText: "encerrar",
+                firstAction: pauseAction,   // antes: { isCancelAlertPresented = true }
+                secondAction: finishAction,
+                firstIcon: isPaused ? designSystem.style.icons.playIcon : designSystem.style.icons.pauseIcon
+            )
                 .padding(. top, 86)
                 .padding(.horizontal, 22)
             
@@ -61,5 +70,5 @@ struct InProgressView: View {
 }
 
 #Preview {
-    InProgressView(message: "faça o seu cárdio sem abrir redes sociais", challengeSubTitle: "menos distração, mais foco", challengeDescription: "sem redes sociais, seu cardio vira um momento para cuidar do corpo e desacelerar a mente.", challengeIcon: ActivityCategory.physical.cardIcon, timeText: "00:00:00", finishAction: { }, cancelAction: { }).environment(DesignSystem.shared)
+    InProgressView(message: "...", challengeSubTitle: "...", challengeDescription: "...", challengeIcon: ActivityCategory.physical.cardIcon, isPaused: false, pauseAction: { }, timeText: "00:00:00", finishAction: { }, cancelAction: { }).environment(DesignSystem.shared)
 }
