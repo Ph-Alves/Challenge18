@@ -565,8 +565,21 @@ struct InteractorTests {
         #expect(try #require(presenterSpy.week)[0].humor == nil)
     }
 
+    // O carrossel da Home usa `shifted(by:)` para saber a categoria de cada slot.
+    @Test(arguments: [
+        (ActivityCategory.physical, 1, ActivityCategory.cognitive),
+        (ActivityCategory.physical, -1, ActivityCategory.social),
+        (ActivityCategory.social, 1, ActivityCategory.physical),
+        (ActivityCategory.cognitive, 2, ActivityCategory.social),
+        (ActivityCategory.physical, -2, ActivityCategory.sensorial),
+        (ActivityCategory.sensorial, 0, ActivityCategory.sensorial)
+    ])
+    func testingCategoryShiftedWrapsAround(start: ActivityCategory, offset: Int, expected: ActivityCategory) {
+        #expect(start.shifted(by: offset) == expected)
+    }
+
     // MARK: - ActivityInteractor (sorteio de desafios)
-    
+
     private struct ActivitySUT {
         let interactor: ActivityInteractor
         let presenter: ActivityPresenterSpy
