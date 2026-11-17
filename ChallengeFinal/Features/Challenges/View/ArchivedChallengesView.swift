@@ -29,12 +29,9 @@ var body: some View {
                     content
                         .padding(.top, 62)
                 } else  {
-        
                     content
                         .padding(.top, 40)
                 }
-              
-
               
             }
             .padding(.horizontal, 32)

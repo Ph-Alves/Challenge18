@@ -136,7 +136,10 @@ struct ActivityView: View {
                 InProgressView(
                     message: store.activityTitle ?? "",
                     challengeSubTitle: store.activitySubtitle ?? "",
-                    challengeDescription: store.activityDescription ?? "", challengeIcon: currentCategory.cardIcon,
+                    challengeDescription: store.activityDescription ?? "",
+                    challengeIcon: currentCategory.cardIcon,
+                    isPaused: store.isPaused,
+                    pauseAction: interactor.togglePause,
                     timeText: store.timeText,
                     finishAction: {
                         interactor.completeActivity(currentCategory: currentCategory, title: title, subTitle: subtitle, Description: description)

@@ -15,6 +15,7 @@ import SwiftUI
 protocol ActivityStoreProtocol: AnyObject {
     // MARK: - Step do timer
     func displayTimer(_ text: String)
+    func displayPaused(_ isPaused: Bool)
     
     // MARK: Steps .draw e .challenge
     func displayActivity(_ challenge: FrictionChallenge)
@@ -131,6 +132,10 @@ final class ActivityStore: ActivityStoreProtocol {
         self.coordinator = coordinator
     }
     
+    private(set) var isPaused = false
+    
+    
+    
     // MARK: - Functions
     
     // MARK: Step .humor
@@ -180,6 +185,10 @@ final class ActivityStore: ActivityStoreProtocol {
         timeText = text
     }
     
+    
+    func displayPaused(_ isPaused: Bool) {
+        self.isPaused = isPaused
+    }
     // MARK: Steps .draw e .challenge
     // Os requisitos estão declarados no `ActivityStoreProtocol`.
 
