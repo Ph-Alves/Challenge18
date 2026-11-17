@@ -1548,10 +1548,12 @@ struct InteractorTests {
         defer { sut.interactor.cancelTimer() }
 
         sut.interactor.resumeTimer()
+        // Mede logo após retomar, antes de esperar o mock: `currentElapsed()` cresce com o relógio,
+        // e em CI lento a espera poderia passar de 1s e estourar o limite superior.
+        let elapsed = sut.interactor.currentElapsed()
         await wait { sut.liveActivity.resumeCalls.count == 1 }
 
         #expect(!sut.interactor.isTimerPaused)
-        let elapsed = sut.interactor.currentElapsed()
         #expect(elapsed >= 30)
         #expect(elapsed < 31)
         #expect(sut.liveActivity.resumeCalls.first == sut.interactor.timerStartDate)
