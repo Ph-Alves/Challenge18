@@ -21,43 +21,38 @@ struct HomeView: View {
     // Para observar
     var store: HomeStore
 
-    // Estado da animação do círculo no swipe
-    @State private var imageOffset: CGFloat = 0
-    @State private var imageOpacity: Double = 1
+    // Estado da animação do carrossel no swipe:
+    // 0 = parado, -1 = deslizando para a próxima categoria, +1 = para a anterior
+    @State private var slide: CGFloat = 0
     @State private var isAnimatingSwipe = false
 
     // MARK: - Animation
 
-    // Troca a categoria: a imagem atual sai para o lado do swipe
-    // e a nova entra vindo do lado oposto.
+    // Troca a categoria: todos os círculos andam um slot para o lado do swipe
+    // (o vizinho cresce e toma o centro, o atual encolhe e vai para a lateral).
     private func changeCategory(towardsNext: Bool) {
         guard !isAnimatingSwipe else { return }
         isAnimatingSwipe = true
-        // Swipe para esquerda (próxima): sai pela esquerda, entra pela direita
-        let distance: CGFloat = towardsNext ? -200 : 200
-
-        withAnimation(.easeIn(duration: 0.15)) {
-            imageOffset = distance
-            imageOpacity = 0
+        
+        // Swipe para esquerda (próxima): tudo desliza para a esquerda (slide = -1)
+        withAnimation(.easeInOut(duration: 0.3)) {
+            slide = towardsNext ? -1 : 1
         }
 
         Task { @MainActor in
-            try? await Task.sleep(for: .milliseconds(150))
+            try? await Task.sleep(for: .milliseconds(300))
             if towardsNext {
                 interactor.nextCategory(current: store.currentCategory)
             } else {
                 interactor.previousCategory(current: store.currentCategory)
             }
-            // Reposiciona do lado oposto sem animar
+            // Com a categoria nova, os slots já mostram as imagens certas:
+            // volta para 0 sem animar, que o resultado visual é o mesmo.
             // Toda mudança de estado carrega uma transaction, que define como a mudança deve ser animada.
             var transaction = Transaction(animation: nil)
             transaction.disablesAnimations = true
             withTransaction(transaction) {
-                imageOffset = -distance
-            }
-            withAnimation(.spring(duration: 0.3)) {
-                imageOffset = 0
-                imageOpacity = 1
+                slide = 0
             }
             isAnimatingSwipe = false
         }
@@ -80,30 +75,27 @@ struct HomeView: View {
                     .multilineTextAlignment(.center)
             }
             
+            
             VStack {
-                // Circulo de desafio
-                ChallengeCircle(category: store.currentCategory, text: nil, isOpen: false)
+                // Carrossel: categoria atual no centro e vizinhas (anterior/próxima) nas laterais
+                CategoryCarousel(current: store.currentCategory, slide: slide) {
+                    interactor.startActivity()
+                }
                 // Gesture para o swipe (esquerda/direita)
-                    .gesture(
-                        DragGesture(minimumDistance: 20)
-                        // Quando o swipe termina, eu verifico o valor
-                            .onEnded { value in
-                                // Se width > height, então e horizontal
-                                let isHorizontalSwipe = abs(value.translation.width) > abs(value.translation.height)
-                                guard isHorizontalSwipe else { return }
-                                
-                                // pego o width
-                                // Positivo: esquerda para direita
-                                // Negativo: direita para esquerda
-                                changeCategory(towardsNext: value.translation.width < 0)
-                            }
-                    )
-                    .offset(x: imageOffset)
-                    .opacity(imageOpacity)
-                    .onTapGesture {
-                        interactor.startActivity()
-                    }
-                
+                .gesture(
+                    DragGesture(minimumDistance: 20)
+                    // Quando o swipe termina, eu verifico o valor
+                        .onEnded { value in
+                            // Se width > height, então e horizontal
+                            let isHorizontalSwipe = abs(value.translation.width) > abs(value.translation.height)
+                            guard isHorizontalSwipe else { return }
+                            
+                            // pego o width
+                            // Positivo: esquerda para direita
+                            // Negativo: direita para esquerda
+                            changeCategory(towardsNext: value.translation.width < 0)
+                        }
+                )
                 
                 // Texto da respectiva categoria
                 CategoryText(category: store.currentCategory)
@@ -154,7 +146,7 @@ extension HomeStore {
     static var preview: HomeStore {
         let state = HomeStore(coordinator: HomeCoordinator())
         
-        state.daysOfWeek = ["D", "S", "T", "Q", "Q", "S", "S"]
+        state.daysOfWeek = ["D", "S", "T", "Q", "Q", "S", "S"].map { WeekDay(label: $0, humor: nil) }
         return state
     }
 }

@@ -41,7 +41,7 @@ struct StoreTests {
     
     @Test func testingDisplayWeekUpdatesDaysOfWeek() {
         let store = createHomeStore()
-        let week = ["D", "S", "T", "Q", "Q", "S", "S"]
+        let week = ["D", "S", "T", "Q", "Q", "S", "S"].map { WeekDay(label: $0, humor: nil) }
 
         store.displayWeek(days: week)
 
@@ -50,7 +50,7 @@ struct StoreTests {
     
     @Test func testingDisplayWeekReplacesPreviousDays() {
         let store = createHomeStore()
-        store.displayWeek(days: ["D", "S", "T", "Q", "Q", "S", "S"])
+        store.displayWeek(days: ["D", "S", "T", "Q", "Q", "S", "S"].map { WeekDay(label: $0, humor: nil) })
 
         store.displayWeek(days: [])
 

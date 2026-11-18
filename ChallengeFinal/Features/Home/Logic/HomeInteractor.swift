@@ -20,7 +20,7 @@ protocol HomeInteractorProtocol: AnyObject {
 // MARK: - Class
 // Regras da Home: qual a próxima/anterior categoria, quais são os dias da semana
 // e quando iniciar a Activity. Não decide como mostrar (isso é do Presenter).
-// Aqui o repository ainda não é usado: fica pronto para o registro de humor.
+// O repository é usado para buscar o humor registrado em cada dia da semana.
 @MainActor
 final class HomeInteractor: HomeInteractorProtocol {
     
@@ -65,7 +65,22 @@ final class HomeInteractor: HomeInteractorProtocol {
             calendar.date(byAdding: .day, value: offset, to: startOfWeek)
         }
         
-        presenter.presentWeek(days: days)
+        // Humor do dia = humor da primeira atividade (por createdAt) daquele dia que já tem resultado.
+        // Atividades sem resultado (ainda em andamento) são ignoradas; se não houver nenhuma, o humor é nil.
+        // Se o banco falhar, seguimos com a semana sem humores em vez de travar a Home.
+        do {
+            let activities = try repository.getAll().sorted { $0.createdAt < $1.createdAt }
+            let week = days.map { day -> (date: Date, humor: Humor?) in
+                let firstDone = activities.first {
+                    calendar.isDate($0.createdAt, inSameDayAs: day) && $0.result != nil
+                }
+                return (day, firstDone?.result?.humor)
+            }
+            
+            presenter.presentWeek(days: week)
+        } catch {
+            print("Erro ao buscar atividades no banco: \(error.localizedDescription)")
+        }
     }
     
     // Muda a categoria para a proxima (conforme prototipo)

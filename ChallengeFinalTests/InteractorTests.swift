@@ -17,13 +17,13 @@ import UIKit
 final class HomePresenterSpy: HomePresenterProtocol {
     
     private(set) var presentedCategory: ActivityCategory?
-    private(set) var week: [Date]?
+    private(set) var week: [(date: Date, humor: Humor?)]?
     
     func presentCategory(_ category: ChallengeFinal.ActivityCategory) {
         presentedCategory = category
     }
     
-    func presentWeek(days: [Date]) {
+    func presentWeek(days: [(date: Date, humor: Humor?)]) {
         week = days
     }
     
@@ -517,17 +517,77 @@ struct InteractorTests {
         calendar.firstWeekday = 1
         
         // A semana começa no domingo (weekday == 1).
-        #expect(calendar.component(.weekday, from: week[0]) == 1)
+        #expect(calendar.component(.weekday, from: week[0].date) == 1)
         
         // Os dias são consecutivos.
         for index in 1..<week.count {
-            let expected = calendar.date(byAdding: .day, value: 1, to: week[index - 1])
-            #expect(week[index] == expected)
+            let expected = calendar.date(byAdding: .day, value: 1, to: week[index - 1].date)
+            #expect(week[index].date == expected)
         }
     }
 
-    // MARK: - ActivityInteractor (sorteio de desafios)
+    // Cria uma Activity (com ou sem resultado) numa data específica e salva no banco de teste.
+    private func addActivity(on date: Date, humor: Humor?, hasResult: Bool = true) throws {
+        let result = hasResult ? ActivityResult(time: 60, humor: humor) : nil
+        let activity = Activity(category: .physical, result: result, createdAt: date, name: "Teste", description: "", archived: false)
+        try makeActivityRepository().add(activity)
+    }
     
+    @Test func testingIfWeekHumorUsesFirstActivityWithResultOfTheDay() throws {
+        let repository = makeActivityRepository()
+        let presenterSpy = HomePresenterSpy()
+        let interactor = HomeInteractor(repository: repository, presenter: presenterSpy)
+        
+        // Pega o domingo da semana atual (primeiro dia apresentado) para não depender do dia de hoje.
+        interactor.getCurrentWeek()
+        let sunday = try #require(presenterSpy.week?.first?.date)
+        let calendar = Calendar.current
+        let monday = try #require(calendar.date(byAdding: .day, value: 1, to: sunday))
+        
+        // Domingo: a mais cedo está sem resultado (ignorada); a primeira com resultado é a das 10h.
+        try addActivity(on: sunday.addingTimeInterval(8 * 3600), humor: nil, hasResult: false)
+        try addActivity(on: sunday.addingTimeInterval(15 * 3600), humor: .unpleasant)
+        try addActivity(on: sunday.addingTimeInterval(10 * 3600), humor: .veryPleasant)
+        // Segunda: só uma atividade, com resultado.
+        try addActivity(on: monday.addingTimeInterval(9 * 3600), humor: .neutral)
+        
+        interactor.getCurrentWeek()
+        
+        let week = try #require(presenterSpy.week)
+        #expect(week[0].humor == .veryPleasant)
+        #expect(week[1].humor == .neutral)
+        // Terça em diante: sem atividades.
+        #expect(week[2...].allSatisfy { $0.humor == nil })
+    }
+    
+    @Test func testingIfWeekHumorIsNilWhenDayOnlyHasActivitiesWithoutResult() throws {
+        let presenterSpy = HomePresenterSpy()
+        let interactor = HomeInteractor(repository: makeActivityRepository(), presenter: presenterSpy)
+        
+        interactor.getCurrentWeek()
+        let sunday = try #require(presenterSpy.week?.first?.date)
+        try addActivity(on: sunday.addingTimeInterval(10 * 3600), humor: nil, hasResult: false)
+        
+        interactor.getCurrentWeek()
+        
+        #expect(try #require(presenterSpy.week)[0].humor == nil)
+    }
+
+    // O carrossel da Home usa `shifted(by:)` para saber a categoria de cada slot.
+    @Test(arguments: [
+        (ActivityCategory.physical, 1, ActivityCategory.cognitive),
+        (ActivityCategory.physical, -1, ActivityCategory.social),
+        (ActivityCategory.social, 1, ActivityCategory.physical),
+        (ActivityCategory.cognitive, 2, ActivityCategory.social),
+        (ActivityCategory.physical, -2, ActivityCategory.sensorial),
+        (ActivityCategory.sensorial, 0, ActivityCategory.sensorial)
+    ])
+    func testingCategoryShiftedWrapsAround(start: ActivityCategory, offset: Int, expected: ActivityCategory) {
+        #expect(start.shifted(by: offset) == expected)
+    }
+
+    // MARK: - ActivityInteractor (sorteio de desafios)
+
     private struct ActivitySUT {
         let interactor: ActivityInteractor
         let presenter: ActivityPresenterSpy
