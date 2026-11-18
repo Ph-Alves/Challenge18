@@ -272,10 +272,28 @@ struct PresenterTests {
 
         presenter.presentStory(result, title: "faça o seu cardio", subtitle: "menos distração", description: "sem redes sociais", challengeIcon: ActivityCategory.physical.closedIcon)
         
-        // O story sai em 1080x1920 px (360x640 pt com scale 3).
-        let image = try #require(store.storyImage)
-        #expect(image.size.width * image.scale == 1080)
-        #expect(image.size.height * image.scale == 1920)
+        // O story sai no tamanho da especificação (pontos x scale).
+        let image = try #require(store.storyImages[.white])
+        #expect(image.size.width * image.scale == ShareImageSpecification.pointSize.width * ShareImageSpecification.scale)
+        #expect(image.size.height * image.scale == ShareImageSpecification.pointSize.height * ShareImageSpecification.scale)
+    }
+    
+    @Test func testingPresentStoryWithoutPhotoRendersEveryStyleExceptPhoto() {
+        let (presenter, store) = createActivityPresenterAndStore()
+        let result = ActivityResult(time: 0, humor: .veryPleasant)
+
+        presenter.presentStory(result, title: "faça o seu cardio", subtitle: "menos distração", description: "sem redes sociais", challengeIcon: ActivityCategory.physical.closedIcon)
+        
+        #expect(Set(store.storyImages.keys) == [.white, .black, .transparent])
+    }
+    
+    @Test func testingPresentStoryWithPhotoRendersEveryStyle() {
+        let (presenter, store) = createActivityPresenterAndStore()
+        let result = ActivityResult(photo: makePhotoData(), time: 0, humor: .veryPleasant)
+
+        presenter.presentStory(result, title: "faça o seu cardio", subtitle: "menos distração", description: "sem redes sociais", challengeIcon: ActivityCategory.physical.closedIcon)
+        
+        #expect(Set(store.storyImages.keys) == Set(StoryCardStyle.allCases))
     }
     
     @Test func testingPresentShareSheetOpensAndCloses() {
@@ -484,7 +502,7 @@ struct PresenterTests {
         #expect(store.presentDetail)
         #expect(store.selectedActivity === activity)
         #expect(store.selectedPhoto != nil)
-        #expect(store.storyImage != nil)
+        #expect(store.storyImages[.photo] != nil)
     }
     
     @Test func testingPresentSelectedActivityWithoutPhotoStillRendersStory() {
@@ -493,7 +511,8 @@ struct PresenterTests {
         presenter.presentSelectedActivity(activity: makeFeelingActivity(named: "Caminhada", humor: .pleasant))
         
         #expect(store.selectedPhoto == nil)
-        #expect(store.storyImage != nil)
+        #expect(store.storyImages[.white] != nil)
+        #expect(store.storyImages[.photo] == nil)
     }
     
     // MARK: - FeelingsPresenter (tirar outra foto)
@@ -635,7 +654,7 @@ struct PresenterTests {
         
         presenter.presentStory(for: makeFeelingActivity(named: "Caminhada", humor: .pleasant, photo: makePhotoData()))
         
-        #expect(store.storyImage != nil)
+        #expect(Set(store.storyImages.keys) == Set(StoryCardStyle.allCases))
     }
     
     @Test func testingPresentShareSheetOpensSheetWithFileAndClearsError() {

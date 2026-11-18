@@ -278,7 +278,7 @@ struct StoreTests {
         #expect(store.isCameraPresented == false)
         #expect(store.cameraFlashIcon == "bolt.slash")
         #expect(store.errorMessage == nil)
-        #expect(store.storyImage == nil)
+        #expect(store.storyImages.isEmpty)
         #expect(store.shareItem == nil)
     }
 
@@ -380,10 +380,10 @@ struct StoreTests {
         let store = FeelingsStore()
         let item = ShareItem(activityItems: [URL(fileURLWithPath: "/tmp/story.png")])
 
-        store.presentStoryImage(UIImage())
+        store.presentStoryImages([.white: UIImage()])
         store.presentShareSheet(item)
 
-        #expect(store.storyImage != nil)
+        #expect(store.storyImages[.white] != nil)
         #expect(store.shareItem?.id == item.id)
 
         store.presentShareSheet(nil)
