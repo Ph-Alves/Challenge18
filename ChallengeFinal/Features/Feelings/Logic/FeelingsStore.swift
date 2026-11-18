@@ -23,7 +23,7 @@ protocol FeelingsStoreProtocol: AnyObject {
     func presentPhoto(_ photo: Image?)
     func presentDetailVisibility(isVisible: Bool)
     // MARK: Compartilhar
-    func presentStoryImage(_ image: UIImage?)
+    func presentStoryImages(_ images: [StoryCardStyle: UIImage])
     func presentShareSheet(_ item: ShareItem?)
 }
 
@@ -67,8 +67,9 @@ final class FeelingsStore: FeelingsStoreProtocol {
     
     // MARK: Compartilhar
     
-    /// Imagem do story da atividade selecionada, já renderizada. `nil` = ainda não existe ou falhou.
-    var storyImage: UIImage? = nil
+    /// Imagem do story da atividade selecionada, já renderizada, uma por estilo da sheet de compartilhar.
+    /// Estilo ausente = ainda não existe, a renderização falhou (ou `.photo` sem foto).
+    var storyImages: [StoryCardStyle: UIImage] = [:]
     
     /// Controla o `.sheet(item:)` do share sheet. `nil` = fechado.
     var shareItem: ShareItem? = nil
@@ -125,8 +126,8 @@ final class FeelingsStore: FeelingsStoreProtocol {
 
     // MARK: - Compartilhar
 
-    func presentStoryImage(_ image: UIImage?) {
-        storyImage = image
+    func presentStoryImages(_ images: [StoryCardStyle: UIImage]) {
+        storyImages = images
     }
     
     func presentShareSheet(_ item: ShareItem?) {

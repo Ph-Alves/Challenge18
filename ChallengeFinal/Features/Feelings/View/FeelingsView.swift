@@ -58,7 +58,7 @@ struct FeelingsView: View {
                     returnAction: store.returnToFeelings,
                     deleteAction: interactor.deleteActivity,
                     retakeAction: interactor.retakePhoto,
-                    shareAction: { interactor.shareStory(store.storyImage) },
+                    shareAction: { style in interactor.shareStory(store.storyImages[style]) },
                     selected: activity,
                     photo: store.selectedPhoto,
                     createdAt: store.selectedCreatedAt
