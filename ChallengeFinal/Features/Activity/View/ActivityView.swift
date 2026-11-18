@@ -218,8 +218,8 @@ struct ActivityView: View {
             photo: store.photo,
             humor: store.humor,
             onFinish: { interactor.finishActivityFlow() },
-            // A imagem do story já está pronta na Store: só repassamos.
-            onShare: { interactor.shareStory(store.storyImage) }
+            // As imagens do story (uma por estilo) já estão prontas na Store: só repassamos a escolhida.
+            onShare: { style in interactor.shareStory(store.storyImages[style]) }
         )
         .transition(.opacity)
         .onAppear {
