@@ -2,22 +2,13 @@
 //  ProfileCoordinator.swift
 //  ChallengeFinal
 //
-//  Created by Raquel Souza on 19/11/26.
-//
-
-
-//
-//  ProfileCoordinator.swift
-//  ChallengeFinal
-//
 //  Created by Raquel Souza on 16/11/26.
 //
 
 import Foundation
 import SwiftData
 
-/// Coordinator da tela de Perfil.
-/// O sheet de configurações é apresentado pela própria View (estado na Store),
+/// Como o sheet de configurações é apresentado pela própria View (estado na Store),
 /// então aqui só montamos a view pelo Builder e guardamos em cache.
 @MainActor
 final class ProfileCoordinator: ProfileRouting {

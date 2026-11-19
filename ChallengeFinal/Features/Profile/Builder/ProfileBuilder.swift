@@ -5,27 +5,24 @@
 //  Created by Raquel Souza on 16/10/26.
 //
 
-/*
- // Prepara a view e retorna a mesma.
- enum HomeBuilder {
-     @MainActor
-     static func build(routing: HomeRouting, context: ModelContext) -> HomeView {
-         let store = HomeStore(coordinator: routing)
-         let presenter = HomePresenter(store: store)
-         let interactor = HomeInteractor(repository: GenericRepository<Activity>(context: context), presenter: presenter)
-         
-         return HomeView(interactor: interactor, store: store)
-     }
- }
- */
-
 import Foundation
+import SwiftData
 
+///
+/// É o ÚNICO lugar que conhece as classes concretas. Todo o resto se enxerga por protocolo.
+/// Ordem de criação: Store -> Presenter(store) -> Interactor(presenter, repositórios) -> View
 enum ProfileBuilder {
     @MainActor
-    static func build() -> ProfileView {
-        
-        
-        return ProfileView
+    static func build(context: ModelContext) -> ProfileView {
+        let store = ProfileStore()
+        let presenter = ProfilePresenter(store: store)
+        let interactor = ProfileInteractor(
+            presenter: presenter,
+            profileRepository: GenericRepository<Profile>(context: context),
+            activityRepository: GenericRepository<Activity>(context: context)
+        )
+
+        // A View segura a Store com força: o Presenter guarda a Store como `weak`.
+        return ProfileView(interactor: interactor, store: store)
     }
 }

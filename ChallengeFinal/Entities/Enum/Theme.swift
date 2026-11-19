@@ -20,4 +20,14 @@ enum Theme: String, Codable {
         case .techNature: return "tech nature"
         }
     }
+    
+    ///Nome do asset do ícone do tema.
+    var previewIcon: String {
+        switch self {
+        case .sober: return SoberStyle().icons.activityIcons[.physical]?.closed ?? "eightBall"
+        case .pop: return "popThemeIcon" //CHANGE: colocar asset real.
+        case .bubblegum: return "bubblegumThemeIcon" //CHANGE: colocar asset real.
+        case .techNature: return "techNatureThemeIcon" //CHANGE: colocar asset real.
+        }
+    }
 }
