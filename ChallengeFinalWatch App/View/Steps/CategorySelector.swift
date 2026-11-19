@@ -28,6 +28,7 @@ struct CategorySelector: View {
         }
         .tabViewStyle(.verticalPage)
         .navigationTitle("desafie-se!")
+        .padding(.top, 5)
     }
 }
 
