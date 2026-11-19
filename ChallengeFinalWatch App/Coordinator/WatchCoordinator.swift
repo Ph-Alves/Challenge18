@@ -20,6 +20,21 @@ enum WatchStep {
 final class WatchCoordinator {
     /// Step atual. Só muda pelos `goTo...` (somente leitura para quem está fora).
     private(set) var step: WatchStep = .home
+
+    /// Cache da view para não reconstruir a cena a cada render de quem a exibe.
+    /// Fora da observação: ela é preenchida durante o `body` do App.
+    @ObservationIgnored var cachedView: HomeWatch?
+
+    /// Monta a view pelo Builder na primeira vez e reaproveita nas seguintes.
+    func startHomeView() -> HomeWatch {
+        if let cachedView {
+            return cachedView
+        }
+
+        let view = WatchBuilder.build(routing: self)
+        cachedView = view
+        return view
+    }
 }
 
 // Cada função só troca o step; a View reage à mudança.

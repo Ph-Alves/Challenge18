@@ -36,29 +36,19 @@ enum WatchCategory: CaseIterable {
 }
 
 struct HomeWatch: View {
-    @State private var selected: WatchCategory = .physical
-
+    
+    // Para executar
+    let interactor: WatchInteractorProtocol
+    // Para observar
+    var store: WatchStore
+    
     var body: some View {
         NavigationStack {
-            TabView(selection: $selected) {
-                ForEach(WatchCategory.allCases, id: \.self) { category in
-                    VStack(spacing: 8) {
-                        Image(category.imageName)   // coffee / eightBall / cookie / telephone
-                            .resizable()
-                            .scaledToFit()
-                        Text(category.text)           // mente / movimento / sentidos / conexão
-                            .font(.headline)
-                    }
-                    .tag(category)
-                    .onTapGesture { /* iniciar o desafio de `category` */ }
-                }
-            }
-            .tabViewStyle(.verticalPage)
-            .navigationTitle("desafie-se!")
+            CategorySelector(startFlow: interactor.startActivity)
         }
     }
 }
 
 #Preview {
-    HomeWatch()
+    WatchBuilder.build(routing: WatchCoordinator())
 }
