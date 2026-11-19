@@ -84,4 +84,7 @@ struct SoberStyle: ThemeStyleProtocol {
         overlayColor: .black,
         overlayOpacity: 0.6)
     
+    let profile = ProfileStyle(
+        headerBackgroundAsset: "retangleSoberProfile")
+    
 }
