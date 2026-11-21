@@ -23,7 +23,7 @@ struct StreakProfileCard: View {
     var body: some View {
         HStack(spacing: 28) {
             VStack(spacing: 6) {
-                Image(icon.streakIcon)
+                designSystem.currentTheme.streakImage
                     .resizable()
                     .scaledToFit()
                     .frame(width: 44, height: 44)

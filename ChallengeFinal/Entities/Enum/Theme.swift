@@ -21,7 +21,17 @@ enum Theme: String, Codable {
         }
     }
     
-    ///Nome do asset do ícone do tema.
+    ///Icone que aparece na tela de perfil na seção STREAK CARD
+    var streakIcon: String {
+        switch self {
+        case .sober: return SoberStyle().icons.activityIcons[.physical]?.closed ?? "eightBall"
+        case .pop: return SoberStyle().icons.activityIcons[.physical]?.closed ?? "eightBall" //CHANGE: trocar por PopStyle() quando existir.
+        case .bubblegum: return SoberStyle().icons.activityIcons[.physical]?.closed ?? "eightBall" //CHANGE: trocar por BubblegumStyle() quando existir.
+        case .techNature: return SoberStyle().icons.activityIcons[.physical]?.closed ?? "eightBall" //CHANGE: trocar por TechNatureStyle() quando existir.
+        }
+    }
+    
+    ///Icone que aparece na tela de perfil na seção de TEMAS
     var previewIcon: String {
         switch self {
         case .sober: return SoberStyle().icons.activityIcons[.physical]?.closed ?? "eightBall"
