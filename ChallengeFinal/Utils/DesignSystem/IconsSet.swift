@@ -17,7 +17,7 @@ struct IconsSet {
     let shareIcon: (base: String, card: String)
     let retryIcon: (base: String, card: String)
     let profilePlaceholder: String // foi
-    let camera: String // foi
+    let takePicturePlaceholder: String // foi
     let cameraIcon: String // foi
     let nextIcon: String // foi
     let pauseIcon: String //foi

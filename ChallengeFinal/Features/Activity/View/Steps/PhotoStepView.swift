@@ -94,7 +94,7 @@ struct PhotoStepView: View {
     private var header: some View {
         VStack(spacing: 17) {
             if !hasPhoto {
-                Image(designSystem.style.icons.camera)
+                Image(designSystem.style.icons.takePicturePlaceholder)
                     .resizable()
                     .frame(width: 145, height: 94.45)
                     .padding(.bottom, 21)

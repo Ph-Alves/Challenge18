@@ -43,7 +43,7 @@ struct SoberStyle: ThemeStyleProtocol {
         emotionNeutro: .soberEmotionNeutro,
         emotionDesagradavel: .soberEmotionDesagradavel,
         emotionPessimo: .soberEmotionPessimo,
-        emotionStroke: .soberEmotionStroke,
+//        emotionStroke: .soberEmotionStroke,
         overlaySoft: .soberOverlaySoft,
         overlayStrong: .soberOverlayStrong,
         emotionBGFill: .soberEmotionBGFill,
@@ -73,11 +73,12 @@ struct SoberStyle: ThemeStyleProtocol {
         shareIcon: (base: "shareIcon", card: "shareIconCard"),
         retryIcon: (base: "retryIcon", card: "retryIconCard"),
         profilePlaceholder: "profilePlaceholder",
-        camera: "camera",
+        takePicturePlaceholder: "camera",
         cameraIcon: "cameraIcon",
         nextIcon: "nextIcon",
         pauseIcon: "pauseIcon",
-        tabBar: TabBarIcons(challenge: (base: "challengeTabIcon", fill: "challengeTabFill"), home: (base: "homeTabIcon", fill: "homeTabFill"), feelings: (base: "feelingsTabIcon", fill: "feelingsTabFill"), profile: (base: "profileTabIcon", fill: "profileTabFill")), playIcon: "playIcon")
+        tabBar: TabBarIcons(challenge: (base: "challengeTabIcon", fill: "challengeTabFill"), home: (base: "house", fill: "house.fill"), feelings: (base: "feelingsTabIcon", fill: "feelingsTabFill"), profile: (base: "profileTabIcon", fill: "profileTabFill")),
+        playIcon: "play.fill")
     
     let humorWheel = HumorWheelStyle(
         pointerAsset: "wheelArrow",
