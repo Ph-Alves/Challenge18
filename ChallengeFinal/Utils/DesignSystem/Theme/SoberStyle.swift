@@ -30,8 +30,8 @@ struct SoberStyle: ThemeStyleProtocol {
         backgroundInverse: .soberBackgroundInverse,
         fillPrimary: .soberFillPrimary,
         fillPlaceholder: .soberFillPlaceholder,
-        fillConstantDark: .soberFillConstantDark,
-        fillConstantLight: .soberFillConstantLight,
+        fillConstantDark: .soberConstantDark,
+        fillConstantLight: .soberConstantLight,
         textPrimary: .soberTextPrimary,
         textSecondary: .soberTextSecondary,
         textInverse: .soberTextInverse,
@@ -47,8 +47,8 @@ struct SoberStyle: ThemeStyleProtocol {
         overlaySoft: .soberOverlaySoft,
         overlayStrong: .soberOverlayStrong,
         emotionBGFill: .soberEmotionBGFill,
-        strokeConstantDark: .soberFillConstantDark,
-        strokeConstantLight: .soberStrokeConstantLight)
+        strokeConstantDark: .soberConstantDark,
+        strokeConstantLight: .soberConstantLight)
         
     
     let icons = IconsSet(
