@@ -49,10 +49,10 @@ struct SoberStyle: ThemeStyleProtocol {
     
     let icons = IconsSet(
         activityIcons: [
-            .cognitive: (closed: "coffee", open: "openCoffee",   card: "coffeeCard"),
             .physical:  (closed: "eightBall",    open: "openBall", card: "eightCard"),
-            .sensorial: (closed: "cookie",   open: "openCookie", card: "cookieCard"),
-            .social:    (closed: "telephone", open: "openPhone",  card: "telephoneCard")
+            .cognitive: (closed: "cookie",   open: "openCookie", card: "cookieCard"),
+            .social:    (closed: "telephone", open: "openPhone",  card: "telephoneCard"),
+            .sensorial: (closed: "coffee", open: "openCoffee",   card: "coffeeCard")
         ],
         
         feelingIcons: [

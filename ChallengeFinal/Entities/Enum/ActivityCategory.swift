@@ -9,8 +9,8 @@
 enum ActivityCategory: String, Codable, CaseIterable {
     case physical
     case cognitive
-    case sensorial
     case social
+    case sensorial
     
     var closedIcon: String {
         DesignSystem.shared.style.icons.activityIcons[self]?.closed ?? ""
@@ -26,14 +26,14 @@ enum ActivityCategory: String, Codable, CaseIterable {
 
     var text: String {
         switch self {
-        case .cognitive:
-            return "mente"
         case .physical:
             return "movimento"
-        case .sensorial:
-            return "sentidos"
+        case .cognitive:
+            return "mente"
         case .social:
-            return "conexão"
+            return "conexões"
+        case .sensorial:
+            return "sensorial"
         }
     }
 }
