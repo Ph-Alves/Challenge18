@@ -8,6 +8,7 @@
 import ActivityKit
 import WidgetKit
 import SwiftUI
+import AppIntents   
 
 
 /// Transforma um número de segundos em um texto no formato HH:MM:SS.
@@ -20,12 +21,10 @@ private func formatElapsed(_ seconds: Int) -> String {
     let minutes = (seconds % 3600) / 60
     let remainingSeconds = seconds % 60
     
-    return String(
-        format: "%02d:%02d:%02d",
-        hours,
-        minutes,
-        remainingSeconds
-    )
+    if hours > 0 {
+        return String(format: "%d:%02d:%02d", hours, minutes, remainingSeconds)
+    }
+    return String(format: "%d:%02d", minutes, remainingSeconds)
 }
 
 // MARK: - TimerLabel
@@ -94,32 +93,11 @@ struct ChallengeFinalWidgetLiveActivity: Widget {
     var body: some WidgetConfiguration {
         // Interface da tela bloqueada
         ActivityConfiguration(for: ChallengeFinalWidgetAttributes.self) { context in
-            // Banner da tela bloqueada: ícone, grupo da atividade (`attributes.name`) e o tempo.
-     
-            HStack {
-                VStack(alignment: .center) {
-                    Image(systemName: "timer")
-                        .font(.system(size: 50, weight: .bold))
-                    
-                }
-                
-                VStack(alignment: .leading) {
-                    Text(context.attributes.name)
-                        .font(.caption2)
-                        .fontWeight(.thin)
-                    
-                    TimerLabel(context: context, font: .body)
-                    
-                }
-                
-                Spacer()
+            // Banner da tela bloqueada (ou versão pequena, no Smart Stack do Apple Watch e no CarPlay).
+            ActivityContentView(context: context)
+                .activityBackgroundTint(Color.black)
+                .activitySystemActionForegroundColor(Color.white)
 
-                
-            }
-            .padding()
-            .activityBackgroundTint(Color.black)
-            .activitySystemActionForegroundColor(Color.white)
-            
         } dynamicIsland: { context in
             DynamicIsland {
                 // Ilha expandida (quando a pessoa segura a ilha): ícone grande à esquerda e,
@@ -132,7 +110,7 @@ struct ChallengeFinalWidgetLiveActivity: Widget {
                         VStack {
                             Spacer()
                             Image(systemName: "timer")
-                                .font(.system(size: 50, weight: .bold))
+                                .font(.system(size: 56, weight: .bold))
                             
                             Spacer()
                         }
@@ -155,19 +133,36 @@ struct ChallengeFinalWidgetLiveActivity: Widget {
                     }
                 }
                 
-                // Ilha compacta, lado esquerdo: só o ícone (o tempo fica no lado direito).
+                DynamicIslandExpandedRegion(.trailing) {
+                    HStack {
+                        VStack(alignment:.trailing) {
+                            Spacer()
+
+                            Button(intent: TogglePauseIntent()) {
+                                Image(context.state.isRunning ? "buttonPause" : "buttonPlay")
+                                    .resizable()
+                                    .frame(width: 52, height: 52)
+                                    .contentTransition(.identity)
+                            }
+                            .buttonStyle(.plain)
+                            Spacer()
+                        }.padding(.horizontal, 8)
+
+
+                    }
+                    
+                }
+                
             }  compactLeading: {
                 Image(systemName: "timer")
                     .font(.title)
               
                 
-                // Ilha compacta, lado direito: o tempo, com `alignment: .trailing` para encostar na borda de fora.
             } compactTrailing: {
              
                 
                 TimerLabel(context: context, font: .caption2, alignment: .trailing)
 
-                // Ilha mínima (quando há outra Live Activity ativa): só o ícone.
             } minimal: {
                 Image(systemName: "timer")
                     .font(.title)
@@ -176,6 +171,73 @@ struct ChallengeFinalWidgetLiveActivity: Widget {
             .keylineTint(Color.red)
 
         }
+        // Adota a família pequena (Smart Stack do Apple Watch e CarPlay), além da padrão (tela bloqueada).
+        .supplementalActivityFamilies([.small])
+    }
+}
+
+// MARK: - ActivityContentView
+
+/// Conteúdo da Live Activity fora da Dynamic Island.
+/// Lê a família renderizada (`activityFamily`) para escolher entre o banner completo e o layout pequeno.
+struct ActivityContentView: View {
+    @Environment(\.activityFamily) private var activityFamily
+    let context: ActivityViewContext<ChallengeFinalWidgetAttributes>
+
+    var body: some View {
+        switch activityFamily {
+        case .small:
+            smallBody
+        default:
+            mediumBody
+        }
+    }
+
+    /// Banner da tela bloqueada: ícone, grupo da atividade (`attributes.name`), o tempo e o botão.
+    private var mediumBody: some View {
+        HStack {
+            Image(systemName: "timer")
+                .font(.system(size: 50, weight: .bold))
+
+            VStack(alignment: .leading) {
+                Text(context.attributes.name)
+                    .font(.caption2)
+                    .fontWeight(.thin)
+
+                TimerLabel(context: context, font: .body)
+            }
+
+            Spacer()
+
+            Button(intent: TogglePauseIntent()) {
+                Image(context.state.isRunning ? "buttonPause" : "buttonPlay")
+                    .resizable()
+                    .frame(width: 52, height: 52)
+                    .contentTransition(.identity)
+            }
+            .buttonStyle(.plain)
+        }
+        .padding()
+    }
+
+    /// Layout compacto: ícone, grupo e tempo, sem o botão, para caber em áreas pequenas.
+    private var smallBody: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "timer")
+                .font(.title2.weight(.bold))
+
+            VStack(alignment: .leading) {
+                Text(context.attributes.name)
+                    .font(.caption2)
+                    .fontWeight(.thin)
+                    .lineLimit(1)
+
+                TimerLabel(context: context, font: .body)
+            }
+
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal)
     }
 }
     

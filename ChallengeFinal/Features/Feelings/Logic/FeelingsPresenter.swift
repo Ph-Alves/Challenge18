@@ -168,13 +168,15 @@ final class FeelingsPresenter: FeelingsPresenterProtocol {
         // Bytes -> UIImage no tamanho original: é o fundo inteiro do story.
         let photo = activity.result?.photo.flatMap { UIImage(data: $0) }
         
-        let story = StoryCard(
-            challengeTitle: name.isEmpty ? "desafio concluído" : name,
-            challengeDescription: activity.activityDescription.trimmingCharacters(in: .whitespacesAndNewlines),
-            challengePhoto: photo, challengeIcon: activity.category.closedIcon
+        // Uma imagem por estilo da sheet de compartilhar: a View escolhe pelo toque.
+        let images = ShareImageRenderer.renderAllStyles(
+            title: name.isEmpty ? "desafio concluído" : name,
+            description: activity.activityDescription.trimmingCharacters(in: .whitespacesAndNewlines),
+            photo: photo,
+            icon: activity.category.closedIcon
         )
         
-        store?.presentStoryImage(ShareImageRenderer.render(story))
+        store?.presentStoryImages(images)
     }
     
     /// O arquivo do story está pronto: abre o share sheet.

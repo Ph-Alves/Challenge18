@@ -8,11 +8,21 @@
 import Foundation
 import SwiftUI
 
+// MARK: - Dia da semana
+// Já vem pronto para a View desenhar (o Presenter decide o que cada campo vale).
+// É struct (e não tupla) porque o ForEach da View precisa de um tipo Hashable.
+struct WeekDay: Hashable {
+    let label: String      // letra do dia ("D", "S", "T"...)
+    let humor: Humor?      // humor registrado no dia; nil = ainda sem registro
+    var isToday: Bool = false  // hoje sem humor: círculo com stroke preto (ainda dá para registrar)
+    var isFuture: Bool = false // dia depois de hoje: círculo apagado, ainda não pode ter registro
+}
+
 // MARK: - Protocol
 @MainActor
 protocol HomeStoreProtocol: AnyObject {
     func displayCategory(_ current: ActivityCategory) // Mostrar a categoria para a view
-    func displayWeek(days: [String]) // Salvar a semana que vai ser mostrada
+    func displayWeek(days: [WeekDay]) // Salvar a semana que vai ser mostrada
     func displayActivityFlow()
 }
 
@@ -30,7 +40,7 @@ final class HomeStore: HomeStoreProtocol {
     
     // Dados da view
     private(set) var currentCategory: ActivityCategory = .physical // categoria atual
-    var daysOfWeek: [String] = [] // Dias da semana atual
+    var daysOfWeek: [WeekDay] = [] // Dias da semana atual
     
     // MARK: - Init
     init(coordinator: HomeRouting) {
@@ -50,7 +60,7 @@ final class HomeStore: HomeStoreProtocol {
         self.currentCategory = category
     }
     
-    func displayWeek(days: [String]) {
+    func displayWeek(days: [WeekDay]) {
         self.daysOfWeek = days
     }
 }

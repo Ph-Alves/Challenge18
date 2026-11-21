@@ -15,6 +15,7 @@ import SwiftUI
 protocol ActivityStoreProtocol: AnyObject {
     // MARK: - Step do timer
     func displayTimer(_ text: String)
+    func displayPaused(_ isPaused: Bool)
     
     // MARK: Steps .draw e .challenge
     func displayActivity(_ challenge: FrictionChallenge)
@@ -37,7 +38,7 @@ protocol ActivityStoreProtocol: AnyObject {
     func displayError(_ message: String?)
     
     // MARK: Step .summary
-    func displayStoryImage(_ image: UIImage?)
+    func displayStoryImages(_ images: [StoryCardStyle: UIImage])
     func displayShareSheet(_ item: ShareItem?)
     
     // MARK: Transitions
@@ -118,9 +119,9 @@ final class ActivityStore: ActivityStoreProtocol {
     /// Descrição da conquista, já citando o tempo da atividade. `nil` = o summary ainda não abriu.
     private(set) var achievementDescription: String?
     
-    /// Imagem do story já renderizada, pronta para o "compartilhar".
-    /// `nil` = a renderização falhou; o Interactor trata ao tocar em compartilhar.
-    private(set) var storyImage: UIImage?
+    /// Imagem do story já renderizada, uma por estilo da sheet de compartilhar, pronta para o "compartilhar".
+    /// Estilo ausente = a renderização falhou (ou `.photo` sem foto); o Interactor trata ao tocar em compartilhar.
+    private(set) var storyImages: [StoryCardStyle: UIImage] = [:]
     
     /// Controla o `.sheet(item:)` do share sheet. `nil` = fechado.
     private(set) var shareItem: ShareItem?
@@ -130,6 +131,10 @@ final class ActivityStore: ActivityStoreProtocol {
     init(coordinator: ActivityRouting) {
         self.coordinator = coordinator
     }
+    
+    private(set) var isPaused = false
+    
+    
     
     // MARK: - Functions
     
@@ -164,8 +169,8 @@ final class ActivityStore: ActivityStoreProtocol {
     
     // MARK: Step .summary
     
-    func displayStoryImage(_ image: UIImage?) {
-        storyImage = image
+    func displayStoryImages(_ images: [StoryCardStyle: UIImage]) {
+        storyImages = images
     }
 
     func displayShareSheet(_ item: ShareItem?) {
@@ -180,6 +185,10 @@ final class ActivityStore: ActivityStoreProtocol {
         timeText = text
     }
     
+    
+    func displayPaused(_ isPaused: Bool) {
+        self.isPaused = isPaused
+    }
     // MARK: Steps .draw e .challenge
     // Os requisitos estão declarados no `ActivityStoreProtocol`.
 

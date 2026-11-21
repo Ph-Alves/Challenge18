@@ -76,11 +76,60 @@ struct PresenterTests {
         // 18/10/2026 é domingo, então a semana vai de domingo a sábado.
         let calendar = Calendar.current
         let sunday = calendar.date(from: DateComponents(year: 2026, month: 10, day: 18))!
-        let days = (0..<7).compactMap { calendar.date(byAdding: .day, value: $0, to: sunday) }
+        let days = (0..<7).compactMap { calendar.date(byAdding: .day, value: $0, to: sunday) }.map { (date: $0, humor: Humor?.none) }
         
         presenter.presentWeek(days: days)
         
-        #expect(store.daysOfWeek == ["D", "S", "T", "Q", "Q", "S", "S"])
+        #expect(store.daysOfWeek.map(\.label) == ["D", "S", "T", "Q", "Q", "S", "S"])
+    }
+    
+    // A semana depende da data atual, então montamos os dias relativos a hoje (ontem, hoje, amanhã).
+    private func yesterdayTodayTomorrow() throws -> (yesterday: Date, today: Date, tomorrow: Date) {
+        let calendar = Calendar.current
+        let today = Date()
+        let yesterday = try #require(calendar.date(byAdding: .day, value: -1, to: today))
+        let tomorrow = try #require(calendar.date(byAdding: .day, value: 1, to: today))
+        return (yesterday, today, tomorrow)
+    }
+    
+    @Test func testingPresentWeekKeepsHumorOnPastAndTodayButDropsFuture() throws {
+        let (presenter, store) = createPresenterAndStore()
+        let (yesterday, today, tomorrow) = try yesterdayTodayTomorrow()
+        
+        presenter.presentWeek(days: [
+            (date: yesterday, humor: .veryPleasant),
+            (date: today, humor: .neutral),
+            (date: tomorrow, humor: .pleasant)
+        ])
+        
+        // Ontem e hoje mantêm o humor; amanhã é descartado.
+        #expect(store.daysOfWeek.map(\.humor) == [.veryPleasant, .neutral, nil])
+    }
+    
+    @Test func testingPresentWeekMarksOnlyDaysAfterTodayAsFuture() throws {
+        let (presenter, store) = createPresenterAndStore()
+        let (yesterday, today, tomorrow) = try yesterdayTodayTomorrow()
+        
+        presenter.presentWeek(days: [
+            (date: yesterday, humor: nil),
+            (date: today, humor: nil),
+            (date: tomorrow, humor: nil)
+        ])
+        
+        #expect(store.daysOfWeek.map(\.isFuture) == [false, false, true])
+    }
+    
+    @Test func testingPresentWeekMarksOnlyTodayAsToday() throws {
+        let (presenter, store) = createPresenterAndStore()
+        let (yesterday, today, tomorrow) = try yesterdayTodayTomorrow()
+        
+        presenter.presentWeek(days: [
+            (date: yesterday, humor: nil),
+            (date: today, humor: nil),
+            (date: tomorrow, humor: nil)
+        ])
+        
+        #expect(store.daysOfWeek.map(\.isToday) == [false, true, false])
     }
     
     // MARK: - ActivityPresenter (sorteio de desafios)
@@ -223,10 +272,28 @@ struct PresenterTests {
 
         presenter.presentStory(result, title: "faça o seu cardio", subtitle: "menos distração", description: "sem redes sociais", challengeIcon: ActivityCategory.physical.closedIcon)
         
-        // O story sai em 1080x1920 px (360x640 pt com scale 3).
-        let image = try #require(store.storyImage)
-        #expect(image.size.width * image.scale == 1080)
-        #expect(image.size.height * image.scale == 1920)
+        // O story sai no tamanho da especificação (pontos x scale).
+        let image = try #require(store.storyImages[.white])
+        #expect(image.size.width * image.scale == ShareImageSpecification.pointSize.width * ShareImageSpecification.scale)
+        #expect(image.size.height * image.scale == ShareImageSpecification.pointSize.height * ShareImageSpecification.scale)
+    }
+    
+    @Test func testingPresentStoryWithoutPhotoRendersEveryStyleExceptPhoto() {
+        let (presenter, store) = createActivityPresenterAndStore()
+        let result = ActivityResult(time: 0, humor: .veryPleasant)
+
+        presenter.presentStory(result, title: "faça o seu cardio", subtitle: "menos distração", description: "sem redes sociais", challengeIcon: ActivityCategory.physical.closedIcon)
+        
+        #expect(Set(store.storyImages.keys) == [.white, .black, .transparent])
+    }
+    
+    @Test func testingPresentStoryWithPhotoRendersEveryStyle() {
+        let (presenter, store) = createActivityPresenterAndStore()
+        let result = ActivityResult(photo: makePhotoData(), time: 0, humor: .veryPleasant)
+
+        presenter.presentStory(result, title: "faça o seu cardio", subtitle: "menos distração", description: "sem redes sociais", challengeIcon: ActivityCategory.physical.closedIcon)
+        
+        #expect(Set(store.storyImages.keys) == Set(StoryCardStyle.allCases))
     }
     
     @Test func testingPresentShareSheetOpensAndCloses() {
@@ -435,7 +502,7 @@ struct PresenterTests {
         #expect(store.presentDetail)
         #expect(store.selectedActivity === activity)
         #expect(store.selectedPhoto != nil)
-        #expect(store.storyImage != nil)
+        #expect(store.storyImages[.photo] != nil)
     }
     
     @Test func testingPresentSelectedActivityWithoutPhotoStillRendersStory() {
@@ -444,7 +511,8 @@ struct PresenterTests {
         presenter.presentSelectedActivity(activity: makeFeelingActivity(named: "Caminhada", humor: .pleasant))
         
         #expect(store.selectedPhoto == nil)
-        #expect(store.storyImage != nil)
+        #expect(store.storyImages[.white] != nil)
+        #expect(store.storyImages[.photo] == nil)
     }
     
     // MARK: - FeelingsPresenter (tirar outra foto)
@@ -586,7 +654,7 @@ struct PresenterTests {
         
         presenter.presentStory(for: makeFeelingActivity(named: "Caminhada", humor: .pleasant, photo: makePhotoData()))
         
-        #expect(store.storyImage != nil)
+        #expect(Set(store.storyImages.keys) == Set(StoryCardStyle.allCases))
     }
     
     @Test func testingPresentShareSheetOpensSheetWithFileAndClearsError() {

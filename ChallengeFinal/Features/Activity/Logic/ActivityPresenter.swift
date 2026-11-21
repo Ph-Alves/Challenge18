@@ -38,6 +38,7 @@ protocol ActivityPresenterProtocol: AnyObject {
     func presentFlash(isOn: Bool)
     func presentError(_ error: Error)
     func presentAlertsDismissed()
+    func presentPaused(_ isPaused: Bool)
     
     // MARK: Step .summary
     func presentStory(_ result: ActivityResult, title: String?, subtitle: String?, description: String?, challengeIcon: String)
@@ -171,6 +172,10 @@ final class ActivityPresenter: ActivityPresenterProtocol {
         store?.displayTimer(String(format: "%02d:%02d:%02d", hours, minutes, seconds))
     }
     
+    func presentPaused(_ isPaused: Bool) {
+        store?.displayPaused(isPaused)
+    }
+    
     // MARK: Steps .draw e .challenge
     // Os requisitos estão declarados no `ActivityPresenterProtocol`.
 
@@ -212,13 +217,15 @@ final class ActivityPresenter: ActivityPresenterProtocol {
         // Bytes -> UIImage no tamanho original: é o fundo inteiro do story.
         let photo = result.photo.flatMap { UIImage(data: $0) }
 
-        let story = StoryCard(
-            challengeTitle: title,
-            challengeDescription: Self.description(for: result),
-            challengePhoto: photo, challengeIcon: challengeIcon
+        // Uma imagem por estilo da sheet de compartilhar: a View escolhe pelo toque.
+        let images = ShareImageRenderer.renderAllStyles(
+            title: title,
+            description: Self.description(for: result),
+            photo: photo,
+            icon: challengeIcon
         )
 
-        store?.displayStoryImage(ShareImageRenderer.render(story))
+        store?.displayStoryImages(images)
     }
 
     /// O arquivo do story está pronto: abre o share sheet.

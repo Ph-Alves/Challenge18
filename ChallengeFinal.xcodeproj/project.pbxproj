@@ -63,6 +63,7 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				ChallengeFinalWidgetAttributes.swift,
+				TogglePauseIntent.swift,
 			);
 			target = 000000000000000100000000 /* ChallengeFinal */;
 		};

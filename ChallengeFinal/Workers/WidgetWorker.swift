@@ -18,6 +18,8 @@ protocol WidgetWorkerProtocol {
     func startLiveActivity(name: String, startDate: Date) async
     func stopLiveActivity(elapsed: TimeInterval) async
     func cancelLiveActivity() async
+    func pauseLiveActivity(elapsed: TimeInterval) async
+    func resumeLiveActivity(startDate: Date) async
     
 }
 
@@ -65,6 +67,33 @@ final class WidgetWorker: WidgetWorkerProtocol {
         } catch {
             print("ERRO: \(error)")
         }
+    }
+    
+    func pauseLiveActivity(elapsed: TimeInterval) async {
+        guard let activity else { return }
+        
+        let state = ChallengeFinalWidgetAttributes.ContentState (
+            emoji: "timer.circle",
+            startTime: activity.content.state.startTime,
+            isRunning: false,
+            elapsedSeconds: Int(elapsed)
+        )
+        
+        await activity.update(ActivityContent(state: state, staleDate: nil))
+    }
+    
+    /// Retomou: `startDate` já vem deslocado pelo Interactor (agora - tempo acumulado),
+    /// então o contador do sistema continua de onde parou.
+    func resumeLiveActivity(startDate: Date) async {
+        guard let activity else { return }
+        
+        let state = ChallengeFinalWidgetAttributes.ContentState(
+            emoji: "timer.circle",
+            startTime: startDate,
+            isRunning: true,
+            elapsedSeconds: 0
+        )
+        await activity.update(ActivityContent(state: state, staleDate: nil))
     }
     
     /// Terminou a atividade: atualiza a ilha para "parado" com o tempo final (`elapsed`)

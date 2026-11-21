@@ -17,13 +17,13 @@ import UIKit
 final class HomePresenterSpy: HomePresenterProtocol {
     
     private(set) var presentedCategory: ActivityCategory?
-    private(set) var week: [Date]?
+    private(set) var week: [(date: Date, humor: Humor?)]?
     
     func presentCategory(_ category: ChallengeFinal.ActivityCategory) {
         presentedCategory = category
     }
     
-    func presentWeek(days: [Date]) {
+    func presentWeek(days: [(date: Date, humor: Humor?)]) {
         week = days
     }
     
@@ -56,7 +56,11 @@ final class ActivityPresenterSpy: ActivityPresenterProtocol {
     private(set) var flowFinishedCount = 0
 
     func presentTime(_ elapsed: TimeInterval) { presentedTimes.append(elapsed) }
-    
+
+    /// Valores de pausa que o Interactor mandou para a Store, em ordem.
+    private(set) var pausedValues: [Bool] = []
+    func presentPaused(_ isPaused: Bool) { pausedValues.append(isPaused) }
+
     // Humor e compartilhamento
     private(set) var presentedHumors: [Humor] = []
     private(set) var presentedErrors: [Error] = []
@@ -226,10 +230,14 @@ final class WidgetWorkerMock: WidgetWorkerProtocol {
     private(set) var startCalls: [(name: String, startDate: Date)] = []
     private(set) var stopElapsed: [TimeInterval] = []
     private(set) var cancelCount = 0
+    private(set) var pauseElapsed: [TimeInterval] = []
+    private(set) var resumeCalls: [Date] = []
 
     func startLiveActivity(name: String, startDate: Date) async { startCalls.append((name, startDate)) }
     func stopLiveActivity(elapsed: TimeInterval) async { stopElapsed.append(elapsed) }
     func cancelLiveActivity() async { cancelCount += 1 }
+    func pauseLiveActivity(elapsed: TimeInterval) async { pauseElapsed.append(elapsed) }
+    func resumeLiveActivity(startDate: Date) async { resumeCalls.append(startDate) }
 }
 
 /// Anota o que o Interactor de Feelings entregou ao Presenter, uma entrada por chamada.
@@ -509,17 +517,77 @@ struct InteractorTests {
         calendar.firstWeekday = 1
         
         // A semana começa no domingo (weekday == 1).
-        #expect(calendar.component(.weekday, from: week[0]) == 1)
+        #expect(calendar.component(.weekday, from: week[0].date) == 1)
         
         // Os dias são consecutivos.
         for index in 1..<week.count {
-            let expected = calendar.date(byAdding: .day, value: 1, to: week[index - 1])
-            #expect(week[index] == expected)
+            let expected = calendar.date(byAdding: .day, value: 1, to: week[index - 1].date)
+            #expect(week[index].date == expected)
         }
     }
 
-    // MARK: - ActivityInteractor (sorteio de desafios)
+    // Cria uma Activity (com ou sem resultado) numa data específica e salva no banco de teste.
+    private func addActivity(on date: Date, humor: Humor?, hasResult: Bool = true) throws {
+        let result = hasResult ? ActivityResult(time: 60, humor: humor) : nil
+        let activity = Activity(category: .physical, result: result, createdAt: date, name: "Teste", description: "", archived: false)
+        try makeActivityRepository().add(activity)
+    }
     
+    @Test func testingIfWeekHumorUsesFirstActivityWithResultOfTheDay() throws {
+        let repository = makeActivityRepository()
+        let presenterSpy = HomePresenterSpy()
+        let interactor = HomeInteractor(repository: repository, presenter: presenterSpy)
+        
+        // Pega o domingo da semana atual (primeiro dia apresentado) para não depender do dia de hoje.
+        interactor.getCurrentWeek()
+        let sunday = try #require(presenterSpy.week?.first?.date)
+        let calendar = Calendar.current
+        let monday = try #require(calendar.date(byAdding: .day, value: 1, to: sunday))
+        
+        // Domingo: a mais cedo está sem resultado (ignorada); a primeira com resultado é a das 10h.
+        try addActivity(on: sunday.addingTimeInterval(8 * 3600), humor: nil, hasResult: false)
+        try addActivity(on: sunday.addingTimeInterval(15 * 3600), humor: .unpleasant)
+        try addActivity(on: sunday.addingTimeInterval(10 * 3600), humor: .veryPleasant)
+        // Segunda: só uma atividade, com resultado.
+        try addActivity(on: monday.addingTimeInterval(9 * 3600), humor: .neutral)
+        
+        interactor.getCurrentWeek()
+        
+        let week = try #require(presenterSpy.week)
+        #expect(week[0].humor == .veryPleasant)
+        #expect(week[1].humor == .neutral)
+        // Terça em diante: sem atividades.
+        #expect(week[2...].allSatisfy { $0.humor == nil })
+    }
+    
+    @Test func testingIfWeekHumorIsNilWhenDayOnlyHasActivitiesWithoutResult() throws {
+        let presenterSpy = HomePresenterSpy()
+        let interactor = HomeInteractor(repository: makeActivityRepository(), presenter: presenterSpy)
+        
+        interactor.getCurrentWeek()
+        let sunday = try #require(presenterSpy.week?.first?.date)
+        try addActivity(on: sunday.addingTimeInterval(10 * 3600), humor: nil, hasResult: false)
+        
+        interactor.getCurrentWeek()
+        
+        #expect(try #require(presenterSpy.week)[0].humor == nil)
+    }
+
+    // O carrossel da Home usa `shifted(by:)` para saber a categoria de cada slot.
+    @Test(arguments: [
+        (ActivityCategory.physical, 1, ActivityCategory.cognitive),
+        (ActivityCategory.physical, -1, ActivityCategory.social),
+        (ActivityCategory.social, 1, ActivityCategory.physical),
+        (ActivityCategory.cognitive, 2, ActivityCategory.social),
+        (ActivityCategory.physical, -2, ActivityCategory.sensorial),
+        (ActivityCategory.sensorial, 0, ActivityCategory.sensorial)
+    ])
+    func testingCategoryShiftedWrapsAround(start: ActivityCategory, offset: Int, expected: ActivityCategory) {
+        #expect(start.shifted(by: offset) == expected)
+    }
+
+    // MARK: - ActivityInteractor (sorteio de desafios)
+
     private struct ActivitySUT {
         let interactor: ActivityInteractor
         let presenter: ActivityPresenterSpy
@@ -1501,6 +1569,83 @@ struct InteractorTests {
 
         #expect(sut.liveActivity.cancelCount == 1)
         #expect(sut.liveActivity.stopElapsed.isEmpty)
+    }
+
+    // Pausar congela o tempo acumulado e avisa a ilha e a tela com ele.
+    @Test func testingPauseTimerSendsElapsedToLiveActivity() async throws {
+        let sut = makeActivitySUT()
+        sut.interactor.timerStartDate = Date().addingTimeInterval(-30)
+
+        sut.interactor.pauseTimer()
+        defer { sut.interactor.cancelTimer() }
+        await wait { sut.liveActivity.pauseElapsed.count == 1 }
+
+        let elapsed = try #require(sut.liveActivity.pauseElapsed.first)
+        #expect(elapsed >= 30)
+        #expect(elapsed < 31)
+        #expect(sut.interactor.isTimerPaused)
+        #expect(sut.interactor.timerStartDate == nil)
+        #expect(sut.presenter.pausedValues == [true])
+    }
+
+    // Pausar sem o cronômetro rodando não faz nada.
+    @Test func testingPauseTimerWithoutRunningTimerDoesNothing() async {
+        let sut = makeActivitySUT()
+
+        sut.interactor.pauseTimer()
+        try? await Task.sleep(for: .milliseconds(50))
+
+        #expect(!sut.interactor.isTimerPaused)
+        #expect(sut.liveActivity.pauseElapsed.isEmpty)
+        #expect(sut.presenter.pausedValues.isEmpty)
+    }
+
+    // Retomar desloca o início: o tempo continua de onde parou, sem contar a pausa.
+    @Test func testingResumeTimerContinuesFromPausedTime() async throws {
+        let sut = makeActivitySUT()
+        sut.interactor.timerStartDate = Date().addingTimeInterval(-30)
+        sut.interactor.pauseTimer()
+        defer { sut.interactor.cancelTimer() }
+
+        sut.interactor.resumeTimer()
+        // Mede logo após retomar, antes de esperar o mock: `currentElapsed()` cresce com o relógio,
+        // e em CI lento a espera poderia passar de 1s e estourar o limite superior.
+        let elapsed = sut.interactor.currentElapsed()
+        await wait { sut.liveActivity.resumeCalls.count == 1 }
+
+        #expect(!sut.interactor.isTimerPaused)
+        #expect(elapsed >= 30)
+        #expect(elapsed < 31)
+        #expect(sut.liveActivity.resumeCalls.first == sut.interactor.timerStartDate)
+        #expect(sut.presenter.pausedValues == [true, false])
+    }
+
+    // O botão da ilha alterna: rodando pausa, pausado retoma.
+    @Test func testingTogglePauseAlternatesBetweenPauseAndResume() async {
+        let sut = makeActivitySUT()
+        sut.interactor.timerStartDate = Date().addingTimeInterval(-30)
+        defer { sut.interactor.cancelTimer() }
+
+        sut.interactor.togglePause()
+        #expect(sut.interactor.isTimerPaused)
+
+        sut.interactor.togglePause()
+        #expect(!sut.interactor.isTimerPaused)
+    }
+
+    // Parar enquanto pausado mantém o tempo congelado, sem zerar nem contar a pausa.
+    @Test func testingStopTimerWhilePausedKeepsPausedTime() async throws {
+        let sut = makeActivitySUT()
+        sut.interactor.timerStartDate = Date().addingTimeInterval(-30)
+        sut.interactor.pauseTimer()
+
+        sut.interactor.stopTimer()
+        await wait { sut.liveActivity.stopElapsed.count == 1 }
+
+        let elapsed = try #require(sut.liveActivity.stopElapsed.first)
+        #expect(elapsed >= 30)
+        #expect(elapsed < 31)
+        #expect(!sut.interactor.isTimerPaused)
     }
 
     @Test func testingStartActivityStartsLiveActivity() async {

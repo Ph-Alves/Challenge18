@@ -136,7 +136,10 @@ struct ActivityView: View {
                 InProgressView(
                     message: store.activityTitle ?? "",
                     challengeSubTitle: store.activitySubtitle ?? "",
-                    challengeDescription: store.activityDescription ?? "", challengeIcon: currentCategory.cardIcon,
+                    challengeDescription: store.activityDescription ?? "",
+                    challengeIcon: currentCategory.cardIcon,
+                    isPaused: store.isPaused,
+                    pauseAction: interactor.togglePause,
                     timeText: store.timeText,
                     finishAction: {
                         interactor.completeActivity(currentCategory: currentCategory, title: title, subTitle: subtitle, Description: description)
@@ -215,8 +218,8 @@ struct ActivityView: View {
             photo: store.photo,
             humor: store.humor,
             onFinish: { interactor.finishActivityFlow() },
-            // A imagem do story já está pronta na Store: só repassamos.
-            onShare: { interactor.shareStory(store.storyImage) }
+            // As imagens do story (uma por estilo) já estão prontas na Store: só repassamos a escolhida.
+            onShare: { style in interactor.shareStory(store.storyImages[style]) }
         )
         .transition(.opacity)
         .onAppear {

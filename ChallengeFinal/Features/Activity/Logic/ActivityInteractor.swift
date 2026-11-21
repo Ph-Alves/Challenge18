@@ -68,6 +68,10 @@ protocol ActivityInteractorProtocol: AnyObject {
     func startTimer()
     func stopTimer()
     func cancelTimer()
+    func pauseTimer()
+    func resumeTimer()
+    func togglePause()
+
 
     // MARK: Step .draw
     func detectMotion(for category: ActivityCategory)
@@ -150,7 +154,9 @@ final class ActivityInteractor: ActivityInteractorProtocol {
 
     /// O cronômetro: só entrega os ticks de 1 segundo. Pelo protocolo, para dar mock nos testes.
     let timer: TimerWorkerProtocol
-
+    /// Escuta o botão da Live Activity enquanto o cronômetro existe.
+    var pauseObserverTask: Task<Void, Never>?
+    
     /// A Live Activity (Dynamic Island) do cronômetro. Pelo protocolo, para dar mock nos testes.
     /// Quem fala com ela é o Interactor direto, sem passar pelo Presenter: é algo do sistema,
     /// não da tela do app.
@@ -184,6 +190,9 @@ final class ActivityInteractor: ActivityInteractorProtocol {
     /// Tempo final da atividade, em segundos, fixado ao terminar (`stopTimer`).
     /// Vai para o `ActivityResult` no final. Volta a 0 se o usuário cancelar.
     var timerElapsed: TimeInterval = 0
+    
+    var isTimerPaused = false
+
 
     /// O Task que escuta os ticks do worker. Fica guardado para poder ser cancelado.
     var timerTask: Task<Void, Never>?
@@ -394,6 +403,7 @@ final class ActivityInteractor: ActivityInteractorProtocol {
     /// Começa a contar: guarda a data de início e, a cada tick, manda o tempo
     /// atual para o Presenter (que formata e entrega à Store).
     func startTimer( ) {
+        startObservingPauseButton()
         // Garante um só Task rodando, caso o início seja chamado duas vezes.
         timerTask?.cancel()
         let startDate = Date()
@@ -416,12 +426,71 @@ final class ActivityInteractor: ActivityInteractorProtocol {
             }
         }
     }
+    
+    /// O botão da ilha alterna: rodando → pausa, pausado → retoma.
+    func togglePause() {
+        if isTimerPaused { resumeTimer() } else { pauseTimer() }
+    }
+    
+    /// Escuta o botão da Live Activity enquanto o cronômetro existe.
+    private func startObservingPauseButton() {
+        pauseObserverTask?.cancel()
+        pauseObserverTask = Task { [weak self] in
+            for await _ in NotificationCenter.default.notifications(named: .toggleTimerPause) {
+                guard let self else { return }
+                togglePause()
+            }
+        }
+    }
+    
+    private func stopObservingPauseButton() {
+        pauseObserverTask?.cancel()
+        pauseObserverTask = nil
+    }
+    
+    /// Pausa: congela o tempo acumulado e para os ticks.
+    func pauseTimer() {
+        guard timerStartDate != nil, !isTimerPaused else { return }
+        
+        timerElapsed = currentElapsed()
+        isTimerPaused = true
+        presenter.presentPaused(true)
+
+        timerTask?.cancel()
+        timerStartDate = nil
+        
+        Task { await liveActivity.pauseLiveActivity(elapsed: timerElapsed) }
+    }
+    
+    /// Retoma: desloca o início para que "agora - início" continue igual ao tempo acumulado.
+    func resumeTimer() {
+        guard isTimerPaused else { return }
+        
+        let startDate = Date().addingTimeInterval(-timerElapsed)
+        timerStartDate = startDate
+        isTimerPaused = false
+        presenter.presentPaused(false)
+
+        
+        Task { await liveActivity.resumeLiveActivity(startDate: startDate) }
+        
+        timerTask = Task { [weak self] in
+            guard let ticks = self?.timer.ticks() else { return }
+            for await _ in ticks {
+                guard let self else { return }
+                presenter.presentTime(currentElapsed())
+            }
+        }
+    }
 
     /// Terminou a atividade: para os ticks e fixa o tempo final em `timerElapsed`,
     /// que vai para o `ActivityResult` no final do fluxo.
     func stopTimer() {
         timerTask?.cancel()
         timerElapsed = currentElapsed()
+        isTimerPaused = false
+        presenter.presentPaused(false)
+
         timerStartDate = nil
 
         // A ilha passa a mostrar o tempo final (parado) e some depois de alguns segundos.
@@ -465,6 +534,9 @@ final class ActivityInteractor: ActivityInteractorProtocol {
     /// A tela volta a "00:00:00".
     func cancelTimer() {
         timerTask?.cancel()
+        isTimerPaused = false            
+        presenter.presentPaused(false)
+
         timerTask = nil
         achievementTask?.cancel()
         achievementTask = nil
@@ -480,7 +552,8 @@ final class ActivityInteractor: ActivityInteractorProtocol {
     /// Quanto tempo já passou desde `timerStartDate`, em segundos.
     /// Devolve `0` se o cronômetro não estiver rodando.
     func currentElapsed() -> TimeInterval {
-        guard let start = timerStartDate else { return 0}
+        if isTimerPaused { return timerElapsed }
+        guard let start = timerStartDate else { return 0 }
         return Date().timeIntervalSince(start)
     }
 
