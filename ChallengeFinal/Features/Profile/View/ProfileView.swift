@@ -8,9 +8,9 @@
 import SwiftUI
 import PhotosUI
 
-/// Tela de Perfil: cabeçalho (foto, nome e streak) + seção de temas.
-/// Lápis = editar nome/foto. Engrenagem = sheet de configurações.
-/// Só lê da Store e repassa as ações ao Interactor.
+/// Tela de Perfil. Só lê da Store e repassa as ações ao Interactor.
+///
+/// Monta: cabeçalho (lápis, foto, engrenagem, nome e streak) + seção "temas".
 struct ProfileView: View {
 
     // MARK: - Variables
@@ -18,47 +18,61 @@ struct ProfileView: View {
     @Environment(DesignSystem.self) private var designSystem
     @Environment(\.openURL) private var openURL
 
+    /// Pelo protocolo, para dar para passar um Interactor falso no preview.
     let interactor: ProfileInteractorProtocol
+
+    /// Estado da tela. A View segura com força (o Presenter guarda como `weak`).
     @State var store: ProfileStore
 
-    /// Item escolhido no PhotosPicker (vira Data no Interactor).
+    /// Item escolhido na galeria (estado de UI; os bytes quem carrega é o Interactor).
     @State private var photoItem: PhotosPickerItem?
+
+    /// Foco do campo de nome: abre o teclado ao entrar no modo edição.
     @FocusState private var isNameFocused: Bool
+
+    // MARK: - DS atalhos
+
+    private var typography: Typography { designSystem.style.typography }
+    private var colors: ColorPalette { designSystem.style.colors }
 
     // MARK: - Body
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 48) {
-                ProfileHeaderView(
-                    name: store.name,
-                    userPhoto: store.userPhoto,
-                    streakText: store.streakText,
-                    levelTitle: store.levelTitle,
-                    levelSubtitle: store.levelSubtitle,
-                    isEditing: store.isEditing,
-                    draftName: $store.draftName,
-                    photoItem: $photoItem,
-                    isNameFocused: $isNameFocused,
-                    editAction: toggleEditing,
-                    settingsAction: interactor.openSettings
-                )
+        VStack(spacing: 50) {
+            ProfileHeaderView(
+                name: store.name,
+                userPhoto: store.userPhoto,
+                streakDayCount: store.streakText,
+                levelTitle: store.levelTitle,
+                levelSubtitle: store.levelSubtitle,
+                isEditing: store.isEditing,
+                draftName: $store.draftName,
+                photoItem: $photoItem,
+                isNameFocused: $isNameFocused,
+                editAction: editAction,
+                settingsAction: interactor.openSettings
+            )
 
-                themesSection
-                    .padding(.horizontal, 30)
-            }
-            .padding(.bottom, 32)
+            themesSection
+
         }
-        .scrollIndicators(.hidden)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .ignoresSafeArea(edges: .top)
-        .background(designSystem.style.colors.backgroundPrimary)
+        .background(colors.backgroundPrimary)
+        .foregroundStyle(colors.textPrimary)
         .onAppear(perform: interactor.fetchProfile)
-        .onChange(of: photoItem) { _, item in
-            guard let item else { return }
-            interactor.didSelectPhoto(item)
+        // Foto: a View só avisa; o Interactor carrega e salva.
+        .onChange(of: photoItem) { _, newItem in
+            guard let newItem else { return }
+            interactor.didSelectPhoto(newItem)
             photoItem = nil
         }
-        .sheet(isPresented: $store.isSettingsPresented) {
+        // Teclado acompanha o modo edição decidido pelo Interactor.
+        .onChange(of: store.isEditing) { _, isEditing in
+            isNameFocused = isEditing
+        }
+        // Engrenagem
+        .sheet(isPresented: $store.isSettingsPresented, onDismiss: interactor.closeSettings) {
             SettingsView(
                 localizable: store.localizable,
                 notifications: store.notifications,
@@ -68,138 +82,123 @@ struct ProfileView: View {
                 notificationsAction: interactor.updateNotifications,
                 backgroundAction: interactor.updateBackgroundActivity
             )
-            .presentationDetents([.large])
-            .presentationDragIndicator(.visible)
-            // Com o sheet aberto, os alertas precisam ser dele (permissões vêm daqui).
-            .alert("Ops!", isPresented: isPermissionAlertPresented) { permissionButtons } message: {
+            // Permissão negada aparece por cima do sheet, que é onde o toggle foi tocado.
+            .alert("Permissão necessária", isPresented: isPermissionAlertPresented) {
+                permissionAlertButtons
+            } message: {
                 Text(store.permissionAlertMessage ?? "")
             }
-            .alert("Ops!", isPresented: isErrorAlertPresented) { errorButton } message: {
-                Text(store.errorMessage ?? "")
-            }
         }
-        // Erros com o sheet fechado (ex.: foto que não carregou).
-        .alert("Ops!", isPresented: isErrorAlertOutsideSheet) { errorButton } message: {
+        // Erros técnicos (ex.: foto não carregou)
+        .alert("Ops!", isPresented: isErrorPresented) {
+            Button("OK", role: .cancel, action: interactor.dismissAlerts)
+        } message: {
             Text(store.errorMessage ?? "")
         }
     }
 
-    // MARK: - Seção de temas
+    // MARK: - Temas
 
     private var themesSection: some View {
-        VStack(alignment: .leading, spacing: 24) {
-            VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: 28) {
+            VStack(alignment: .leading, spacing: 2) {
                 Text("temas")
-                    .font(designSystem.style.typography.title1)
+                    .font(typography.title1)
                 Text("escolha um tema e deixe o app a sua cara")
-                    .font(designSystem.style.typography.text2)
+                    .font(typography.text2)
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
 
-            HStack(spacing: 26) {
+            HStack(spacing: 24) {
                 ForEach(store.themes, id: \.self) { theme in
-                    ThemeCard(theme: theme, isSelected: theme == store.currentTheme) {
+                    ThemeCard(theme: theme, isSelected: store.currentTheme == theme) {
                         interactor.updateTheme(theme)
                     }
                 }
             }
             .frame(maxWidth: .infinity)
         }
-        .foregroundStyle(designSystem.style.colors.textPrimary)
-    }
-
-    // MARK: - Alertas
-
-    /// Permissão negada: leva aos Ajustes do iPhone.
-    @ViewBuilder
-    private var permissionButtons: some View {
-        Button("abrir ajustes") {
-            if let url = URL(string: UIApplication.openSettingsURLString) {
-                openURL(url)
-            }
-            interactor.dismissAlerts()
-        }
-        Button("Agora não", role: .cancel) { interactor.dismissAlerts() }
-    }
-
-    /// Erro técnico: só fecha.
-    private var errorButton: some View {
-        Button("OK", role: .cancel) { interactor.dismissAlerts() }
-    }
-
-    // O `.alert` precisa de um Binding<Bool>, mas a View só LÊ a Store.
-    // Então o "get" lê a Store, e o "set" (quando o usuário fecha o alerta)
-    // avisa o Interactor, que pede ao Presenter para limpar a mensagem.
-
-    private var isPermissionAlertPresented: Binding<Bool> {
-        Binding(
-            get: { store.permissionAlertMessage != nil },
-            set: { isPresented in
-                if !isPresented { interactor.dismissAlerts() }
-            }
-        )
-    }
-
-    private var isErrorAlertPresented: Binding<Bool> {
-        Binding(
-            get: { store.errorMessage != nil },
-            set: { isPresented in
-                if !isPresented { interactor.dismissAlerts() }
-            }
-        )
-    }
-
-    /// Uma view só apresenta uma coisa por vez: com o sheet aberto, o alerta é dele.
-    private var isErrorAlertOutsideSheet: Binding<Bool> {
-        Binding(
-            get: { store.errorMessage != nil && !store.isSettingsPresented },
-            set: { isPresented in
-                if !isPresented { interactor.dismissAlerts() }
-            }
-        )
+        .padding(.horizontal, 30)
     }
 
     // MARK: - Ações
 
-    /// Lápis: entra no modo edição; no modo edição vira "check" e salva.
-    private func toggleEditing() {
+    /// Lápis vira "check": o primeiro toque entra em edição, o segundo salva.
+    private func editAction() {
         if store.isEditing {
-            isNameFocused = false
             interactor.saveEditing(name: store.draftName)
         } else {
             interactor.startEditing()
-            isNameFocused = true
         }
     }
-}
 
-// MARK: - Stub pro preview
+    // MARK: - Alertas
 
-private final class ProfileInteractorStub: ProfileInteractorProtocol {
-    func fetchProfile() {}
-    func startEditing() {}
-    func saveEditing(name: String) {}
-    func didSelectPhoto(_ item: PhotosPickerItem) {}
-    func updateTheme(_ theme: Theme) {}
-    func openSettings() {}
-    func closeSettings() {}
-    func updateLocalizable(_ isOn: Bool) {}
-    func updateNotifications(_ isOn: Bool) {}
-    func updateBackgroundActivity(_ isOn: Bool) {}
-    func dismissAlerts() {}
-}
+    /// As mensagens são `private(set)` na Store: fechar o alerta passa pelo Interactor.
+    private var isPermissionAlertPresented: Binding<Bool> {
+        Binding(
+            get: { store.permissionAlertMessage != nil },
+            set: { if !$0 { interactor.dismissAlerts() } }
+        )
+    }
 
-extension ProfileStore {
-    static var preview: ProfileStore {
-        let store = ProfileStore()
-        store.displayProfile(name: "nome", userPhoto: nil)
-        store.displayStreak(streakText: "0 dias", levelTitle: "começando :)", levelSubtitle: "o primeiro passo você já deu, agora falta se desafiar!")
-        store.displayTheme(.sober)
-        return store
+    private var isErrorPresented: Binding<Bool> {
+        Binding(
+            get: { store.errorMessage != nil },
+            set: { if !$0 { interactor.dismissAlerts() } }
+        )
+    }
+
+    @ViewBuilder
+    private var permissionAlertButtons: some View {
+        Button("abrir ajustes") {
+            interactor.dismissAlerts()
+            if let url = URL(string: UIApplication.openSettingsURLString) {
+                openURL(url)
+            }
+        }
+        Button("agora não", role: .cancel, action: interactor.dismissAlerts)
     }
 }
 
 // MARK: - Preview
+
+/// Interactor falso: só fala com a Store, sem banco nem permissões.
+@MainActor
+private final class ProfileInteractorPreview: ProfileInteractorProtocol {
+    let store: ProfileStore
+    init(store: ProfileStore) { self.store = store }
+
+    func fetchProfile() {}
+    func startEditing() { store.displayEditing(isEditing: true, draftName: store.name) }
+    func saveEditing(name: String) {
+        store.displayProfile(name: name.isEmpty ? store.name : name, userPhoto: store.userPhoto)
+        store.displayEditing(isEditing: false, draftName: name)
+    }
+    func didSelectPhoto(_ item: PhotosPickerItem) {}
+    func updateTheme(_ theme: Theme) { store.displayTheme(theme) }
+    func openSettings() { store.displaySettingsSheet(isPresented: true) }
+    func closeSettings() { store.displaySettingsSheet(isPresented: false) }
+    func updateLocalizable(_ isOn: Bool) {
+        store.displaySettings(localizable: isOn, notifications: store.notifications, backgroundActivity: store.backgroundActivity)
+    }
+    func updateNotifications(_ isOn: Bool) {
+        store.displaySettings(localizable: store.localizable, notifications: isOn, backgroundActivity: store.backgroundActivity)
+    }
+    func updateBackgroundActivity(_ isOn: Bool) {
+        store.displaySettings(localizable: store.localizable, notifications: store.notifications, backgroundActivity: isOn)
+    }
+    func dismissAlerts() {
+        store.displayPermissionAlert(nil)
+        store.displayError(nil)
+    }
+}
+
 #Preview {
-    ProfileView(interactor: ProfileInteractorStub(), store: .preview)
+    let store = ProfileStore()
+    store.displayStreak(streakText: "0 dias", levelTitle: "começando :)",
+                        levelSubtitle: "07 dias priorizando seu bem estar :)")
+
+    return ProfileView(interactor: ProfileInteractorPreview(store: store), store: store)
         .environment(DesignSystem.shared)
 }

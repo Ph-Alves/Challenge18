@@ -19,7 +19,14 @@ enum ProfileBuilder {
         let interactor = ProfileInteractor(
             presenter: presenter,
             profileRepository: GenericRepository<Profile>(context: context),
-            activityRepository: GenericRepository<Activity>(context: context)
+            activityRepository: GenericRepository<Activity>(context: context),
+            ///Tem que ser o .shared, e não um DesignSystem() novo, por dois motivos.
+            ///Primeiro, o init dele é private, então nem compila.
+            ///Segundo, é essa instância única que está no .environment(DesignSystem.shared) do MyApp.
+            ///Quando o Interactor muda o currentTheme, todas as Views que leem o designSystem do environment são atualizadas.
+            ///Com qualquer outra instância, o tema seria salvo, mas a tela não mudaria.
+            themeApplier: DesignSystem.shared
+
         )
 
         // A View segura a Store com força: o Presenter guarda a Store como `weak`.

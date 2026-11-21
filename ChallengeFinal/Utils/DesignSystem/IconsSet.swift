@@ -23,6 +23,6 @@ struct IconsSet {
     let pauseIcon: String //foi
     let tabBar: TabBarIcons
     let playIcon: String
-
+    let streakIcon: String
 }
 

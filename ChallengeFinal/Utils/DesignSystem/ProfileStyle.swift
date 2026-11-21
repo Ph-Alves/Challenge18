@@ -12,5 +12,5 @@ import Foundation
 /// O que muda na tela de Perfil de um tema para outro.
 struct ProfileStyle {
     /// Fundo do cabeçalho (já vem com textura e cantos arredondados).
-    let headerBackgroundAsset: String
+    let headerBackground: String
 }

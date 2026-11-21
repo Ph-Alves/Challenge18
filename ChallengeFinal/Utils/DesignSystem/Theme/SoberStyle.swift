@@ -30,6 +30,8 @@ struct SoberStyle: ThemeStyleProtocol {
         backgroundInverse: .soberBackgroundInverse,
         fillPrimary: .soberFillPrimary,
         fillPlaceholder: .soberFillPlaceholder,
+        fillConstantDark: .soberFillConstantDark,
+        fillConstantLight: .soberFillConstantLight,
         textPrimary: .soberTextPrimary,
         textSecondary: .soberTextSecondary,
         textInverse: .soberTextInverse,
@@ -44,7 +46,9 @@ struct SoberStyle: ThemeStyleProtocol {
         emotionStroke: .soberEmotionStroke,
         overlaySoft: .soberOverlaySoft,
         overlayStrong: .soberOverlayStrong,
-        emotionBGFill: .soberEmotionBGFill)
+        emotionBGFill: .soberEmotionBGFill,
+        strokeConstantDark: .soberFillConstantDark,
+        strokeConstantLight: .soberStrokeConstantLight)
         
     
     let icons = IconsSet(
@@ -73,7 +77,8 @@ struct SoberStyle: ThemeStyleProtocol {
         cameraIcon: "cameraIcon",
         nextIcon: "nextIcon",
         pauseIcon: "pauseIcon",
-        tabBar: TabBarIcons(challenge: (base: "challengeTabIcon", fill: "challengeTabFill"), home: (base: "homeTabIcon", fill: "homeTabFill"), feelings: (base: "feelingsTabIcon", fill: "feelingsTabFill"), profile: (base: "profileTabIcon", fill: "profileTabFill")), playIcon: "playIcon")
+        tabBar: TabBarIcons(challenge: (base: "challengeTabIcon", fill: "challengeTabFill"), home: (base: "homeTabIcon", fill: "homeTabFill"), feelings: (base: "feelingsTabIcon", fill: "feelingsTabFill"), profile: (base: "profileTabIcon", fill: "profileTabFill")), playIcon: "playIcon",
+        streakIcon: "soberStreakIcon")
     
     let humorWheel = HumorWheelStyle(
         pointerAsset: "wheelArrow",
@@ -85,6 +90,5 @@ struct SoberStyle: ThemeStyleProtocol {
         overlayOpacity: 0.6)
     
     let profile = ProfileStyle(
-        headerBackgroundAsset: "retangleSoberProfile")
-    
+        headerBackground: "soberHeaderBackground")
 }
