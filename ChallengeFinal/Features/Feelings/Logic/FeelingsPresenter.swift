@@ -173,7 +173,7 @@ final class FeelingsPresenter: FeelingsPresenterProtocol {
             title: name.isEmpty ? "desafio concluído" : name,
             description: activity.activityDescription.trimmingCharacters(in: .whitespacesAndNewlines),
             photo: photo,
-            icon: activity.category.closedIcon
+            icon: activity.category.defaultClosed
         )
         
         store?.presentStoryImages(images)

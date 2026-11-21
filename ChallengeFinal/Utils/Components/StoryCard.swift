@@ -158,7 +158,7 @@ struct StoryCard: View {
 #Preview("Story 1 - sem foto") {
     StoryCard(
         challengeTitle: "menos distração, mais foco",
-        challengeDescription: "sem redes sociais, seu cardio vira um momento para cuidar do corpo e desacelerar a mente.", challengeIcon: ActivityCategory.sensorial.closedIcon
+        challengeDescription: "sem redes sociais, seu cardio vira um momento para cuidar do corpo e desacelerar a mente.", challengeIcon: ActivityCategory.sensorial.defaultClosed
     ).environment(DesignSystem.shared)
 }
 
@@ -166,7 +166,7 @@ struct StoryCard: View {
     StoryCard( 
         challengeTitle: "menos distração, mais foco",
         challengeDescription: "sem redes sociais, seu cardio vira um momento para cuidar do corpo e desacelerar a mente.",
-        challengePhoto: UIImage(named: "challengePhoto"), challengeIcon: ActivityCategory.sensorial.closedIcon
+        challengePhoto: UIImage(named: "challengePhoto"), challengeIcon: ActivityCategory.sensorial.defaultClosed
     ).environment(DesignSystem.shared)
 }
 

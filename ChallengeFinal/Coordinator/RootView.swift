@@ -42,5 +42,13 @@ struct RootView: View {
             }
         }
         .tint(.primary)
+        // Aplica o tema salvo assim que o app abre, sem esperar a aba de Perfil carregar.
+        .task { applySavedTheme() }
+    }
+    
+    private func applySavedTheme() {
+        guard let profile = try? context.fetch(FetchDescriptor<Profile>()).first,
+              designSystem.currentTheme != profile.theme else { return }
+        designSystem.currentTheme = profile.theme
     }
 }

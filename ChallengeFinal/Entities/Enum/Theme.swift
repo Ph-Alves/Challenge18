@@ -24,18 +24,18 @@ enum Theme: String, Codable {
     ///Icone que aparece na tela de perfil na seção STREAK CARD
     var streakIcon: String {
         switch self {
-        case .sober: return SoberStyle().icons.activityIcons[.physical]?.closed ?? "eightBall"
-        case .pop: return SoberStyle().icons.activityIcons[.physical]?.closed ?? "eightBall" //CHANGE: trocar por PopStyle() quando existir.
-        case .bubblegum: return SoberStyle().icons.activityIcons[.physical]?.closed ?? "eightBall" //CHANGE: trocar por BubblegumStyle() quando existir.
-        case .techNature: return SoberStyle().icons.activityIcons[.physical]?.closed ?? "eightBall" //CHANGE: trocar por TechNatureStyle() quando existir.
+        case .sober: return SoberStyle().icons.activityIcons[.physical]?.defaultClosed ?? "eightBall"
+        case .pop: return PopStyle().icons.activityIcons[.social]?.defaultClosed ?? "tomato"
+        case .bubblegum: return SoberStyle().icons.activityIcons[.physical]?.defaultClosed ?? "eightBall" //CHANGE: trocar por BubblegumStyle() quando existir.
+        case .techNature: return SoberStyle().icons.activityIcons[.physical]?.defaultClosed ?? "eightBall" //CHANGE: trocar por TechNatureStyle() quando existir.
         }
     }
     
     ///Icone que aparece na tela de perfil na seção de TEMAS
     var previewIcon: String {
         switch self {
-        case .sober: return SoberStyle().icons.activityIcons[.physical]?.closed ?? "eightBall"
-        case .pop: return "popThemeIcon" //CHANGE: colocar asset real.
+        case .sober: return SoberStyle().icons.activityIcons[.physical]?.defaultClosed ?? "eightBall"
+        case .pop: return PopStyle().icons.activityIcons[.cognitive]?.defaultClosed ?? "dice"
         case .bubblegum: return "bubblegumThemeIcon" //CHANGE: colocar asset real.
         case .techNature: return "techNatureThemeIcon" //CHANGE: colocar asset real.
         }

@@ -16,7 +16,7 @@ struct ArchivedChallengeRow: View {
     var body: some View {
         HStack(spacing: 17) {
             HStack(spacing: 10) {
-                Image(activity.category.closedIcon)
+                Image(activity.category.defaultClosed)
                     .resizable()
                     .frame(width: 44, height: 44)
                     .accessibilityHidden(true)

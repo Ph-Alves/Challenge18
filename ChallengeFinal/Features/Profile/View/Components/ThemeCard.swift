@@ -79,7 +79,7 @@ struct ThemeCard: View {
 #Preview("Selecionado e não selecionado") {
     HStack(spacing: 12) {
         ThemeCard(theme: .sober, isSelected: true, action: {})
-        ThemeCard(theme: .bubblegum, isSelected: false, action: {})
+        ThemeCard(theme: .pop, isSelected: false, action: {})
     }
     .padding(24)
     .environment(DesignSystem.shared)

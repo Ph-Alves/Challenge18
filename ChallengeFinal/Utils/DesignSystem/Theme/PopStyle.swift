@@ -45,7 +45,7 @@ struct PopStyle: ThemeStyleProtocol {
         fillConstantLight: .popConstantGray,
         textPrimary: .popConstantLight,
         textSecondary: .popConstantGray,
-        textInverse: .popConstantLight,
+        textInverse: .popConstantDark,
         strokeDefault: .popConstantLight,
         strokeSecondary: .popConstantGray,
         strokeMuted: .popConstantDark,
@@ -67,11 +67,13 @@ struct PopStyle: ThemeStyleProtocol {
 
     // MARK: - Ícones
     let icons = IconsSet(
+
+        //categorias
         activityIcons: [
-            .cognitive: (closed: "dice",   open: "openDice",   card: "diceCard"),
-            .physical:  (closed: "cone",   open: "openCone",   card: "coneCard"),
-            .sensorial: (closed: "lamp",   open: "openLamp",   card: "lampCard"),
-            .social:    (closed: "tomato", open: "openTomato", card: "tomatoCard")
+            .cognitive: (homeCarousel: "diceCard", defaultClosed: "dice", defaultOpen: "openDice", activityFlowCard: "dice"),
+            .physical: (homeCarousel: "coneCard", defaultClosed: "cone", defaultOpen: "openCone", activityFlowCard: "cone"),
+            .sensorial: (homeCarousel: "lampCard", defaultClosed: "lamp", defaultOpen: "openLamp", activityFlowCard: "lamp"),
+            .social: (homeCarousel: "tomatoCard", defaultClosed: "tomato", defaultOpen: "openTomato", activityFlowCard: "tomato"),
         ],
 
         //sentimentos
@@ -103,6 +105,7 @@ struct PopStyle: ThemeStyleProtocol {
             home:      (base: "house",            fill: "house.fill"),
             feelings:  (base: "feelingsTabIcon",  fill: "feelingsTabFill"),
             profile:   (base: "profileTabIcon",   fill: "profileTabFill")),
+        
         playIcon: "play.fill")
 
     // MARK: - Roda de humor

@@ -137,7 +137,7 @@ struct ActivityView: View {
                     message: store.activityTitle ?? "",
                     challengeSubTitle: store.activitySubtitle ?? "",
                     challengeDescription: store.activityDescription ?? "",
-                    challengeIcon: currentCategory.cardIcon,
+                    challengeIcon: currentCategory.activityFlowCard,
                     isPaused: store.isPaused,
                     pauseAction: interactor.togglePause,
                     timeText: store.timeText,
@@ -197,7 +197,7 @@ struct ActivityView: View {
                 ChallengeAcceptedView(
                     challengeTitle: title,
                     challengeSubTitle: subtitle,
-                    challengeDescription: description, challengeIcon: currentCategory.cardIcon,
+                    challengeDescription: description, challengeIcon: currentCategory.activityFlowCard,
                     startAction: { interactor.startActivity() },
                     cancelAction: { interactor.reroll(for: currentCategory) }
                 )
@@ -227,7 +227,7 @@ struct ActivityView: View {
                 title: store.activityTitle,
                 subtitle: store.activitySubtitle,
                 description: store.activityDescription,
-                challengeIcon: currentCategory.closedIcon
+                challengeIcon: currentCategory.defaultClosed
             )
         }
     }

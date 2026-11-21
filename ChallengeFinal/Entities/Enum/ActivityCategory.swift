@@ -12,16 +12,24 @@ enum ActivityCategory: String, Codable, CaseIterable {
     case sensorial
     case social
     
-    var closedIcon: String {
-        DesignSystem.shared.style.icons.activityIcons[self]?.closed ?? ""
+    //usado no carrosel da home apenas
+    var homeCarousel: String {
+        DesignSystem.shared.style.icons.activityIcons[self]?.homeCarousel ?? ""
     }
-
-    var openIcon: String {
-        DesignSystem.shared.style.icons.activityIcons[self]?.open ?? ""
+    
+    //icone padrao fechado
+    var defaultClosed: String {
+        DesignSystem.shared.style.icons.activityIcons[self]?.defaultClosed ?? ""
     }
-
-    var cardIcon: String {
-        DesignSystem.shared.style.icons.activityIcons[self]?.card ?? ""
+    
+    //icone padrao aberto
+    var defaultOpen: String {
+        DesignSystem.shared.style.icons.activityIcons[self]?.defaultOpen ?? ""
+    }
+    
+    //icone usado na tela 'durante desafio' do activityFlow, o step 'display'
+    var activityFlowCard: String {
+        DesignSystem.shared.style.icons.activityIcons[self]?.activityFlowCard ?? ""
     }
 
     /// Categoria `offset` posições à frente (ou atrás, se negativo), voltando ao início nas pontas.
@@ -39,7 +47,7 @@ enum ActivityCategory: String, Codable, CaseIterable {
         case .physical:
             return "movimento"
         case .sensorial:
-            return "sentidos"
+            return "sensorial"
         case .social:
             return "conexão"
         }

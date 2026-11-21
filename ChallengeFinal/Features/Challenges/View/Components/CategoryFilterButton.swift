@@ -17,8 +17,7 @@ struct CategoryFilterButton: View {
     var body: some View {
         Button(action: action) {
             VStack(spacing: 6) {
-                // vai quebrar por conta do asset de alta, se quiser testar precisa comentar a imagem ou ajustar o tamanho
-                Image(category.closedIcon)
+                Image(category.defaultClosed)
                     .resizable()
                     .frame(width: 63, height: 63)
 
@@ -36,7 +35,18 @@ struct CategoryFilterButton: View {
     }
 }
 
-#Preview {
-    CategoryFilterButton(category: .cognitive, isSelected: false, action: { print("click") })
-        .environment(DesignSystem.shared)
+#Preview("Sober") {
+    let designSystem = DesignSystem.shared
+    designSystem.currentTheme = .sober
+
+    return CategoryFilterButton(category: .cognitive, isSelected: false, action: { print("click") })
+        .environment(designSystem)
+}
+
+#Preview("Pop") {
+    let designSystem = DesignSystem.shared
+    designSystem.currentTheme = .pop
+
+    return CategoryFilterButton(category: .cognitive, isSelected: true, action: { print("click") })
+        .environment(designSystem)
 }

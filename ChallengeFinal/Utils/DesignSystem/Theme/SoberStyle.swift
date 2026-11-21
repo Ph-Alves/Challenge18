@@ -52,11 +52,12 @@ struct SoberStyle: ThemeStyleProtocol {
         
     
     let icons = IconsSet(
+        //categorias
         activityIcons: [
-            .cognitive: (closed: "coffee", open: "openCoffee",   card: "coffeeCard"),
-            .physical:  (closed: "eightBall",    open: "openBall", card: "eightCard"),
-            .sensorial: (closed: "cookie",   open: "openCookie", card: "cookieCard"),
-            .social:    (closed: "telephone", open: "openPhone",  card: "telephoneCard")
+            .cognitive: (homeCarousel: "coffee", defaultClosed: "coffee", defaultOpen: "openCoffee", activityFlowCard: "coffeeCard"),
+            .physical: (homeCarousel: "eightBall", defaultClosed: "eightBall", defaultOpen: "openBall",  activityFlowCard: "eightCard"),
+            .sensorial: (homeCarousel: "cookie", defaultClosed: "cookie", defaultOpen: "openCookie", activityFlowCard: "cookieCard"),
+            .social: (homeCarousel: "telephone", defaultClosed: "telephone", defaultOpen: "openPhone", activityFlowCard: "telephoneCard"),
         ],
         
         feelingIcons: [

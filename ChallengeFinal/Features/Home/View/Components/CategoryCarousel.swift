@@ -28,6 +28,8 @@ struct CategoryCarousel: View {
     private let sideScale: CGFloat = 0.6
     // Distância entre os centros de dois slots, em frações da largura do círculo central
     private let spacingRatio: CGFloat = 0.63
+    // Tamanho fixo de cada círculo: o layout não depende mais do tamanho do PNG do tema
+    private let circleSize: CGFloat = ChallengeCircle.closedIconSize
 
     // MARK: - View
     var body: some View {
@@ -37,6 +39,8 @@ struct CategoryCarousel: View {
                 circle(at: slot)
             }
         }
+        // Limita o espaço que o carrossel ocupa na tela (sem isso ele assume o tamanho do maior asset)
+        .frame(width: circleSize, height: circleSize)
         .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { circleWidth = $0 }
     }
 
@@ -48,7 +52,9 @@ struct CategoryCarousel: View {
         // Cresce até 1 no centro e fica em `sideScale` a partir de 1 slot de distância
         let scale = 0.8 - (1 - sideScale) * min(abs(position), 1)
 
-        ChallengeCircle(category: current.shifted(by: slot), text: nil, isOpen: false)
+        ChallengeCircle(category: current.shifted(by: slot), text: nil, isOpen: false, variant: .homeCarousel)
+            // O frame vem ANTES do scaleEffect: scaleEffect só muda o desenho, não o layout
+            .frame(width: circleSize, height: circleSize)
             .scaleEffect(scale)
             .offset(x: position * spacingRatio * circleWidth)
             .onTapGesture {
