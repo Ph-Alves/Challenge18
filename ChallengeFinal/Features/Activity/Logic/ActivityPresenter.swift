@@ -217,13 +217,15 @@ final class ActivityPresenter: ActivityPresenterProtocol {
         // Bytes -> UIImage no tamanho original: é o fundo inteiro do story.
         let photo = result.photo.flatMap { UIImage(data: $0) }
 
-        let story = StoryCard(
-            challengeTitle: title,
-            challengeDescription: Self.description(for: result),
-            challengePhoto: photo, challengeIcon: challengeIcon
+        // Uma imagem por estilo da sheet de compartilhar: a View escolhe pelo toque.
+        let images = ShareImageRenderer.renderAllStyles(
+            title: title,
+            description: Self.description(for: result),
+            photo: photo,
+            icon: challengeIcon
         )
 
-        store?.displayStoryImage(ShareImageRenderer.render(story))
+        store?.displayStoryImages(images)
     }
 
     /// O arquivo do story está pronto: abre o share sheet.
