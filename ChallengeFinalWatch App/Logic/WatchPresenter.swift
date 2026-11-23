@@ -27,6 +27,10 @@ protocol WatchPresenterProtocol: AnyObject {
     func presentCategory(_ category: WatchCategory)
     func presentDrawnChallenge(_ challenge: WatchChallenge)
     func presentAchievement(_ achievement: WatchAchievement)
+
+    // MARK: Cronômetro
+    func presentTime(_ elapsed: TimeInterval)
+    func presentPaused(_ isPaused: Bool)
 }
 
 // MARK: - Class
@@ -75,5 +79,22 @@ final class WatchPresenter: WatchPresenterProtocol {
 
     func presentAchievement(_ achievement: WatchAchievement) {
         store?.displayAchievement(achievement)
+    }
+
+    // MARK: - Cronômetro
+
+    /// Recebe o tempo em segundos e entrega o texto "hh:mm:ss" para a Store.
+    /// Formatar é papel do Presenter: o Interactor nunca monta texto de tela.
+    /// Ex.: 3725s = 1h 02min 05s -> "01:02:05".
+    func presentTime(_ elapsed: TimeInterval) {
+        let total = Int(elapsed)
+        let hours = total / 3600
+        let minutes = (total % 3600) / 60
+        let seconds = total % 60
+        store?.displayTimer(String(format: "%02d:%02d:%02d", hours, minutes, seconds))
+    }
+
+    func presentPaused(_ isPaused: Bool) {
+        store?.displayPaused(isPaused)
     }
 }

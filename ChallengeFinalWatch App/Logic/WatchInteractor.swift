@@ -29,6 +29,9 @@ protocol WatchInteractorProtocol: AnyObject {
     func drawChallenge(for category: WatchCategory)
     func rerollChallenge(for category: WatchCategory)
     func generateAchievement(elapsed: TimeInterval)
+
+    // MARK: Cronômetro
+    func togglePause()
 }
 
 // MARK: - Auxiliares
@@ -68,6 +71,9 @@ final class WatchInteractor: WatchInteractorProtocol {
     /// Para quem o Interactor manda os resultados. Pelo protocolo, para dar spy nos testes.
     let presenter: WatchPresenterProtocol
 
+    /// O cronômetro: só entrega os ticks de 1 segundo. Pelo protocolo, para dar mock nos testes.
+    let timer: WatchTimerWorkerProtocol
+
     // MARK: - Dados do fluxo
 
     /// Categoria escolhida na home. O sorteio do `finishDraw()` parte dela.
@@ -79,10 +85,23 @@ final class WatchInteractor: WatchInteractorProtocol {
     /// Presets já mostrados nesta sessão (pelo `rationale`), para o "outro desafio" não repetir.
     private var seenPresets: Set<String> = []
 
+    /// Quando o cronômetro foi iniciado (ou retomado). `nil` = parado ou pausado.
+    /// O tempo é sempre calculado a partir desta data, nunca contado de 1 em 1.
+    private var timerStartDate: Date?
+
+    /// Tempo já acumulado, em segundos. Fixado ao pausar ou parar; volta a 0 ao iniciar de novo.
+    private var timerElapsed: TimeInterval = 0
+
+    private var isTimerPaused = false
+
+    /// O Task que escuta os ticks do worker. Fica guardado para poder ser cancelado.
+    private var timerTask: Task<Void, Never>?
+
     // MARK: - Init
 
-    init(presenter: WatchPresenterProtocol) {
+    init(presenter: WatchPresenterProtocol, timer: WatchTimerWorkerProtocol) {
         self.presenter = presenter
+        self.timer = timer
     }
 
     // MARK: - Navigation
@@ -105,13 +124,22 @@ final class WatchInteractor: WatchInteractorProtocol {
         presenter.presentAccepted()
     }
 
-    /// "iniciar": começa o cronômetro.
+    /// "iniciar": vai para "em andamento" e já começa o cronômetro do zero.
     func startTimer() {
+        timerTask?.cancel()
+        timerElapsed = 0
+        isTimerPaused = false
+        timerStartDate = Date()
+
+        presenter.presentTime(0)
+        presenter.presentPaused(false)
+        startTicking()
         presenter.presentInProgress()
     }
 
-    /// Botão de parar o cronômetro: vai para o "arrasou".
+    /// Botão de parar o cronômetro: fixa o tempo final e vai para o "arrasou".
     func finishActivity() {
+        stopTimer()
         presenter.presentCompleted()
     }
 
@@ -133,9 +161,89 @@ final class WatchInteractor: WatchInteractorProtocol {
         }
     }
 
-    /// X (steps `.accepted` e `.inProgress`): sai do fluxo e volta para a home.
+    /// X (steps `.accepted` e `.inProgress`): sai do fluxo, descarta o cronômetro e volta para a home.
     func didTapClose() {
+        cancelTimer()
         presenter.presentHome()
+    }
+
+    // MARK: - Cronômetro
+    //
+    // O tempo NÃO é um contador (`segundos += 1`): guarda a data de início (`timerStartDate`) e calcula
+    // "agora - início" quando precisa. Assim o valor continua certo mesmo se o Watch apagar a tela.
+    // O worker só entrega os ticks que mandam a tela atualizar; ele não conta nada.
+
+    /// Botão da esquerda: alterna entre pausar e retomar.
+    func togglePause() {
+        if isTimerPaused { resumeTimer() } else { pauseTimer() }
+    }
+
+    /// Pausa: congela o tempo acumulado e para os ticks.
+    private func pauseTimer() {
+        guard timerStartDate != nil, !isTimerPaused else { return }
+
+        timerElapsed = currentElapsed()
+        isTimerPaused = true
+        timerStartDate = nil
+        timerTask?.cancel()
+
+        presenter.presentTime(timerElapsed)
+        presenter.presentPaused(true)
+    }
+
+    /// Retoma: desloca o início para que "agora - início" continue igual ao tempo acumulado.
+    private func resumeTimer() {
+        guard isTimerPaused else { return }
+
+        timerStartDate = Date().addingTimeInterval(-timerElapsed)
+        isTimerPaused = false
+
+        presenter.presentPaused(false)
+        startTicking()
+    }
+
+    /// Para os ticks e fixa o tempo final em `timerElapsed`. Pode ser chamado mais de uma vez
+    /// sem zerar o tempo, porque só recalcula se o cronômetro ainda estiver rodando.
+    private func stopTimer() {
+        timerElapsed = currentElapsed()
+        timerStartDate = nil
+        isTimerPaused = false
+        timerTask?.cancel()
+
+        presenter.presentTime(timerElapsed)
+        presenter.presentPaused(false)
+    }
+
+    /// Descarta o tempo (nada foi concluído) e volta a tela para "00:00:00".
+    private func cancelTimer() {
+        timerTask?.cancel()
+        timerTask = nil
+        timerStartDate = nil
+        timerElapsed = 0
+        isTimerPaused = false
+
+        presenter.presentTime(0)
+        presenter.presentPaused(false)
+    }
+
+    /// A cada tick do worker, manda o tempo atual para o Presenter.
+    /// O `[weak self]` evita que o Task segure o Interactor vivo para sempre.
+    private func startTicking() {
+        timerTask?.cancel()
+        timerTask = Task { [weak self] in
+            guard let ticks = self?.timer.ticks() else { return }
+
+            for await _ in ticks {
+                guard let self else { return }
+                presenter.presentTime(currentElapsed())
+            }
+        }
+    }
+
+    /// Quanto tempo já passou. Rodando, é "agora - início"; parado ou pausado, o valor fixado.
+    private func currentElapsed() -> TimeInterval {
+        guard let timerStartDate else { return timerElapsed }
+        return Date().timeIntervalSince(timerStartDate)
     }
 
     // MARK: - Desafio (presets)

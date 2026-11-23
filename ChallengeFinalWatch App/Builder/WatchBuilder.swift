@@ -21,7 +21,7 @@ enum WatchBuilder {
     static func build(routing: WatchRouting) -> HomeWatch {
         let store = WatchStore(coordinator: routing)
         let presenter = WatchPresenter(store: store)
-        let interactor = WatchInteractor(presenter: presenter)
+        let interactor = WatchInteractor(presenter: presenter, timer: WatchTimerWorker())
 
         return HomeWatch(interactor: interactor, store: store)
     }

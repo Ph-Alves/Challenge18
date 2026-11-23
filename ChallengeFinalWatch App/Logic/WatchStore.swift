@@ -23,6 +23,10 @@ protocol WatchStoreProtocol: AnyObject {
     func displayCategory(_ category: WatchCategory)
     func displayChallenge(_ challenge: WatchChallenge)
     func displayAchievement(_ achievement: WatchAchievement)
+
+    // MARK: Cronômetro
+    func displayTimer(_ text: String)
+    func displayPaused(_ isPaused: Bool)
 }
 
 // MARK: - Class
@@ -55,6 +59,15 @@ final class WatchStore: WatchStoreProtocol {
     /// Conquista do desafio concluído. `nil` = ainda não foi gerada.
     private(set) var achievement: WatchAchievement?
 
+    // MARK: Cronômetro
+
+    /// Tempo do cronômetro já formatado ("hh:mm:ss").
+    /// O Presenter escreve a cada tick; a View só lê.
+    private(set) var timeText: String = "00:00:00"
+
+    /// O cronômetro está pausado (a View troca o ícone de pausar por tocar).
+    private(set) var isPaused = false
+
     // MARK: - Init
 
     init(coordinator: WatchRouting) {
@@ -82,5 +95,15 @@ final class WatchStore: WatchStoreProtocol {
 
     func displayAchievement(_ achievement: WatchAchievement) {
         self.achievement = achievement
+    }
+
+    // MARK: - Cronômetro
+
+    func displayTimer(_ text: String) {
+        timeText = text
+    }
+
+    func displayPaused(_ isPaused: Bool) {
+        self.isPaused = isPaused
     }
 }

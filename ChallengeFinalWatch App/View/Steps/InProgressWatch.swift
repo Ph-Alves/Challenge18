@@ -12,7 +12,11 @@ struct InProgressWatch: View {
 
     /// Tempo já formatado ("hh:mm:ss").
     let timeText: String
-    let onPause: () -> Void
+    /// Pausado: o botão da esquerda mostra "tocar" em vez de "pausar".
+    let isPaused: Bool
+    /// Botão da esquerda: alterna entre pausar e retomar.
+    let onTogglePause: () -> Void
+    /// Botão da direita: para o cronômetro e segue para o "arrasou".
     let onStop: () -> Void
     let onClose: () -> Void
 
@@ -25,7 +29,12 @@ struct InProgressWatch: View {
                 .lineLimit(1)
 
             HStack(spacing: 26) {
-                WatchCircleButton(systemImage: "pause.fill", style: .secondary, accessibilityLabel: "pausar", action: onPause)
+                WatchCircleButton(
+                    systemImage: isPaused ? "play.fill" : "pause.fill",
+                    style: .secondary,
+                    accessibilityLabel: isPaused ? "retomar" : "pausar",
+                    action: onTogglePause
+                )
                 WatchCircleButton(systemImage: "stop.fill", style: .primary, accessibilityLabel: "parar", action: onStop)
             }
         }
@@ -39,6 +48,6 @@ struct InProgressWatch: View {
 
 #Preview {
     NavigationStack {
-        InProgressWatch(timeText: "00:00:00", onPause: {}, onStop: {}, onClose: {})
+        InProgressWatch(timeText: "00:00:00", isPaused: false, onTogglePause: {}, onStop: {}, onClose: {})
     }
 }

@@ -44,9 +44,6 @@ struct HomeWatch: View {
     // Para observar
     var store: WatchStore
     
-    // CHANGE: o tempo é fixo até o cronômetro funcionar; virá da Store.
-    private let sampleTime = "00:00:00"
-    
     var body: some View {
         NavigationStack {
             stepView
@@ -89,11 +86,12 @@ struct HomeWatch: View {
                 onClose: interactor.didTapClose
             )
             
-        // Em andamento: parar segue para o "arrasou"; pausar ainda não tem lógica.
+        // Em andamento: o cronômetro já começou ao entrar aqui. Esquerda pausa/retoma; direita para e segue para o "arrasou".
         case .inProgress:
             InProgressWatch(
-                timeText: sampleTime,
-                onPause: { },
+                timeText: store.timeText,
+                isPaused: store.isPaused,
+                onTogglePause: interactor.togglePause,
                 onStop: interactor.finishActivity,
                 onClose: interactor.didTapClose
             )
