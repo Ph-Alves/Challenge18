@@ -2858,19 +2858,22 @@ struct InteractorTests {
         ([0, 1, 3, 4], 2),     // buraco no meio: só conta até o buraco
         ([0, 0, 0], 1)         // várias no mesmo dia contam como um dia
     ])
+    
     func testingStreakCountsConsecutiveDays(offsets: [Int], expected: Int) {
-        let streak = ProfileInteractor.streak(from: streakDates(offsets), today: streakToday, calendar: streakCalendar)
+        let sut = makeProfileSUT()
+
+        let streak = sut.interactor.streak(from: streakDates(offsets), today: streakToday, calendar: streakCalendar)
 
         #expect(streak == expected)
     }
 
-    // A hora não importa, só o dia: 00h05 de hoje e 23h55 de ontem são dias seguidos.
     @Test func testingStreakIgnoresTimeOfDay() throws {
+        let sut = makeProfileSUT()
         let startOfToday = streakCalendar.startOfDay(for: streakToday)
         let earlyToday = startOfToday.addingTimeInterval(5 * 60)
         let lateYesterday = startOfToday.addingTimeInterval(-5 * 60)
 
-        let streak = ProfileInteractor.streak(from: [earlyToday, lateYesterday], today: streakToday, calendar: streakCalendar)
+        let streak = sut.interactor.streak(from: [earlyToday, lateYesterday], today: streakToday, calendar: streakCalendar)
 
         #expect(streak == 2)
     }
