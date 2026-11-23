@@ -34,35 +34,13 @@ protocol WatchInteractorProtocol: AnyObject {
     func togglePause()
 }
 
-// MARK: - Auxiliares
-
-/// Limites de caracteres dos títulos exibidos na tela (os mesmos do iOS).
-private enum TitleLimit {
-    static let challenge = 42
-    static let achievement = 16
-}
-
-private extension String {
-    /// Corta em palavras inteiras para caber em `limit` caracteres; se a primeira palavra já passa do limite, corta nela.
-    func fitted(to limit: Int) -> String {
-        guard count > limit else { return self }
-        let hardCut = String(prefix(limit))
-        // Se o próximo caractere é um espaço, o corte já caiu no fim de uma palavra.
-        let nextIndex = index(startIndex, offsetBy: limit)
-        guard self[nextIndex] != " ", let lastSpace = hardCut.lastIndex(of: " ") else {
-            return hardCut.trimmingCharacters(in: .whitespaces)
-        }
-        return String(hardCut[..<lastSpace]).trimmingCharacters(in: .whitespaces)
-    }
-}
-
 // MARK: - Class
 
 /// O "cérebro" do Watch.
 ///
 /// Decide o que acontece em cada ação do usuário e avisa o Presenter.
-/// Tem a navegação entre os steps e o sorteio dos desafios, que vêm só dos presets
-/// (no Watch não há geração pelo modelo).
+/// Tem a navegação entre os steps e o cronômetro. O sorteio dos desafios e a conquista
+/// (só presets, no Watch não há geração pelo modelo) ficam no `WatchPresetWorker`.
 @MainActor
 final class WatchInteractor: WatchInteractorProtocol {
 
@@ -71,6 +49,9 @@ final class WatchInteractor: WatchInteractorProtocol {
     /// Para quem o Interactor manda os resultados. Pelo protocolo, para dar spy nos testes.
     let presenter: WatchPresenterProtocol
 
+    /// Sorteia os desafios e monta a conquista. Pelo protocolo, para dar mock nos testes.
+    let presetWorker: WatchPresetWorkerProtocol
+
     /// O cronômetro: só entrega os ticks de 1 segundo. Pelo protocolo, para dar mock nos testes.
     let timer: WatchTimerWorkerProtocol
 
@@ -78,12 +59,6 @@ final class WatchInteractor: WatchInteractorProtocol {
 
     /// Categoria escolhida na home. O sorteio do `finishDraw()` parte dela.
     private var selectedCategory: WatchCategory = .physical
-
-    /// Preset sorteado agora. É dele que sai a conquista.
-    private(set) var currentPreset: PresetChallenge?
-
-    /// Presets já mostrados nesta sessão (pelo `rationale`), para o "outro desafio" não repetir.
-    private var seenPresets: Set<String> = []
 
     /// Quando o cronômetro foi iniciado (ou retomado). `nil` = parado ou pausado.
     /// O tempo é sempre calculado a partir desta data, nunca contado de 1 em 1.
@@ -99,8 +74,9 @@ final class WatchInteractor: WatchInteractorProtocol {
 
     // MARK: - Init
 
-    init(presenter: WatchPresenterProtocol, timer: WatchTimerWorkerProtocol) {
+    init(presenter: WatchPresenterProtocol, presetWorker: WatchPresetWorkerProtocol, timer: WatchTimerWorkerProtocol) {
         self.presenter = presenter
+        self.presetWorker = presetWorker
         self.timer = timer
     }
 
@@ -165,6 +141,30 @@ final class WatchInteractor: WatchInteractorProtocol {
     func didTapClose() {
         cancelTimer()
         presenter.presentHome()
+    }
+
+    // MARK: - Desafio (presets)
+    //
+    // A escolha do preset e a montagem da conquista são do `WatchPresetWorker`;
+    // aqui só se pede o resultado e se entrega ao Presenter. A troca de step continua
+    // nas funções de navegação acima.
+
+    /// Sorteia um desafio da categoria, sem repetir os já vistos nesta sessão.
+    func drawChallenge(for category: WatchCategory) {
+        guard let challenge = presetWorker.draw(for: category) else { return }
+        presenter.presentDrawnChallenge(challenge)
+    }
+
+    /// "outro desafio": sorteia de novo na mesma categoria.
+    func rerollChallenge(for category: WatchCategory) {
+        drawChallenge(for: category)
+    }
+
+    /// Conquista do desafio sorteado, citando o tempo do cronômetro.
+    /// Sem desafio sorteado não há conquista, então não faz nada.
+    func generateAchievement(elapsed: TimeInterval) {
+        guard let achievement = presetWorker.achievement(elapsed: elapsed) else { return }
+        presenter.presentAchievement(achievement)
     }
 
     // MARK: - Cronômetro
@@ -244,72 +244,5 @@ final class WatchInteractor: WatchInteractorProtocol {
     private func currentElapsed() -> TimeInterval {
         guard let timerStartDate else { return timerElapsed }
         return Date().timeIntervalSince(timerStartDate)
-    }
-
-    // MARK: - Desafio (presets)
-    //
-    // Cópia do fluxo do `FoundationWorker` do iOS, só com os presets:
-    // sorteia um desafio ainda não visto e, ao terminar, monta a conquista com o tempo.
-    // Estas funções só entregam os dados ao Presenter; a troca de step continua nas de navegação acima.
-
-    /// Sorteia um desafio da categoria, sem repetir os já vistos nesta sessão.
-    func drawChallenge(for category: WatchCategory) {
-        guard let preset = nextPreset(for: category) else { return }
-
-        currentPreset = preset
-        seenPresets.insert(preset.rationale)
-        presenter.presentDrawnChallenge(
-            WatchChallenge(
-                title: preset.title.fitted(to: TitleLimit.challenge),
-                subTitle: preset.subTitle,
-                rationale: preset.rationale
-            )
-        )
-    }
-
-    /// "outro desafio": sorteia de novo na mesma categoria.
-    func rerollChallenge(for category: WatchCategory) {
-        drawChallenge(for: category)
-    }
-
-    /// Conquista do desafio sorteado, citando o tempo do cronômetro.
-    /// Sem desafio sorteado não há conquista, então não faz nada.
-    func generateAchievement(elapsed: TimeInterval) {
-        guard let preset = currentPreset else { return }
-
-        let duration = Self.spokenDuration(elapsed)
-        presenter.presentAchievement(
-            WatchAchievement(
-                title: preset.achievement.title.fitted(to: TitleLimit.achievement),
-                description: preset.achievement.description(duration: duration)
-            )
-        )
-    }
-
-    // MARK: - Auxiliares privados (presets)
-
-    /// Sorteia um preset da categoria que ainda não foi mostrado. Se todos já foram, sorteia outro
-    /// qualquer (diferente do atual, quando possível), porque no Watch não há modelo para gerar um novo.
-    private func nextPreset(for category: WatchCategory) -> PresetChallenge? {
-        let all = PresetCatalog.challenges(for: category)
-
-        if let unseen = all.filter({ !seenPresets.contains($0.rationale) }).randomElement() {
-            return unseen
-        }
-        return all.filter { $0 != currentPreset }.randomElement() ?? all.randomElement()
-    }
-
-    /// Tempo para ler em voz alta: "1h", "1h 20 min", "20 min" ou "45 s".
-    private static func spokenDuration(_ interval: TimeInterval) -> String {
-        let total = max(0, Int(interval.rounded()))
-        let hours = total / 3600
-        let minutes = (total % 3600) / 60
-
-        switch (hours, minutes) {
-        case (0, 0): return "\(total) s"
-        case (0, _): return "\(minutes) min"
-        case (_, 0): return "\(hours)h"
-        default: return "\(hours)h \(minutes) min"
-        }
     }
 }
