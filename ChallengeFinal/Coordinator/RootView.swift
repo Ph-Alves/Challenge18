@@ -24,21 +24,25 @@ struct RootView: View {
                 }
             } label: {
                 Label("Home", systemImage: coordinator.selectedTab == .home ? designSystem.style.icons.tabBar.home.fill: designSystem.style.icons.tabBar.home.base)
+                    // O TabView aplica .fill automaticamente em SF Symbols; desligamos para respeitar base/fill.
+                    .environment(\.symbolVariants, .none)
             }
             Tab(value: AppTab.challenges) {
                 coordinator.challengesCoordinator.startChallengesFlow(context: context)
             } label: {
-                Label("Challenges", image: coordinator.selectedTab == .challenges ? designSystem.style.icons.tabBar.challenge.fill: designSystem.style.icons.tabBar.challenge.base)
+                Label("Challenges", systemImage: coordinator.selectedTab == .challenges ? designSystem.style.icons.tabBar.challenge.fill: designSystem.style.icons.tabBar.challenge.base)
             }
             Tab(value: AppTab.feelings) {
                 coordinator.feelingsCoordinator.startFeelingsView(context: context)
             } label: {
                 Label("Feelings", systemImage: coordinator.selectedTab == .feelings ? designSystem.style.icons.tabBar.feelings.fill: designSystem.style.icons.tabBar.feelings.base)
+                    .environment(\.symbolVariants, .none)
             }
             Tab(value: AppTab.profile) {
                 coordinator.profileCoordinator.startProfileView(context: context)
             } label: {
                 Label("Profile", systemImage: coordinator.selectedTab == .profile ? designSystem.style.icons.tabBar.profile.fill: designSystem.style.icons.tabBar.profile.base)
+                    .environment(\.symbolVariants, .none)
             }
         }
         .tint(.primary)
