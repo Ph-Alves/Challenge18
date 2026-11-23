@@ -10,7 +10,8 @@ import SwiftUI
 struct CategorySelector: View {
     
     @State private var selected: WatchCategory = .physical
-    var startFlow: () -> Void
+    /// Toque na categoria: entrega qual foi escolhida.
+    var startFlow: (WatchCategory) -> Void
     
     var body: some View {
         TabView(selection: $selected) {
@@ -23,7 +24,7 @@ struct CategorySelector: View {
                         .font(.headline)
                 }
                 .tag(category)
-                .onTapGesture { startFlow() }
+                .onTapGesture { startFlow(category) }
             }
         }
         .tabViewStyle(.verticalPage)
@@ -33,5 +34,5 @@ struct CategorySelector: View {
 }
 
 #Preview {
-    CategorySelector(startFlow: { print("Apertou!") })
+    CategorySelector(startFlow: { category in print("Apertou \(category.text)!") })
 }

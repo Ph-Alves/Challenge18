@@ -20,6 +20,7 @@ protocol WatchStoreProtocol: AnyObject {
     func transitionToCompleted()
 
     // MARK: Desafio (presets)
+    func displayCategory(_ category: WatchCategory)
     func displayChallenge(_ challenge: WatchChallenge)
     func displayAchievement(_ achievement: WatchAchievement)
 }
@@ -45,6 +46,9 @@ final class WatchStore: WatchStoreProtocol {
 
     // MARK: Desafio (presets)
 
+    /// Categoria escolhida na home. As telas do fluxo (e o "outro desafio") partem dela.
+    private(set) var category: WatchCategory = .physical
+
     /// Desafio sorteado. `nil` = ainda não sorteou.
     private(set) var challenge: WatchChallenge?
 
@@ -67,6 +71,10 @@ final class WatchStore: WatchStoreProtocol {
     func transitionToCompleted()  { coordinator.goToCompleted() }
 
     // MARK: - Desafio (presets)
+
+    func displayCategory(_ category: WatchCategory) {
+        self.category = category
+    }
 
     func displayChallenge(_ challenge: WatchChallenge) {
         self.challenge = challenge

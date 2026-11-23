@@ -44,10 +44,7 @@ struct HomeWatch: View {
     // Para observar
     var store: WatchStore
     
-    // CHANGE: os dados abaixo são fixos só para as telas; virão da Store quando houver sorteio e cronômetro.
-    private let sampleCategory: WatchCategory = .physical
-    private let sampleTitle = "fazer o cardio sem abrir as redes sociais"
-    private let sampleDescription = "sem redes sociais, seu cardio vira um momento para cuidar do corpo e desacelerar a mente."
+    // CHANGE: o tempo é fixo até o cronômetro funcionar; virá da Store.
     private let sampleTime = "00:00:00"
     
     var body: some View {
@@ -62,32 +59,32 @@ struct HomeWatch: View {
     private var stepView: some View {
         switch store.currentStep {
             
-        // Seletor de categoria: o toque no círculo inicia o sorteio.
+        // Seletor de categoria: o toque no círculo guarda a categoria e inicia o sorteio.
         case .home:
-            CategorySelector(startFlow: interactor.startActivity)
+            CategorySelector(startFlow: interactor.startActivity(category:))
             
-        // Sorteio. Por enquanto o toque na bola simula o sorteio.
+        // Sorteio. Por enquanto o toque na bola simula o sorteio (o chacoalhar ainda não existe).
         case .draw:
             DrawWatch(
-                category: sampleCategory,
+                category: store.category,
                 onDraw: interactor.finishDraw,
                 onBack: { interactor.didTapBack(on: .draw) }
             )
             
-        // "topa?": aceitar segue; "outro desafio" ainda não tem lógica.
+        // "topa?": aceitar segue; "outro desafio" sorteia outro preset da mesma categoria.
         case .challenge:
             ChallengeWatch(
-                title: sampleTitle,
+                title: store.challenge?.title ?? "",
                 onAccept: interactor.acceptChallenge,
-                onReroll: { },
+                onReroll: { interactor.rerollChallenge(for: store.category) },
                 onBack: { interactor.didTapBack(on: .challenge) }
             )
             
         // Desafio aceito: "iniciar" começa o cronômetro; o X sai do fluxo.
         case .accepted:
             AcceptedWatch(
-                title: sampleTitle,
-                description: sampleDescription,
+                title: store.challenge?.title ?? "",
+                description: store.challenge?.rationale ?? "",
                 onStart: interactor.startTimer,
                 onClose: interactor.didTapClose
             )

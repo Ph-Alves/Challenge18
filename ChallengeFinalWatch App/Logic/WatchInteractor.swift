@@ -16,7 +16,7 @@ import Foundation
 @MainActor
 protocol WatchInteractorProtocol: AnyObject {
     // MARK: Navigation
-    func startActivity()
+    func startActivity(category: WatchCategory)
     func finishDraw()
     func acceptChallenge()
     func startTimer()
@@ -70,6 +70,9 @@ final class WatchInteractor: WatchInteractorProtocol {
 
     // MARK: - Dados do fluxo
 
+    /// Categoria escolhida na home. O sorteio do `finishDraw()` parte dela.
+    private var selectedCategory: WatchCategory = .physical
+
     /// Preset sorteado agora. É dele que sai a conquista.
     private(set) var currentPreset: PresetChallenge?
 
@@ -84,13 +87,16 @@ final class WatchInteractor: WatchInteractorProtocol {
 
     // MARK: - Navigation
 
-    /// Toque no círculo da categoria na home: vai para o sorteio.
-    func startActivity() {
+    /// Toque no círculo da categoria na home: guarda a categoria e vai para o sorteio.
+    func startActivity(category: WatchCategory) {
+        selectedCategory = category
+        presenter.presentCategory(category)
         presenter.presentDraw()
     }
 
-    /// O sorteio terminou (o relógio foi sacudido): mostra o "topa?".
+    /// O sorteio terminou (o relógio foi sacudido): sorteia o desafio da categoria e mostra o "topa?".
     func finishDraw() {
+        drawChallenge(for: selectedCategory)
         presenter.presentChallenge()
     }
 

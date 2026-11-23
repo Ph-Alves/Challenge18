@@ -24,6 +24,7 @@ protocol WatchPresenterProtocol: AnyObject {
     func presentCompleted()
 
     // MARK: Desafio (presets)
+    func presentCategory(_ category: WatchCategory)
     func presentDrawnChallenge(_ challenge: WatchChallenge)
     func presentAchievement(_ achievement: WatchAchievement)
 }
@@ -62,6 +63,10 @@ final class WatchPresenter: WatchPresenterProtocol {
     func presentCompleted()  { store?.transitionToCompleted() }
 
     // MARK: - Desafio (presets)
+
+    func presentCategory(_ category: WatchCategory) {
+        store?.displayCategory(category)
+    }
 
     /// O desafio sorteado já vem pronto dos presets: só entrega para a Store.
     func presentDrawnChallenge(_ challenge: WatchChallenge) {
