@@ -25,28 +25,3 @@ struct IconsSet {
     let playIcon: String
 }
 
-
-/*
- activity categories é usado em:
- - carrossel da home (home - difere em ambos os projetos)
- - sortear novo desafio (icone padrao fechado)
- - retorno novo desafio (icone padrao aberto)
- - durante desafio (icone difere)
- - tela share (icone padrao fechado)
- - challenges row (icone padrao fechado)
- - desafios arquivados (icone padrao fechado)
- - perfil (icone invertido fixo)
- 
- - story com cor (icone de acordo com o modo)
- - story com foto e movimento (icone invertido fixo)
- */
-
-
-/*
- homeCarousel:
- defaultClosed:
- defaultOpen:
- defaultInverse:
- activityFlowCard:
- */
-
