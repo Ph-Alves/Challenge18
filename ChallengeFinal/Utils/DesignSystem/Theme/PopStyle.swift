@@ -11,24 +11,23 @@ import SwiftUI
 struct PopStyle: ThemeStyleProtocol {
 
     // MARK: - Fontes
-    // TODO: trocar fontes
-    private static let titleFont         = "Bodoni 72"
-    private static let subtitleBold      = "SpecialGothic-Bold"
-    private static let subtitleSemiBold  = "SpecialGothic-SemiBold"
-    private static let textRegular       = "SpecialGothic-Regular"
+    private static let titleFont         = "CalSans-Regular"
+    private static let subtitleBold      = "Montserrat-Bold"
+    private static let subtitleSemiBold  = "Montserrat-SemiBold"
+    private static let textRegular       = "Montserrat-Regular"
     private static let textBold          = "SpecialGothic-Bold"
 
     let typography = Typography(
-        title1: .custom(titleFont, size: 36, relativeTo: .largeTitle),
-        title2: .custom(titleFont, size: 32, relativeTo: .title),
-        title3: .custom(titleFont, size: 24, relativeTo: .title3),
+        title1: .custom(titleFont, size: 28, relativeTo: .largeTitle),
+        title2: .custom(titleFont, size: 20, relativeTo: .title),
+        title3: .custom(titleFont, size: 16, relativeTo: .title3),
         title4: .custom(titleFont, size: 18, relativeTo: .title3),
 
         subtitle1: .custom(subtitleBold,     size: 22, relativeTo: .title2),
         subtitle2: .custom(subtitleSemiBold, size: 18, relativeTo: .title3),
         subtitle3: .custom(subtitleBold,     size: 14, relativeTo: .subheadline),
 
-        text1: .custom(textRegular, size: 22, relativeTo: .title2),
+        text1: .custom(textRegular, size: 20, relativeTo: .title2),
         text2: .custom(textRegular, size: 16, relativeTo: .callout),
         text3: .custom(textRegular, size: 12, relativeTo: .caption),
         text4: .custom(textBold,    size: 36, relativeTo: .title))
@@ -70,7 +69,7 @@ struct PopStyle: ThemeStyleProtocol {
 
         //categorias
         activityIcons: [
-            .cognitive: (homeCarousel: "diceCard", defaultClosed: "dice", defaultOpen: "openDice", activityFlowCard: "dice"),
+            .cognitive: (homeCarousel: "diceCard", defaultClosed: "popDice", defaultOpen: "openDice", activityFlowCard: "popDice"),
             .physical: (homeCarousel: "coneCard", defaultClosed: "cone", defaultOpen: "openCone", activityFlowCard: "cone"),
             .sensorial: (homeCarousel: "lampCard", defaultClosed: "lamp", defaultOpen: "openLamp", activityFlowCard: "lamp"),
             .social: (homeCarousel: "tomatoCard", defaultClosed: "tomato", defaultOpen: "openTomato", activityFlowCard: "tomato"),
@@ -101,10 +100,10 @@ struct PopStyle: ThemeStyleProtocol {
         
         //tabBar
         tabBar: TabBarIcons(
-            challenge: (base: "challengeTabIcon", fill: "challengeTabFill"),
+            challenge: (base: "dice", fill: "dice.fill"),
             home:      (base: "house",            fill: "house.fill"),
-            feelings:  (base: "feelingsTabIcon",  fill: "feelingsTabFill"),
-            profile:   (base: "profileTabIcon",   fill: "profileTabFill")),
+            feelings:  (base: "chart.bar",     fill: "chart.bar.fill"),
+            profile:   (base: "person",           fill: "person.fill")),
         
         playIcon: "play.fill")
 

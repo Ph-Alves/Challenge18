@@ -35,7 +35,7 @@ enum Theme: String, Codable {
     var previewIcon: String {
         switch self {
         case .sober: return SoberStyle().icons.activityIcons[.physical]?.defaultClosed ?? "eightBall"
-        case .pop: return PopStyle().icons.activityIcons[.cognitive]?.defaultClosed ?? "dice"
+        case .pop: return PopStyle().icons.activityIcons[.cognitive]?.defaultClosed ?? "popDice"
         case .bubblegum: return "bubblegumThemeIcon" //CHANGE: colocar asset real.
         case .techNature: return "techNatureThemeIcon" //CHANGE: colocar asset real.
         }

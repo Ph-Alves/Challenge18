@@ -78,7 +78,11 @@ struct SoberStyle: ThemeStyleProtocol {
         cameraIcon: "cameraIcon",
         nextIcon: "nextIcon",
         pauseIcon: "pauseIcon",
-        tabBar: TabBarIcons(challenge: (base: "challengeTabIcon", fill: "challengeTabFill"), home: (base: "house", fill: "house.fill"), feelings: (base: "feelingsTabIcon", fill: "feelingsTabFill"), profile: (base: "profileTabIcon", fill: "profileTabFill")),
+        tabBar: TabBarIcons(
+            challenge: (base: "challengeTabIcon", fill: "challengeTabFill"),
+            home: (base: "house", fill: "house.fill"),
+            feelings: (base: "chart.bar", fill: "chart.bar.fill"),
+            profile: (base: "person", fill: "person.fill")),
         playIcon: "play.fill")
     
     let humorWheel = HumorWheelStyle(

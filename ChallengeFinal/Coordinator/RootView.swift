@@ -23,7 +23,7 @@ struct RootView: View {
                     flow.startActivityView(context: context).toolbarVisibility(.hidden, for: .tabBar)
                 }
             } label: {
-                Label("Home", image: coordinator.selectedTab == .home ? designSystem.style.icons.tabBar.home.fill: designSystem.style.icons.tabBar.home.base)
+                Label("Home", systemImage: coordinator.selectedTab == .home ? designSystem.style.icons.tabBar.home.fill: designSystem.style.icons.tabBar.home.base)
             }
             Tab(value: AppTab.challenges) {
                 coordinator.challengesCoordinator.startChallengesFlow(context: context)
@@ -33,12 +33,12 @@ struct RootView: View {
             Tab(value: AppTab.feelings) {
                 coordinator.feelingsCoordinator.startFeelingsView(context: context)
             } label: {
-                Label("Feelings", image: coordinator.selectedTab == .feelings ? designSystem.style.icons.tabBar.feelings.fill: designSystem.style.icons.tabBar.feelings.base)
+                Label("Feelings", systemImage: coordinator.selectedTab == .feelings ? designSystem.style.icons.tabBar.feelings.fill: designSystem.style.icons.tabBar.feelings.base)
             }
             Tab(value: AppTab.profile) {
                 coordinator.profileCoordinator.startProfileView(context: context)
             } label: {
-                Label("Profile", image: coordinator.selectedTab == .profile ? designSystem.style.icons.tabBar.profile.fill: designSystem.style.icons.tabBar.profile.base)
+                Label("Profile", systemImage: coordinator.selectedTab == .profile ? designSystem.style.icons.tabBar.profile.fill: designSystem.style.icons.tabBar.profile.base)
             }
         }
         .tint(.primary)
