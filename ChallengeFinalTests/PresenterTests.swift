@@ -829,10 +829,13 @@ struct PresenterTests {
         (15, "15 dias"),
         (120, "120 dias")
     ])
+    
     func testingStreakText(streak: Int, expected: String) {
-        #expect(ProfilePresenter.streakText(for: streak) == expected)
-    }
+        let (presenter, _) = createProfilePresenterAndStore()
 
+        #expect(presenter.streakText(for: streak) == expected)
+    }
+    
     // Vale o último marco já alcançado; depois do último, ele vale para sempre.
     @Test(arguments: [
         (0, "começando :)"),
@@ -846,18 +849,22 @@ struct PresenterTests {
         (30, "ícone faz assim!"),
         (365, "ícone faz assim!")
     ])
+    
     func testingMilestoneForStreak(streak: Int, expectedTitle: String) {
-        #expect(ProfilePresenter.milestone(for: streak).title == expectedTitle)
+        let (presenter, _) = createProfilePresenterAndStore()
+
+        #expect(presenter.milestone(for: streak).title == expectedTitle)
     }
 
     // A tabela precisa estar em ordem crescente, senão o `last { streak >= day }` escolhe o marco errado.
     @Test func testingMilestonesAreSortedAndComplete() {
-        let days = ProfilePresenter.milestones.map(\.day)
+        let (presenter, _) = createProfilePresenterAndStore()
+        let days = presenter.milestones.map(\.day)
 
         #expect(days.first == 0)
         #expect(days == days.sorted())
         #expect(Set(days).count == days.count)
-        #expect(ProfilePresenter.milestones.allSatisfy { !$0.title.isEmpty && !$0.message.isEmpty })
+        #expect(presenter.milestones.allSatisfy { !$0.title.isEmpty && !$0.message.isEmpty })
     }
 
     @Test(arguments: [Theme.sober, .bubblegum, .pop, .techNature])

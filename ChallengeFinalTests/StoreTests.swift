@@ -528,10 +528,13 @@ struct StoreTests {
 
     // O estado inicial da Store precisa bater com o que o Presenter mostra para 0 dias.
     @Test func testingProfileStoreDefaultStreakMatchesPresenterForZeroDays() {
+        
         let store = ProfileStore()
-        let milestone = ProfilePresenter.milestone(for: 0)
+        let presenter = ProfilePresenter(store: store)
+        
+        let milestone = presenter.milestone(for: 0)
 
-        #expect(store.streakText == ProfilePresenter.streakText(for: 0))
+        #expect(store.streakText == presenter.streakText(for: 0))
         #expect(store.levelTitle == milestone.title)
         #expect(store.levelSubtitle == milestone.message)
     }
