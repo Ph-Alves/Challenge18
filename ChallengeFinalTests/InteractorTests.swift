@@ -611,14 +611,16 @@ struct InteractorTests {
     }
 
     // O carrossel da Home usa `shifted(by:)` para saber a categoria de cada slot.
+    // Ordem dos cases: physical, cognitive, social, sensorial.
     @Test(arguments: [
-        (ActivityCategory.physical, 1, ActivityCategory.cognitive),
-        (ActivityCategory.physical, -1, ActivityCategory.social),
-        (ActivityCategory.social, 1, ActivityCategory.physical),
-        (ActivityCategory.cognitive, 2, ActivityCategory.social),
-        (ActivityCategory.physical, -2, ActivityCategory.sensorial),
-        (ActivityCategory.sensorial, 0, ActivityCategory.sensorial)
+        (ActivityCategory.physical, 1, ActivityCategory.cognitive),   // anda um
+        (ActivityCategory.physical, -1, ActivityCategory.sensorial),  // volta ao final
+        (ActivityCategory.sensorial, 1, ActivityCategory.physical),   // volta ao início
+        (ActivityCategory.cognitive, 2, ActivityCategory.sensorial),  // anda dois
+        (ActivityCategory.physical, -2, ActivityCategory.social),     // volta dois, dando a volta
+        (ActivityCategory.sensorial, 0, ActivityCategory.sensorial)   // não anda
     ])
+    
     func testingCategoryShiftedWrapsAround(start: ActivityCategory, offset: Int, expected: ActivityCategory) {
         #expect(start.shifted(by: offset) == expected)
     }
