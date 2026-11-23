@@ -13,7 +13,7 @@ import SwiftUI
 
 /// Desenhamos em 360x640 pt e renderizamos com scale 3 => 1080x1920 px (tamanho de Stories).
 enum ShareImageSpecification {
-    static let pointSize = CGSize(width: 360, height: 640)
+    static let pointSize = CGSize(width: 161, height: 224)
     static let scale: CGFloat = 3
 
     /// Fotos da câmera têm ~12 MP. Reduzimos antes de usar no card para poupar memória:
@@ -42,5 +42,28 @@ enum ShareImageRenderer {
         renderer.proposedSize = ProposedViewSize(size)
         renderer.scale = scale
         return renderer.uiImage
+    }
+    
+    /// Renderiza o story em todas as variações da sheet de compartilhar.
+    /// `.photo` só entra quando há foto. Variação que falhar fica de fora do dicionário.
+    static func renderAllStyles(
+        title: String,
+        description: String,
+        photo: UIImage?,
+        icon: String
+    ) -> [StoryCardStyle: UIImage] {
+        var images: [StoryCardStyle: UIImage] = [:]
+        
+        for style in StoryCardStyle.allCases where style != .photo || photo != nil {
+            let story = StoryCard(
+                challengeTitle: title,
+                challengeDescription: description,
+                challengePhoto: photo,
+                challengeIcon: icon,
+                style: style
+            )
+            images[style] = render(story)
+        }
+        return images
     }
 }

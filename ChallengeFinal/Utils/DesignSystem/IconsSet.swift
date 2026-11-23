@@ -14,7 +14,7 @@ struct IconsSet {
     let photoPlaceholder: String //foi
     let archivedChallengeIcon: String  //foi//foi
     let archivedInvertedChallengeIcon: String
-    let shareIcon: String
+    let shareIcon: (base: String, card: String)
     let retryIcon: (base: String, card: String)
     let profilePlaceholder: String // foi
     let camera: String // foi
@@ -23,6 +23,5 @@ struct IconsSet {
     let pauseIcon: String //foi
     let tabBar: TabBarIcons
     let playIcon: String
-
 }
 

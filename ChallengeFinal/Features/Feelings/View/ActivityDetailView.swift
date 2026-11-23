@@ -12,7 +12,7 @@ struct ActivityDetailView: View {
     let returnAction: () -> Void
     let deleteAction: (Activity) -> Void
     let retakeAction: () -> Void
-    let shareAction: () -> Void
+    let shareAction: (StoryCardStyle) -> Void
     let selected: Activity
     
     /// Foto já pronta para exibir. `nil` = card vazio.
@@ -69,5 +69,5 @@ struct ActivityDetailView: View {
 }
 
 #Preview {
-    ActivityDetailView(returnAction: {}, deleteAction: {_ in}, retakeAction: {}, shareAction: {}, selected: Activity(category: .cognitive, result: nil, name: "", description: "", archived: false))
+    ActivityDetailView(returnAction: {}, deleteAction: {_ in}, retakeAction: {}, shareAction: { _ in }, selected: Activity(category: .cognitive, result: nil, name: "", description: "", archived: false))
 }
