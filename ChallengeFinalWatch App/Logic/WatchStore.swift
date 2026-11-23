@@ -9,7 +9,7 @@ import Foundation
 
 // MARK: - Protocol
 
-/// O que o Presenter enxerga da Store: mudança de step.
+/// O que o Presenter enxerga da Store: mudança de step e os dados do desafio.
 @MainActor
 protocol WatchStoreProtocol: AnyObject {
     func transitionToHome()
@@ -18,6 +18,10 @@ protocol WatchStoreProtocol: AnyObject {
     func transitionToAccepted()
     func transitionToInProgress()
     func transitionToCompleted()
+
+    // MARK: Desafio (presets)
+    func displayChallenge(_ challenge: WatchChallenge)
+    func displayAchievement(_ achievement: WatchAchievement)
 }
 
 // MARK: - Class
@@ -39,6 +43,14 @@ final class WatchStore: WatchStoreProtocol {
         coordinator.step
     }
 
+    // MARK: Desafio (presets)
+
+    /// Desafio sorteado. `nil` = ainda não sorteou.
+    private(set) var challenge: WatchChallenge?
+
+    /// Conquista do desafio concluído. `nil` = ainda não foi gerada.
+    private(set) var achievement: WatchAchievement?
+
     // MARK: - Init
 
     init(coordinator: WatchRouting) {
@@ -53,4 +65,14 @@ final class WatchStore: WatchStoreProtocol {
     func transitionToAccepted()   { coordinator.goToAccepted() }
     func transitionToInProgress() { coordinator.goToInProgress() }
     func transitionToCompleted()  { coordinator.goToCompleted() }
+
+    // MARK: - Desafio (presets)
+
+    func displayChallenge(_ challenge: WatchChallenge) {
+        self.challenge = challenge
+    }
+
+    func displayAchievement(_ achievement: WatchAchievement) {
+        self.achievement = achievement
+    }
 }

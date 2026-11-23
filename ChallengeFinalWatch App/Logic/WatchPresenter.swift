@@ -22,6 +22,10 @@ protocol WatchPresenterProtocol: AnyObject {
     func presentAccepted()
     func presentInProgress()
     func presentCompleted()
+
+    // MARK: Desafio (presets)
+    func presentDrawnChallenge(_ challenge: WatchChallenge)
+    func presentAchievement(_ achievement: WatchAchievement)
 }
 
 // MARK: - Class
@@ -56,4 +60,15 @@ final class WatchPresenter: WatchPresenterProtocol {
     func presentAccepted()   { store?.transitionToAccepted() }
     func presentInProgress() { store?.transitionToInProgress() }
     func presentCompleted()  { store?.transitionToCompleted() }
+
+    // MARK: - Desafio (presets)
+
+    /// O desafio sorteado já vem pronto dos presets: só entrega para a Store.
+    func presentDrawnChallenge(_ challenge: WatchChallenge) {
+        store?.displayChallenge(challenge)
+    }
+
+    func presentAchievement(_ achievement: WatchAchievement) {
+        store?.displayAchievement(achievement)
+    }
 }
