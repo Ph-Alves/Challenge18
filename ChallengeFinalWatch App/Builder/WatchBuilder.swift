@@ -24,7 +24,8 @@ enum WatchBuilder {
         let interactor = WatchInteractor(
             presenter: presenter,
             presetWorker: WatchPresetWorker(),
-            timer: WatchTimerWorker()
+            timer: WatchTimerWorker(),
+            motion: WatchMotionWorker()
         )
 
         return HomeWatch(interactor: interactor, store: store)

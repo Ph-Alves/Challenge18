@@ -55,10 +55,16 @@ final class WatchInteractor: WatchInteractorProtocol {
     /// O cronômetro: só entrega os ticks de 1 segundo. Pelo protocolo, para dar mock nos testes.
     let timer: WatchTimerWorkerProtocol
 
+    /// Detecta o relógio sendo chacoalhado. Pelo protocolo, para dar mock nos testes.
+    let motion: WatchMotionWorkerProtocol
+
     // MARK: - Dados do fluxo
 
     /// Categoria escolhida na home. O sorteio do `finishDraw()` parte dela.
     private var selectedCategory: WatchCategory = .physical
+
+    /// A detecção de chacoalhar está ligada (só enquanto o step `.draw` está na tela).
+    private var isDetectingShake = false
 
     /// Quando o cronômetro foi iniciado (ou retomado). `nil` = parado ou pausado.
     /// O tempo é sempre calculado a partir desta data, nunca contado de 1 em 1.
@@ -74,23 +80,33 @@ final class WatchInteractor: WatchInteractorProtocol {
 
     // MARK: - Init
 
-    init(presenter: WatchPresenterProtocol, presetWorker: WatchPresetWorkerProtocol, timer: WatchTimerWorkerProtocol) {
+    init(
+        presenter: WatchPresenterProtocol,
+        presetWorker: WatchPresetWorkerProtocol,
+        timer: WatchTimerWorkerProtocol,
+        motion: WatchMotionWorkerProtocol
+    ) {
         self.presenter = presenter
         self.presetWorker = presetWorker
         self.timer = timer
+        self.motion = motion
     }
 
     // MARK: - Navigation
 
-    /// Toque no círculo da categoria na home: guarda a categoria e vai para o sorteio.
+    /// Toque no círculo da categoria na home: guarda a categoria, vai para o sorteio e começa a
+    /// ouvir o chacoalhar.
     func startActivity(category: WatchCategory) {
         selectedCategory = category
         presenter.presentCategory(category)
         presenter.presentDraw()
+        startShakeDetection()
     }
 
-    /// O sorteio terminou (o relógio foi sacudido): sorteia o desafio da categoria e mostra o "topa?".
+    /// O sorteio aconteceu (o relógio foi sacudido ou a pessoa tocou na bola): para de ouvir o
+    /// movimento, sorteia o desafio da categoria e mostra o "topa?".
     func finishDraw() {
+        stopShakeDetection()
         drawChallenge(for: selectedCategory)
         presenter.presentChallenge()
     }
@@ -129,9 +145,11 @@ final class WatchInteractor: WatchInteractorProtocol {
     func didTapBack(on step: WatchStep) {
         switch step {
         case .draw:
+            stopShakeDetection()
             presenter.presentHome()      // volta pro seletor
         case .challenge:
             presenter.presentDraw()      // volta pro sorteio
+            startShakeDetection()        // e volta a ouvir o chacoalhar
         case .home, .accepted, .inProgress, .completed:
             break  // esses steps não têm seta
         }
@@ -141,6 +159,34 @@ final class WatchInteractor: WatchInteractorProtocol {
     func didTapClose() {
         cancelTimer()
         presenter.presentHome()
+    }
+
+    // MARK: - Chacoalhar
+    //
+    // Só fica ligado enquanto o step `.draw` está na tela. Chacoalhar e tocar na bola levam ao
+    // mesmo `finishDraw()`, então o sorteio é igual nos dois casos.
+
+    /// Começa a ouvir o acelerômetro. Chamar de novo com ele já ligado não faz nada.
+    private func startShakeDetection() {
+        guard !isDetectingShake else { return }
+
+        isDetectingShake = true
+        motion.onShake = { [weak self] in self?.didShake() }
+        motion.startMonitoring()
+    }
+
+    /// Para de ouvir. Sem isso o acelerômetro continuaria ligado em outros steps.
+    private func stopShakeDetection() {
+        isDetectingShake = false
+        motion.stopMonitoring()
+        motion.onShake = nil
+    }
+
+    /// Chegou uma sacudida. Se a detecção já foi desligada (a pessoa tocou antes, por exemplo),
+    /// ignora, para não sortear duas vezes.
+    private func didShake() {
+        guard isDetectingShake else { return }
+        finishDraw()
     }
 
     // MARK: - Desafio (presets)

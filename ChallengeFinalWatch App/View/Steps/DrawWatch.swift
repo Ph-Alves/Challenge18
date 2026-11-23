@@ -11,7 +11,7 @@ import SwiftUI
 struct DrawWatch: View {
 
     let category: WatchCategory
-    /// Por enquanto o toque na bola faz o papel do sorteio (o chacoalhar ainda não existe).
+    /// Sortear. Chacoalhar o relógio chega aqui pelo Interactor; o toque na bola é para quem não consegue agitar.
     let onDraw: () -> Void
     let onBack: () -> Void
 

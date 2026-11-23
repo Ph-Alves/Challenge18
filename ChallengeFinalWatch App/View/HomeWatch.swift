@@ -60,7 +60,7 @@ struct HomeWatch: View {
         case .home:
             CategorySelector(startFlow: interactor.startActivity(category:))
             
-        // Sorteio. Por enquanto o toque na bola simula o sorteio (o chacoalhar ainda não existe).
+        // Sorteio: chacoalhar o relógio (detectado no Interactor) ou tocar na bola levam ao "topa?".
         case .draw:
             DrawWatch(
                 category: store.category,
