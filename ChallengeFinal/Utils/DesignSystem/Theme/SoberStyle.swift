@@ -30,6 +30,8 @@ struct SoberStyle: ThemeStyleProtocol {
         backgroundInverse: .soberBackgroundInverse,
         fillPrimary: .soberFillPrimary,
         fillPlaceholder: .soberFillPlaceholder,
+        fillConstantDark: .soberConstantDark,
+        fillConstantLight: .soberConstantLight,
         textPrimary: .soberTextPrimary,
         textSecondary: .soberTextSecondary,
         textInverse: .soberTextInverse,
@@ -44,7 +46,9 @@ struct SoberStyle: ThemeStyleProtocol {
         emotionStroke: .soberEmotionStroke,
         overlaySoft: .soberOverlaySoft,
         overlayStrong: .soberOverlayStrong,
-        emotionBGFill: .soberEmotionBGFill)
+        emotionBGFill: .soberEmotionBGFill,
+        strokeConstantDark: .soberConstantDark,
+        strokeConstantLight: .soberConstantLight)
         
     
     let icons = IconsSet(
@@ -84,4 +88,6 @@ struct SoberStyle: ThemeStyleProtocol {
         overlayColor: .black,
         overlayOpacity: 0.6)
     
+    let profile = ProfileStyle(
+        headerBackground: "soberHeaderBackground")
 }

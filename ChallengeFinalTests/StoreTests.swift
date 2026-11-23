@@ -503,22 +503,131 @@ struct StoreTests {
         #expect(Set(states.map(\.title)).count == states.count)
         #expect(Set(states.map(\.message)).count == states.count)
     }
-//    // MARK: - ProfileStore
-//
-//    @Test func testingProfileStoreStartsWithDefaultProfile() async throws {
-//        let store = ProfileStore()
-//
-//        #expect(store.currentProfile.streak == 0)
-//        #expect(store.currentProfile.theme == .themeOne)
-//    }
-//
-//    @Test func testingProfileStoreHoldsAssignedProfile() async throws {
-//        let store = ProfileStore()
-//        let profile = Profile(profileID: UUID(), profilePicture: Data(), name: "Raquel", localizable: true, notifications: true, theme: .themeFour, backgroundActivity: true, streak: 12)
-//
-//        store.currentProfile = profile
-//
-//        #expect(store.currentProfile.profileID == profile.profileID)
-//        #expect(store.currentProfile.streak == 12)
-//    }
+
+    // MARK: - ProfileStore
+
+    // Antes do primeiro `fetchProfile`, a tela já mostra os textos do protótipo.
+    @Test func testingProfileStoreStartsWithDefaultState() {
+        let store = ProfileStore()
+
+        #expect(store.name == "nome")
+        #expect(store.userPhoto == nil)
+        #expect(store.streakText == "0 dias")
+        #expect(store.levelTitle == "começando :)")
+        #expect(store.levelSubtitle.isEmpty == false)
+        #expect(store.localizable == false)
+        #expect(store.notifications == false)
+        #expect(store.backgroundActivity == false)
+        #expect(store.isSettingsPresented == false)
+        #expect(store.isEditing == false)
+        #expect(store.draftName.isEmpty)
+        #expect(store.permissionAlertMessage == nil)
+        #expect(store.errorMessage == nil)
+        #expect(store.currentTheme == .sober)
+    }
+
+    // O estado inicial da Store precisa bater com o que o Presenter mostra para 0 dias.
+    @Test func testingProfileStoreDefaultStreakMatchesPresenterForZeroDays() {
+        
+        let store = ProfileStore()
+        let presenter = ProfilePresenter(store: store)
+        
+        let milestone = presenter.milestone(for: 0)
+
+        #expect(store.streakText == presenter.streakText(for: 0))
+        #expect(store.levelTitle == milestone.title)
+        #expect(store.levelSubtitle == milestone.message)
+    }
+
+    @Test func testingProfileStoreOffersOnlyPrototypeThemes() {
+        let store = ProfileStore()
+
+        #expect(store.themes == [.sober, .pop])
+    }
+
+    @Test func testingDisplayProfileUpdatesNameAndPhoto() {
+        let store = ProfileStore()
+
+        store.displayProfile(name: "Raquel", userPhoto: Image(systemName: "person"))
+
+        #expect(store.name == "Raquel")
+        #expect(store.userPhoto != nil)
+
+        store.displayProfile(name: "nome", userPhoto: nil)
+
+        #expect(store.userPhoto == nil)
+    }
+
+    @Test func testingDisplayStreakUpdatesCard() {
+        let store = ProfileStore()
+
+        store.displayStreak(streakText: "07 dias", levelTitle: "lenda da consistência", levelSubtitle: "07 dias priorizando seu bem estar!")
+
+        #expect(store.streakText == "07 dias")
+        #expect(store.levelTitle == "lenda da consistência")
+        #expect(store.levelSubtitle == "07 dias priorizando seu bem estar!")
+    }
+
+    @Test func testingDisplaySettingsUpdatesEachToggle() {
+        let store = ProfileStore()
+
+        store.displaySettings(localizable: true, notifications: false, backgroundActivity: true)
+
+        #expect(store.localizable == true)
+        #expect(store.notifications == false)
+        #expect(store.backgroundActivity == true)
+    }
+
+    @Test func testingDisplaySettingsSheetOpensAndCloses() {
+        let store = ProfileStore()
+
+        store.displaySettingsSheet(isPresented: true)
+        #expect(store.isSettingsPresented)
+
+        store.displaySettingsSheet(isPresented: false)
+        #expect(store.isSettingsPresented == false)
+    }
+
+    @Test func testingDisplayEditingUpdatesModeAndDraft() {
+        let store = ProfileStore()
+
+        store.displayEditing(isEditing: true, draftName: "Raquel")
+
+        #expect(store.isEditing)
+        #expect(store.draftName == "Raquel")
+
+        store.displayEditing(isEditing: false, draftName: "")
+
+        #expect(store.isEditing == false)
+        #expect(store.draftName.isEmpty)
+    }
+
+    @Test(arguments: [Theme.sober, .bubblegum, .pop, .techNature])
+    func testingDisplayThemeUpdatesCurrentTheme(theme: Theme) {
+        let store = ProfileStore()
+
+        store.displayTheme(theme)
+
+        #expect(store.currentTheme == theme)
+    }
+
+    // Os dois alertas são independentes: um não limpa o outro.
+    @Test func testingProfileStoreAlertsAreIndependent() {
+        let store = ProfileStore()
+
+        store.displayPermissionAlert("libere nos Ajustes")
+        store.displayError("Ops")
+
+        #expect(store.permissionAlertMessage == "libere nos Ajustes")
+        #expect(store.errorMessage == "Ops")
+
+        store.displayPermissionAlert(nil)
+
+        #expect(store.permissionAlertMessage == nil)
+        #expect(store.errorMessage == "Ops")
+
+        store.displayError(nil)
+
+        #expect(store.errorMessage == nil)
+    }
 }
