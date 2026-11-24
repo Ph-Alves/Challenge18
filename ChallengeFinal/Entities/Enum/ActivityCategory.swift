@@ -39,6 +39,20 @@ enum ActivityCategory: String, Codable, CaseIterable {
         let index = all.firstIndex(of: self) ?? 0
         return all[((index + offset) % all.count + all.count) % all.count]
     }
+    
+    var description: String {
+        switch self {
+        case .physical:
+            return "desafios que colocam seu corpo para se mexer"
+        case .cognitive:
+            return "desafios que fazem você pensar por conta própria"
+        case .sensorial:
+            return "desafios que diminuem os estímulos do seu dia"
+        case .social:
+            return "desafios que te aproximam das pessoas"
+
+        }
+    }
 
     var text: String {
         switch self {

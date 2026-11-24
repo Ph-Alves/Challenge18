@@ -84,7 +84,7 @@ struct SoberStyle: ThemeStyleProtocol {
             home: (base: "house", fill: "house.fill"),
             feelings: (base: "chart.bar", fill: "chart.bar.fill"),
             profile: (base: "person", fill: "person.fill")),
-        playIcon: "play.fill")
+        playIcon: "play.fill", handIcon: "handIcon")
     
     let humorWheel = HumorWheelStyle(
         pointerAsset: "wheelArrow",

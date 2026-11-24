@@ -105,7 +105,7 @@ struct PopStyle: ThemeStyleProtocol {
             feelings:  (base: "chart.bar",     fill: "chart.bar.fill"),
             profile:   (base: "person",           fill: "person.fill")),
         
-        playIcon: "play.fill")
+        playIcon: "play.fill", handIcon: "handIcon")
 
     // MARK: - Roda de humor
     let humorWheel = HumorWheelStyle(

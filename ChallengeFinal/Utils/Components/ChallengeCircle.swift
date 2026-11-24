@@ -22,6 +22,7 @@ struct ChallengeCircle: View {
     let category: ActivityCategory
     let text: String?
     let isOpen: Bool
+    var size: CGFloat? = nil
     var variant: Variant = .standard
     
     //aqui é a diferenciação, se a variant = homeCarousel, então minha var categoryIcon recebe category.homeCarousel
@@ -76,7 +77,7 @@ struct ChallengeCircle: View {
                 Image(categoryIcon)
                     .resizable()
                     .scaledToFit()
-                    .frame(width: Self.closedIconSize, height: Self.closedIconSize)
+                    .frame(width: size ?? Self.closedIconSize, height: size ?? Self.closedIconSize)
             }
             
             if let text, isOpen {
