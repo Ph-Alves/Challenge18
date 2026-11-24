@@ -15,15 +15,15 @@ struct OnboardingView: View {
     @State private var goingForward = true
     @State private var secondPageAnimated = false
     @State private var selectedCategory: ActivityCategory? = .physical
-    
+    let onFinish: () -> Void
+
     private let numberOfPages = 5
     
     private func go(to page: Int) {
         guard page != currentPage, (0..<numberOfPages).contains(page) else { return }
         goingForward = page > currentPage
         
-        // Ao sair da 4ª página, volta o scroll pro ícone ancorado (sem animar)
-        if currentPage == 3, page < 3 {
+        if page == 3 {
             var transaction = Transaction()
             transaction.disablesAnimations = true
             withTransaction(transaction) { selectedCategory = .physical }
@@ -40,7 +40,7 @@ struct OnboardingView: View {
             HStack {
                 Spacer()
                 Button {
-                    
+                    onFinish()
                 } label: {
                     Text("pular")
                         .font(designSystem.style.typography.text2)
@@ -77,9 +77,12 @@ struct OnboardingView: View {
                             insertion: goingForward ? .identity : .opacity,
                             removal: goingForward ? .identity : .identity
                         ))
+                        .padding(.top, 86)
+                    
+                    Spacer()
                     
                 case 4:
-                    OnBoardingFifthPage()
+                    OnBoardingFifthPage(onFinish: onFinish)
                         .transition(.identity)
 
                 default:
@@ -110,18 +113,11 @@ struct OnboardingView: View {
     }
 }
 
-// mesmo arquivo: só aplica o matched quando for o ícone de movimento
 extension View {
-    @ViewBuilder
-    func hero(_ isHero: Bool, in namespace: Namespace.ID) -> some View {
-        if isHero {
-            matchedGeometryEffect(id: "hero", in: namespace)
-        } else {
-            self
-        }
+    func hero(_ category: ActivityCategory, in namespace: Namespace.ID) -> some View {
+        matchedGeometryEffect(id: category, in: namespace)
     }
 }
-
 #Preview {
-    OnboardingView().environment(DesignSystem.shared)
+    OnboardingView(onFinish: { }).environment(DesignSystem.shared)
 }

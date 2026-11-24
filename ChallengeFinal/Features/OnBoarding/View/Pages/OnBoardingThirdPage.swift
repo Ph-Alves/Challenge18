@@ -16,9 +16,10 @@ struct OnBoardingThirdPage: View {
     var body: some View {
         VStack {
             VStack(spacing: 44) {
-                Text("você pode se desafiar (e refletir) em 4 categorias")
-                    .font(designSystem.style.typography.text1)
-                    .multilineTextAlignment(.center)
+                
+                Text("você pode se desafiar\n\((Text("(e refletir)").font(designSystem.style.typography.title3))) em 4 categorias")
+                        .font(designSystem.style.typography.text1)
+                        .multilineTextAlignment(.center)
                
                 VStack {
                     ForEach(ActivityCategory.allCases, id: \.self) { category in
@@ -26,7 +27,7 @@ struct OnBoardingThirdPage: View {
                             Image(category.closedIcon)
                                 .resizable()
                                 .scaledToFit()
-                                .hero(category == .physical, in: namespace)
+                                .hero(category, in: namespace)
 
                                 
                             
@@ -37,7 +38,7 @@ struct OnBoardingThirdPage: View {
                 }
 
             }
-            .padding(.horizontal, 72)
+            .padding(.horizontal, 68)
         }
         .onAppear {
             showBottomText = true

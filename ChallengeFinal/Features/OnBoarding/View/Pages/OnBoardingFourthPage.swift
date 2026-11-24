@@ -8,11 +8,11 @@
 import Foundation
 import SwiftUI
 
-// Mostra cada categoria com o mesmo swipe horizontal da Home.
+// Mostra cada categoria com swipe horizontal em qualquer lugar da página.
 struct OnBoardingFourthPage: View {
-
+    
     // MARK: - Variables
-
+    
     @Environment(DesignSystem.self) private var designSystem
     @Binding var selectedCategory: ActivityCategory?
     @ScaledMetric private var circleSize: CGFloat = 108
@@ -20,46 +20,58 @@ struct OnBoardingFourthPage: View {
     @State private var showContent = false
     @State private var userHasSwiped = false
     @State private var handOpacity: Double = 1
-
+    @State private var goingForward = true
+    
     @State private var showHand = true
     @State private var handOffset: CGFloat = -10
+    
+    private var category: ActivityCategory { selectedCategory ?? .physical }
+    
+    // MARK: - Actions
+    
+    // Troca a categoria; a direção é definida antes de animar
+    // para a view que sai usar a transição do lado certo.
+    private func changeCategory(towardsNext: Bool) {
+        let all = ActivityCategory.allCases
+        guard let index = all.firstIndex(of: category) else { return }
+        
+        let next = towardsNext ? index + 1 : index - 1
+        guard all.indices.contains(next) else { return }
+        
+        goingForward = next > index
+        DispatchQueue.main.async {
+            withAnimation(.easeInOut(duration: 0.35)) { selectedCategory = all[next] }
+        }
+    }
+    
+    // MARK: - View
+    
     var body: some View {
         VStack {
-            Spacer()
-            ScrollView(.horizontal) {
-                HStack(spacing: 0) {
-                    ForEach(ActivityCategory.allCases, id: \.self) { category in
-                        VStack {
-                            ChallengeCircle(category: category, text: nil, isOpen: false, size: circleSize)
-                                .hero(category == .physical, in: namespace)
-                            
-                            CategoryText(category: category)
-                                .font(designSystem.currentTheme.style.typography.title2)
-                                .padding(.top, 16)
-                                .opacity(showContent ? 1 : 0)
+            VStack {
+                ChallengeCircle(category: category, text: nil, isOpen: false, size: circleSize)
+                    .hero(category, in: namespace)
 
-                            Text(category.description)
-                                .font(designSystem.currentTheme.style.typography.text1)
-                                .multilineTextAlignment(.center)
-                                .padding(.top, 38)
-                                .opacity(showContent ? 1 : 0)
+                CategoryText(category: category)
+                    .font(designSystem.currentTheme.style.typography.title2)
+                    .padding(.top, 16)
+                    .opacity(showContent ? 1 : 0)
 
-                        }
-                        .padding(.horizontal, 60)
-                        .containerRelativeFrame(.horizontal)
-                        .id(category)
-                    }
-                }
-                .scrollTargetLayout()
+                
+                Text(category.description)
+                    .font(designSystem.currentTheme.style.typography.text1)
+                    .multilineTextAlignment(.center)
+                    .padding(.top, 30)
+                    .opacity(showContent ? 1 : 0)
+
             }
-            .scrollTargetBehavior(.paging)
-            .scrollPosition(id: $selectedCategory)
-            .scrollIndicators(.hidden)
-            
+            .padding(.horizontal, 60)
+            .id(category)
+            .transition(.push(from: goingForward ? .trailing : .leading))
             
             HStack(spacing: 10) {
-                ForEach(ActivityCategory.allCases, id: \.self) { category in
-                    let isSelected = category == selectedCategory
+                ForEach(ActivityCategory.allCases, id: \.self) { item in
+                    let isSelected = item == selectedCategory
                     Capsule()
                         .frame(width: isSelected ? 5 : 2, height: isSelected ? 20 : 14)
                 }
@@ -68,6 +80,7 @@ struct OnBoardingFourthPage: View {
             .animation(.easeInOut(duration: 0.2), value: selectedCategory)
             .padding(.top, 100)
             .opacity(showContent ? 1 : 0)
+
             
             if showHand {
                 Image(designSystem.style.icons.handIcon)
@@ -75,10 +88,18 @@ struct OnBoardingFourthPage: View {
                     .opacity(showContent ? 1 : 0)
                     .padding(.top, 18)
             }
-            
-            Spacer()
-
         }
+        // Área do gesto = só a altura do conteúdo, na largura toda
+        .frame(maxWidth: .infinity)
+        .contentShape(Rectangle())
+        .gesture(
+            DragGesture(minimumDistance: 20).onEnded { value in
+                guard abs(value.translation.width) > abs(value.translation.height) else { return }
+                changeCategory(towardsNext: value.translation.width < 0)
+            }
+        )
+        // Depois do gesto: empurra pro topo sem aumentar a área do gesto
+        .frame(maxHeight: .infinity, alignment: .top)
         .animation(.easeIn(duration: 0.4), value: showContent)
         .task {
             try? await Task.sleep(for: .milliseconds(500))
@@ -102,7 +123,6 @@ struct OnBoardingFourthPage: View {
                 handOpacity = 0
             }
         }
-
     }
 }
 

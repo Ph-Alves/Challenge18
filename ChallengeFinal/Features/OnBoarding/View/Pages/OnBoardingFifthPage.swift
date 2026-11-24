@@ -10,7 +10,8 @@ import SwiftUI
 
 struct OnBoardingFifthPage: View {
     @Environment(DesignSystem.self) private var designSystem
-
+    let onFinish: () -> Void
+    
     var body: some View {
         VStack(spacing: 57){
             
@@ -25,7 +26,7 @@ struct OnBoardingFifthPage: View {
             }
             .padding(.horizontal, 48)
             
-            CustomButtonComponent(title: "desafie-se", icon: nil, type: .primary, action: { })
+            CustomButtonComponent(title: "desafie-se", icon: nil, type: .primary, action:  onFinish )
                 .padding(.horizontal, 120)
         }
         
@@ -33,5 +34,5 @@ struct OnBoardingFifthPage: View {
 }
 
 #Preview {
-    OnBoardingFifthPage().environment(DesignSystem.shared)
+    OnBoardingFifthPage(onFinish: { }).environment(DesignSystem.shared)
 }

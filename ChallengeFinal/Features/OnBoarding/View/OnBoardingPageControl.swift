@@ -34,7 +34,6 @@ struct OnboardingPageControl: View {
 
             Spacer()
 
-            // Na última página só sobra o botão de voltar
             if !isLastPage {
                 // Indicadores
                 HStack(spacing: 6) {
