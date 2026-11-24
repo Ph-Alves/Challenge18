@@ -14,101 +14,100 @@ struct OnBoardingFourthPage: View {
     // MARK: - Variables
 
     @Environment(DesignSystem.self) private var designSystem
+    @Binding var selectedCategory: ActivityCategory?
+    @ScaledMetric private var circleSize: CGFloat = 108
+    let namespace: Namespace.ID
+    @State private var showContent = false
+    @State private var userHasSwiped = false
+    @State private var handOpacity: Double = 1
 
-    // Categoria exibida (local, o onboarding não tem Store)
-    @State private var currentCategory: ActivityCategory = ActivityCategory.allCases[0]
-
-    // Estado da animação do círculo no swipe
-    @State private var imageOffset: CGFloat = 0
-    @State private var imageOpacity: Double = 1
-    @State private var isAnimatingSwipe = false
-
-    // MARK: - Animation
-
-    // Troca a categoria: a imagem atual sai para o lado do swipe
-    // e a nova entra vindo do lado oposto.
-    private func changeCategory(towardsNext: Bool) {
-        guard !isAnimatingSwipe else { return }
-
-        let categories = ActivityCategory.allCases
-        guard let index = categories.firstIndex(of: currentCategory) else { return }
-        let newIndex = index + (towardsNext ? 1 : -1)
-        // Sem loop: para na primeira/última categoria
-        guard categories.indices.contains(newIndex) else { return }
-
-        isAnimatingSwipe = true
-        // Swipe para esquerda (próxima): sai pela esquerda, entra pela direita
-        let distance: CGFloat = towardsNext ? -200 : 200
-
-        withAnimation(.easeIn(duration: 0.15)) {
-            imageOffset = distance
-            imageOpacity = 0
-        }
-
-        Task { @MainActor in
-            try? await Task.sleep(for: .milliseconds(150))
-            currentCategory = categories[newIndex]
-            // Reposiciona do lado oposto sem animar
-            var transaction = Transaction(animation: nil)
-            transaction.disablesAnimations = true
-            withTransaction(transaction) {
-                imageOffset = -distance
-            }
-            withAnimation(.spring(duration: 0.3)) {
-                imageOffset = 0
-                imageOpacity = 1
-            }
-            isAnimatingSwipe = false
-        }
-    }
-
-    // MARK: - View
-
+    @State private var showHand = true
+    @State private var handOffset: CGFloat = -10
     var body: some View {
-        VStack(spacing: 10) {
+        VStack {
             Spacer()
+            ScrollView(.horizontal) {
+                HStack(spacing: 0) {
+                    ForEach(ActivityCategory.allCases, id: \.self) { category in
+                        VStack {
+                            ChallengeCircle(category: category, text: nil, isOpen: false, size: circleSize)
+                                .hero(category == .physical, in: namespace)
+                            
+                            CategoryText(category: category)
+                                .font(designSystem.currentTheme.style.typography.title2)
+                                .padding(.top, 16)
+                                .opacity(showContent ? 1 : 0)
 
-            VStack {
-                // Circulo da categoria com gesture de swipe (esquerda/direita)
-                ChallengeCircle(category: currentCategory, text: nil, isOpen: false)
-                    .gesture(
-                        DragGesture(minimumDistance: 20)
-                            .onEnded { value in
-                                // Se width > height, então é horizontal
-                                let isHorizontalSwipe = abs(value.translation.width) > abs(value.translation.height)
-                                guard isHorizontalSwipe else { return }
-                                // Negativo: direita para esquerda (próxima)
-                                changeCategory(towardsNext: value.translation.width < 0)
-                            }
-                    )
-                    .offset(x: imageOffset)
-                    .opacity(imageOpacity)
+                            Text(category.description)
+                                .font(designSystem.currentTheme.style.typography.text1)
+                                .multilineTextAlignment(.center)
+                                .padding(.top, 38)
+                                .opacity(showContent ? 1 : 0)
 
-                // Texto da respectiva categoria
-                CategoryText(category: currentCategory)
-                    .font(designSystem.currentTheme.style.typography.title3)
+                        }
+                        .padding(.horizontal, 60)
+                        .containerRelativeFrame(.horizontal)
+                        .id(category)
+                    }
+                }
+                .scrollTargetLayout()
             }
-
-            Spacer()
-
-            // Indicador de categoria: a barra da categoria atual fica maior
+            .scrollTargetBehavior(.paging)
+            .scrollPosition(id: $selectedCategory)
+            .scrollIndicators(.hidden)
+            
+            
             HStack(spacing: 10) {
                 ForEach(ActivityCategory.allCases, id: \.self) { category in
-                    let isSelected = category == currentCategory
+                    let isSelected = category == selectedCategory
                     Capsule()
                         .frame(width: isSelected ? 5 : 2, height: isSelected ? 20 : 14)
                 }
             }
             .frame(height: 20)
-            .animation(.easeInOut(duration: 0.2), value: currentCategory)
-
+            .animation(.easeInOut(duration: 0.2), value: selectedCategory)
+            .padding(.top, 100)
+            .opacity(showContent ? 1 : 0)
+            
+            if showHand {
+                Image(designSystem.style.icons.handIcon)
+                    .offset(x: handOffset)
+                    .opacity(showContent ? 1 : 0)
+                    .padding(.top, 18)
+            }
+            
             Spacer()
+
         }
-        .padding(.vertical)
+        .animation(.easeIn(duration: 0.4), value: showContent)
+        .task {
+            try? await Task.sleep(for: .milliseconds(500))
+            showContent = true
+            
+            let swipeDuration = 0.8
+            var goingRight = true
+            while !userHasSwiped && !Task.isCancelled {
+                withAnimation(.easeInOut(duration: swipeDuration)) {
+                    handOffset = goingRight ? 30 : -10
+                }
+                goingRight.toggle()
+                try? await Task.sleep(for: .seconds(swipeDuration))
+            }
+        }
+        .onChange(of: selectedCategory) {
+            userHasSwiped = true
+            showHand = false
+            withAnimation(.easeOut(duration: 0.4)) {
+                handOffset = 0
+                handOpacity = 0
+            }
+        }
+
     }
 }
 
 #Preview {
-    OnBoardingFourthPage()
-        .environment(DesignSystem.shared)
+    @Previewable @Namespace var ns
+    @Previewable @State var selected: ActivityCategory? = .physical
+    OnBoardingFourthPage(selectedCategory: $selected, namespace: ns).environment(DesignSystem.shared)
 }

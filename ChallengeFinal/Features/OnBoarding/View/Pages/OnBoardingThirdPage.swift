@@ -8,32 +8,36 @@
 import Foundation
 import SwiftUI
 
-struct OnBoardingThir: View {
+struct OnBoardingThirdPage: View {
     @Environment(DesignSystem.self) private var designSystem
     @State var showBottomText = false
+    let namespace: Namespace.ID
 
     var body: some View {
         VStack {
-            VStack(spacing: 18) {
-                Text("selfmaxxing.")
-                    .font(designSystem.style.typography.title1)
-                
-                Text("pequenos desafios intencionais para sair do piloto automático")
+            VStack(spacing: 44) {
+                Text("você pode se desafiar (e refletir) em 4 categorias")
                     .font(designSystem.style.typography.text1)
                     .multilineTextAlignment(.center)
-                
-            }
-            .padding(.horizontal, 46)
-            
-           Spacer()
-            
-            Text("e te ajudar a descobrir sua melhor versão :) ")
-                .font(designSystem.style.typography.text2)
-                .multilineTextAlignment(.center)
-                .opacity(showBottomText ? 1 : 0)
-                .animation(.easeIn(duration: 1.2), value: showBottomText)
-                .padding(.horizontal, 90)
+               
+                VStack {
+                    ForEach(ActivityCategory.allCases, id: \.self) { category in
+                        VStack(spacing: 24) {
+                            Image(category.closedIcon)
+                                .resizable()
+                                .scaledToFit()
+                                .hero(category == .physical, in: namespace)
 
+                                
+                            
+                        }
+                }
+                   
+                    
+                }
+
+            }
+            .padding(.horizontal, 72)
         }
         .onAppear {
             showBottomText = true
@@ -43,5 +47,7 @@ struct OnBoardingThir: View {
 }
 
 #Preview {
-    OnBoardingSecondPage().environment(DesignSystem.shared)
+    @Previewable @Namespace var ns
+    OnBoardingThirdPage(namespace: ns).environment(DesignSystem.shared)
 }
+

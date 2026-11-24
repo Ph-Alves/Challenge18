@@ -12,7 +12,7 @@ struct OnBoardingFirstPage: View {
     @Environment(DesignSystem.self) private var designSystem
 
     var body: some View {
-        Text("Oi!")
+        Text("oi!")
             .font(designSystem.style.typography.title1)
     }
 }
