@@ -17,32 +17,13 @@ struct OnBoardingFourthPage: View {
     @Binding var selectedCategory: ActivityCategory?
     @ScaledMetric private var circleSize: CGFloat = 108
     let namespace: Namespace.ID
+    
     @State private var showContent = false
     @State private var userHasSwiped = false
-    @State private var handOpacity: Double = 1
     @State private var goingForward = true
-    
-    @State private var showHand = true
     @State private var handOffset: CGFloat = -10
     
     private var category: ActivityCategory { selectedCategory ?? .physical }
-    
-    // MARK: - Actions
-    
-    // Troca a categoria; a direção é definida antes de animar
-    // para a view que sai usar a transição do lado certo.
-    private func changeCategory(towardsNext: Bool) {
-        let all = ActivityCategory.allCases
-        guard let index = all.firstIndex(of: category) else { return }
-        
-        let next = towardsNext ? index + 1 : index - 1
-        guard all.indices.contains(next) else { return }
-        
-        goingForward = next > index
-        DispatchQueue.main.async {
-            withAnimation(.easeInOut(duration: 0.35)) { selectedCategory = all[next] }
-        }
-    }
     
     // MARK: - View
     
@@ -71,7 +52,7 @@ struct OnBoardingFourthPage: View {
             
             HStack(spacing: 10) {
                 ForEach(ActivityCategory.allCases, id: \.self) { item in
-                    let isSelected = item == selectedCategory
+                    let isSelected = item == category
                     Capsule()
                         .frame(width: isSelected ? 5 : 2, height: isSelected ? 20 : 14)
                 }
@@ -82,11 +63,14 @@ struct OnBoardingFourthPage: View {
             .opacity(showContent ? 1 : 0)
 
             
-            if showHand {
+            // indicador do swipe com a maozinha
+            if !userHasSwiped {
                 Image(designSystem.style.icons.handIcon)
                     .offset(x: handOffset)
                     .opacity(showContent ? 1 : 0)
                     .padding(.top, 18)
+                    .transition(.opacity)
+
             }
         }
         // Área do gesto = só a altura do conteúdo, na largura toda
@@ -116,12 +100,23 @@ struct OnBoardingFourthPage: View {
             }
         }
         .onChange(of: selectedCategory) {
-            userHasSwiped = true
-            showHand = false
-            withAnimation(.easeOut(duration: 0.4)) {
-                handOffset = 0
-                handOpacity = 0
-            }
+            withAnimation(.easeOut(duration: 0.4)) { userHasSwiped = true }
+        }
+    }
+    
+    // MARK: - Actions
+    // Troca a categoria; a direção é definida antes de animar
+    // para a view que sai usar a transição do lado certo.
+    private func changeCategory(towardsNext: Bool) {
+        let all = ActivityCategory.allCases
+        guard let index = all.firstIndex(of: category) else { return }
+        
+        let next = towardsNext ? index + 1 : index - 1
+        guard all.indices.contains(next) else { return }
+        
+        goingForward = next > index
+        Task { @MainActor in
+            withAnimation(.easeInOut(duration: 0.35)) { selectedCategory = all[next] }
         }
     }
 }

@@ -8,8 +8,10 @@
 import Foundation
 import SwiftUI
 
+// 5ª página: encerramento, com o botão que leva ao app.
 struct OnBoardingFifthPage: View {
     @Environment(DesignSystem.self) private var designSystem
+    // Chamado ao tocar em "desafie-se"
     let onFinish: () -> Void
     
     var body: some View {
@@ -26,6 +28,7 @@ struct OnBoardingFifthPage: View {
             }
             .padding(.horizontal, 48)
             
+            // Botão final
             CustomButtonComponent(title: "desafie-se", icon: nil, type: .primary, action:  onFinish )
                 .padding(.horizontal, 120)
         }

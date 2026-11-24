@@ -8,8 +8,10 @@
 import Foundation
 import SwiftUI
 
+// 2ª página: apresenta o conceito do app. O texto de baixo aparece com fade na 1ª vez.
 struct OnBoardingSecondPage: View {
     @Environment(DesignSystem.self) private var designSystem
+    // Indica se o fade já rodou, para não repetir ao voltar para a página
     @Binding var hasAnimated: Bool
     @State private var showBottomText = false
     
@@ -30,10 +32,12 @@ struct OnBoardingSecondPage: View {
             Text("e te ajudar a descobrir sua melhor versão :) ")
                 .font(designSystem.style.typography.text2)
                 .multilineTextAlignment(.center)
+                // Já animado: aparece direto, sem animação
                 .opacity(showBottomText || hasAnimated ? 1 : 0)
                 .animation(hasAnimated ? nil : .easeIn(duration: 1.2), value: showBottomText)
                 .padding(.horizontal, 90)
         }
+        // Dispara o fade do texto de baixo
         .onAppear {
             showBottomText = true
         }

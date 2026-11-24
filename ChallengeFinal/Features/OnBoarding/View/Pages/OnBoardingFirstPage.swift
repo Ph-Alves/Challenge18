@@ -8,6 +8,7 @@
 import Foundation
 import SwiftUI
 
+// 1ª página: saudação oi.
 struct OnBoardingFirstPage: View {
     @Environment(DesignSystem.self) private var designSystem
 
