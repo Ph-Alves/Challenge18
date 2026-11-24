@@ -72,7 +72,7 @@ struct ChallengesView: View {
                     photo: store.selectedPhoto,
                     humor: activity.result?.humor,
                     onFinish: { interactor.retakePhoto() },
-                    onShare: { interactor.shareStory() },
+                    onShare: { style in interactor.shareStory(style: style) },
                     onReflect: { interactor.openMood() }
                 )
                 .toolbar {

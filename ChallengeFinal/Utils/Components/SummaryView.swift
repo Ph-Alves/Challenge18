@@ -67,6 +67,13 @@ struct SummaryView: View {
         return .topHumorPosition
     }
     
+    /// Sheet de escolha do estilo do story.
+    @State private var selectTypeShare = false
+    
+    /// Estilo escolhido na sheet. Só vira `onShare` quando ela termina de fechar,
+    /// porque o share sheet do sistema não abre enquanto ela ainda está na tela.
+    @State private var pendingShareStyle: StoryCardStyle?
+    
     /// Estilo do componente (para mudar com base no fluxo)
     let style: SummaryStyle
     
@@ -91,8 +98,8 @@ struct SummaryView: View {
     /// Toque em "finalizar".
     let onFinish: () -> Void
     
-    /// Toque em "compartilhar".
-    let onShare: () -> Void
+    /// Confirmou o estilo do story na sheet de compartilhar.
+    let onShare: (StoryCardStyle) -> Void
     
     /// Toque em "reflita!" (só aparece no `.display` quando não há humor registrado).
     var onReflect: () -> Void = {}
@@ -112,6 +119,22 @@ struct SummaryView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .navigationTitle(createdAt ?? "")
         .navigationBarTitleDisplayMode(.inline)
+        .sheet(isPresented: $selectTypeShare, onDismiss: {
+            guard let style = pendingShareStyle else { return }
+            pendingShareStyle = nil
+            onShare(style)
+        }, content: {
+            ShareStorySheet(
+                challengeTitle: title,
+                challengeDescription: description,
+                challengeIcon: category.defaultClosed,
+                photo: photo,
+                onConfirm: { style in
+                    pendingShareStyle = style
+                    selectTypeShare = false
+                }
+            )
+        })
     }
     
     private var header: some View {
@@ -205,7 +228,9 @@ struct SummaryView: View {
     //MARK: - Botões reutilizáveis ao longo das subviews
     
     private func shareButton(type: CustomButtonType) -> some View {
-        CustomButtonComponent(title: "compartilhar", icon: designSystem.style.icons.shareIcon, type: type, action: onShare)
+        CustomButtonComponent(title: "compartilhar", icon: type != .primary ? designSystem.style.icons.shareIcon.base : designSystem.style.icons.shareIcon.card, type: type, action: {
+            selectTypeShare = true
+        })
     }
     
     private func photoButton(type: CustomButtonType) -> some View {
@@ -228,7 +253,7 @@ struct SummaryView: View {
         photo: Image(systemName: "photo"),
         humor: .unpleasant,
         onFinish: {},
-        onShare: {}
+        onShare: { _ in }
     )
     .environment(DesignSystem.shared)
 }
@@ -243,7 +268,7 @@ struct SummaryView: View {
         photo: nil,
         humor: .unpleasant,
         onFinish: {},
-        onShare: {}
+        onShare: { _ in }
     )
     .environment(DesignSystem.shared)
 }
@@ -258,7 +283,7 @@ struct SummaryView: View {
         photo: Image(systemName: "photo"),
         humor: .unpleasant,
         onFinish: {},
-        onShare: {}
+        onShare: { _ in }
     )
     .environment(DesignSystem.shared)
 }
@@ -273,7 +298,7 @@ struct SummaryView: View {
         photo: nil,
         humor: .unpleasant,
         onFinish: {},
-        onShare: {}
+        onShare: { _ in }
     )
     .environment(DesignSystem.shared)
 }

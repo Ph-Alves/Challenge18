@@ -75,12 +75,14 @@ struct MoodStepView: View {
             .overlay(alignment: .top) {
                 ZStack(alignment: .top) {
 
-                    Image(designSystem.style.humorWheel.backgroundAsset)
-                        .resizable()
-                        .scaledToFit()
-                       .frame(width: 480, height: 221)
-                       .padding(.top, -20)
-                       .allowsHitTesting(false)
+                    if let background = designSystem.style.humorWheel.backgroundAsset {
+                        Image(background)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 480, height: 221)
+                            .padding(.top, -20)
+                            .allowsHitTesting(false)
+                    }
 
                     HumorWheel(selected: humor, onNext: onNext, onPrevious: onPrevious)
                         .padding(.top, 40) // espaço para o marcador (o offset dele)

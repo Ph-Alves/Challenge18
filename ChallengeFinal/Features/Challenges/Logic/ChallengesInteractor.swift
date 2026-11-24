@@ -17,7 +17,7 @@ protocol ChallengesInteractorProtocol: AnyObject {
     func restoreChallenge(_ activity: Activity)       // devolver o arquivado ao grupo
     func openSummary(_ activity: Activity)            // tocou num card: abre o resumo
     func closeSummary()                               //fechou o sheet de summary
-    func shareStory()                                 // "compartilhar" no resumo
+    func shareStory(style: StoryCardStyle?)           // estilo escolhido na sheet de compartilhar (`nil` = padrão: foto, se houver)
     func didFinishSharing(completed: Bool)            // share sheet fechou (concluiu ou cancelou)
     func dismissError()                               // fechou o alerta de erro
     // MARK: Câmera (tirar outra foto no resumo)
@@ -36,6 +36,13 @@ protocol ChallengesInteractorProtocol: AnyObject {
     func saveHumor()                                  // "salvar" no MoodStepView
     func closeMood()                                  // X do MoodStepView
     func deleteChallenge()                            // "arquivar" no menu "…" do resumo
+}
+
+extension ChallengesInteractorProtocol {
+    /// Compartilha com o estilo padrão (com foto, o da foto; sem foto, o branco).
+    func shareStory() {
+        shareStory(style: nil)
+    }
 }
 
 //MARK: - Class
@@ -151,8 +158,8 @@ final class ChallengesInteractor: ChallengesInteractorProtocol {
     
     /// A imagem não aparece na tela: é só o arquivo que vai para o share sheet,
     /// então é gerada aqui, na hora do toque, e não fica guardada na Store.
-    func shareStory() {
-        guard let selectedActivity, let image = makeStoryImage(for: selectedActivity) else {
+    func shareStory(style: StoryCardStyle?) {
+        guard let selectedActivity, let image = makeStoryImage(for: selectedActivity, style: style) else {
             presenter.presentError("não foi possível preparar a imagem para compartilhar.")
             return
         }
@@ -383,14 +390,15 @@ final class ChallengesInteractor: ChallengesInteractorProtocol {
     
     
     /// Monta o StoryCard e transforma em UIImage. `nil` = a renderização falhou.
-    private func makeStoryImage(for activity: Activity) -> UIImage? {
+    private func makeStoryImage(for activity: Activity, style: StoryCardStyle?) -> UIImage? {
         let name = activity.name.trimmingCharacters(in: .whitespacesAndNewlines)
         let photo = activity.result?.photo.flatMap { UIImage(data: $0) }
  
         let story = StoryCard(
             challengeTitle: name.isEmpty ? "desafio concluído" : name,
             challengeDescription: activity.activityDescription.trimmingCharacters(in: .whitespacesAndNewlines),
-            challengePhoto: photo, challengeIcon: activity.category.closedIcon
+            challengePhoto: photo, challengeIcon: activity.category.defaultClosed,
+            style: style
         )
         return ShareImageRenderer.render(story)
     }

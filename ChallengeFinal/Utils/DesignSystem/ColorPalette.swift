@@ -13,6 +13,8 @@ struct ColorPalette {
     let backgroundInverse: Color
     let fillPrimary: Color
     let fillPlaceholder: Color
+    let fillConstantDark: Color
+    let fillConstantLight: Color
     let textPrimary: Color
     let textSecondary: Color
     let textInverse: Color
@@ -24,9 +26,11 @@ struct ColorPalette {
     let emotionNeutro: Color
     let emotionDesagradavel: Color
     let emotionPessimo: Color
-    let emotionStroke: Color
+//    let emotionStroke: Color
     let overlaySoft: Color
     let overlayStrong: Color
     let emotionBGFill: Color
+    let strokeConstantDark: Color
+    let strokeConstantLight: Color
 }
 

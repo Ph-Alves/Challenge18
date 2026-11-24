@@ -26,7 +26,8 @@ extension Theme {
     var style: ThemeStyleProtocol {
         switch self {
         case .sober: return SoberStyle()
-        case .bubblegum, .pop, .techNature: return SoberStyle()
+        case .pop: return PopStyle()
+        case .bubblegum, .techNature: return SoberStyle()
         }
     }
 }

@@ -21,5 +21,6 @@ final class AppCoordinator {
     let homeCoordinator = HomeCoordinator()
     let feelingsCoordinator = FeelingsCoordinator()
     let challengesCoordinator = ChallengesCoordinator()
+    let profileCoordinator = ProfileCoordinator()
 }
 

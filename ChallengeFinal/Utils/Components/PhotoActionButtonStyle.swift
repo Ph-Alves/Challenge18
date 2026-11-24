@@ -5,14 +5,6 @@
 //  Created by Raquel Souza on 26/10/26.
 //
 
-
-//
-//  PhotoActionButtonStyle.swift
-//  ChallengeFinal
-//
-//  Created by Raquel Souza on 26/10/26.
-//
-
 import SwiftUI
 
 /// Botões cinza de largura total, com ícone + texto em negrito e sombra suave

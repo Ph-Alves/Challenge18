@@ -12,8 +12,6 @@ enum Humor: String, Codable, CaseIterable { //CaseIterable: a roleta monta as op
     case neutral = "Neutro"
     case unpleasant = "Desagradável"
     case veryUnpleasant = "Péssimo"
-
-
     
     // Vêm do tema ativo (sem valor próprio no enum)
     var icon: String {

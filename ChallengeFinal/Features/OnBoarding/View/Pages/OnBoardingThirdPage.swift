@@ -28,7 +28,7 @@ struct OnBoardingThirdPage: View {
                 VStack {
                     ForEach(ActivityCategory.allCases, id: \.self) { category in
                         VStack(spacing: 24) {
-                            Image(category.closedIcon)
+                            Image(category.defaultClosed)
                                 .resizable()
                                 .scaledToFit()
                                 .hero(category, in: namespace)

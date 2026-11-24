@@ -70,5 +70,5 @@ struct InProgressView: View {
 }
 
 #Preview {
-    InProgressView(message: "...", challengeSubTitle: "...", challengeDescription: "...", challengeIcon: ActivityCategory.physical.cardIcon, isPaused: false, pauseAction: { }, timeText: "00:00:00", finishAction: { }, cancelAction: { }).environment(DesignSystem.shared)
+    InProgressView(message: "...", challengeSubTitle: "...", challengeDescription: "...", challengeIcon: ActivityCategory.physical.activityFlowCard, isPaused: false, pauseAction: { }, timeText: "00:00:00", finishAction: { }, cancelAction: { }).environment(DesignSystem.shared)
 }

@@ -13,7 +13,9 @@ struct ArchivedChallengesView: View {
     // MARK: - Variables
     let interactor: ChallengesInteractorProtocol
     var store: ChallengesStore
+    
     @Environment(DesignSystem.self) private var designSystem
+    
     // O alerta de sucesso fica aqui: a linha some da lista ao restaurar e levaria o alerta junto.
     @State private var isRestoreSuccessAlertPresented = false
 

@@ -13,6 +13,7 @@ protocol ThemeStyleProtocol {
     var icons: IconsSet { get }
     var humorWheel: HumorWheelStyle { get }
     var photoFilter: PhotoFilter? { get }
+    var profile: ProfileStyle { get }
 }
 
 extension ThemeStyleProtocol {

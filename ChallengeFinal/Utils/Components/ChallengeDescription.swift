@@ -54,5 +54,5 @@ struct ChallengeDescription: View {
 }
 
 #Preview {
-    ChallengeDescription(challengeIcon: ActivityCategory.social.cardIcon, challengeTitle: "faça o seu cárdio", challengeSubTitle: "Menos distracao, mais foco", challengeDescription: "jeifjciejceijciecowdcinoicnedincicainispaimdcpamoinsmdinaindainidsiw").environment(DesignSystem.shared)
+    ChallengeDescription(challengeIcon: ActivityCategory.social.activityFlowCard, challengeTitle: "faça o seu cárdio", challengeSubTitle: "Menos distracao, mais foco", challengeDescription: "jeifjciejceijciecowdcinoicnedincicainispaimdcpamoinsmdinaindainidsiw").environment(DesignSystem.shared)
 }
