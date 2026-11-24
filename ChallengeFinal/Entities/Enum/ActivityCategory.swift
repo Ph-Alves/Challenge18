@@ -9,8 +9,8 @@
 enum ActivityCategory: String, Codable, CaseIterable {
     case physical
     case cognitive
-    case sensorial
     case social
+    case sensorial
     
     //usado no carrosel da home apenas
     var homeCarousel: String {

@@ -83,7 +83,7 @@ final class ProfileInteractor: ProfileInteractorProtocol {
                 .filter { $0.result != nil }
                 .map(\.createdAt)
 
-            profile.streak = Self.streak(from: completedDates)
+            profile.streak = streak(from: completedDates)
             try profileRepository.save()
             
             themeApplier.currentTheme = profile.theme
@@ -195,7 +195,7 @@ final class ProfileInteractor: ProfileInteractorProtocol {
 
     /// Dias SEGUIDOS com desafio concluído, terminando hoje.
     /// Se hoje ainda não teve desafio, a sequência de ontem continua valendo.
-    static func streak(from dates: [Date], today: Date = Date(), calendar: Calendar = .current) -> Int {
+     func streak(from dates: [Date], today: Date = Date(), calendar: Calendar = .current) -> Int {
         let days = Set(dates.map { calendar.startOfDay(for: $0) })
         var day = calendar.startOfDay(for: today)
 
@@ -215,7 +215,7 @@ final class ProfileInteractor: ProfileInteractorProtocol {
 
     // MARK: - Auxiliares privados
 
-    private func loadOrCreateProfile() throws -> Profile {
+     func loadOrCreateProfile() throws -> Profile {
         if let profile { return profile }
 
         if let saved = try profileRepository.getAll().first {

@@ -67,13 +67,14 @@ struct SoberStyle: ThemeStyleProtocol {
             .pleasant:       (base: "plesantBase",        humor: "plesantHumor",        card: "pleasantCard",       white: "plesantWhite"),
             .veryPleasant:   (base: "veryPleasantBase",   humor: "veryPleasantHumor",   card: "veryPleasantCard",   white: "veryPleasantWhite")
         ],
+        
         placeholderCheckIcon: "placeholderCheckIcon",
         photoPlaceholder: "photoPlaceholder",
         archivedChallengeIcon: "archiveIcon",
         archivedInvertedChallengeIcon: "archiveInvertedIcon",
         shareIcon: (base: "shareIcon", card: "shareIconCard"),
         retryIcon: (base: "retryIcon", card: "retryIconCard"),
-        profilePlaceholder: "profilePlaceholder",
+        profilePlaceholder: "popProfilePlaceholder",
         takePicturePlaceholder: "camera",
         cameraIcon: "cameraIcon",
         nextIcon: "nextIcon",

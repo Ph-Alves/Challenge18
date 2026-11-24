@@ -48,9 +48,9 @@ final class ProfilePresenter: ProfilePresenterProtocol {
             userPhoto: image(from: profile.profilePicture)
         )
 
-        let milestone = Self.milestone(for: profile.streak)
+        let milestone = milestone(for: profile.streak)
         store?.displayStreak(
-            streakText: Self.streakText(for: profile.streak),
+            streakText: streakText(for: profile.streak),
             levelTitle: milestone.title,
             levelSubtitle: milestone.message
         )
@@ -116,7 +116,7 @@ final class ProfilePresenter: ProfilePresenterProtocol {
 
     /// cada uma vale a partir do dia do marco.
     /// Ordem crescente; a última vale para sempre depois dela.
-    static let milestones: [(day: Int, title: String, message: String)] = [
+    let milestones: [(day: Int, title: String, message: String)] = [
         (0,  "começando :)",          "o primeiro passo você já deu, agora falta se desafiar!"),
         (3,  "pegou o ritmo",         "03 dias cuidando de você, continue assim!"),
         (7,  "lenda da consistência", "07 dias priorizando seu bem estar!"),
@@ -126,13 +126,13 @@ final class ProfilePresenter: ProfilePresenterProtocol {
     ]
 
     /// O último marco que o usuário já alcançou (ex.: 5 dias -> variante dos 3 dias).
-    static func milestone(for streak: Int) -> (title: String, message: String) {
+    func milestone(for streak: Int) -> (title: String, message: String) {
         let reached = milestones.last { streak >= $0.day } ?? milestones[0]
         return (reached.title, reached.message)
     }
 
     /// "0 dias", "03 dias", "15 dias" (dois dígitos).
-    static func streakText(for streak: Int) -> String {
+    func streakText(for streak: Int) -> String {
         streak == 0 ? "0 dias" : String(format: "%02ld %@", streak, streak == 1 ? "dia" : "dias")
     }
 
