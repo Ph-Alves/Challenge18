@@ -252,7 +252,7 @@ private struct CheckerboardView: View {
     ShareStorySheet(
         challengeTitle: "mestre offline",
         challengeDescription: "você passou 1h se exercitando sem entrar em nenhuma rede social",
-        challengeIcon: ActivityCategory.physical.closedIcon,
+        challengeIcon: ActivityCategory.physical.defaultClosed,
         onConfirm: { _ in }
     )
     .frame(height: 506)
@@ -264,7 +264,7 @@ private struct CheckerboardView: View {
     ShareStorySheet(
         challengeTitle: "mestre offline",
         challengeDescription: "você passou 1h se exercitando sem entrar em nenhuma rede social",
-        challengeIcon: ActivityCategory.physical.closedIcon,
+        challengeIcon: ActivityCategory.physical.defaultClosed,
         photo: Image("challengePhoto"),
         onConfirm: { _ in }
     )

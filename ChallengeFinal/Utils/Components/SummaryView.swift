@@ -127,7 +127,7 @@ struct SummaryView: View {
             ShareStorySheet(
                 challengeTitle: title,
                 challengeDescription: description,
-                challengeIcon: category.closedIcon,
+                challengeIcon: category.defaultClosed,
                 photo: photo,
                 onConfirm: { style in
                     pendingShareStyle = style

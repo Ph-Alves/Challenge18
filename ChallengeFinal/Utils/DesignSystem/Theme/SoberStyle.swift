@@ -43,7 +43,7 @@ struct SoberStyle: ThemeStyleProtocol {
         emotionNeutro: .soberEmotionNeutro,
         emotionDesagradavel: .soberEmotionDesagradavel,
         emotionPessimo: .soberEmotionPessimo,
-        emotionStroke: .soberEmotionStroke,
+//        emotionStroke: .soberEmotionStroke,
         overlaySoft: .soberOverlaySoft,
         overlayStrong: .soberOverlayStrong,
         emotionBGFill: .soberEmotionBGFill,
@@ -52,11 +52,12 @@ struct SoberStyle: ThemeStyleProtocol {
         
     
     let icons = IconsSet(
+        //categorias
         activityIcons: [
-            .physical:  (closed: "eightBall",    open: "openBall", card: "eightCard"),
-            .cognitive: (closed: "cookie",   open: "openCookie", card: "cookieCard"),
-            .social:    (closed: "telephone", open: "openPhone",  card: "telephoneCard"),
-            .sensorial: (closed: "coffee", open: "openCoffee",   card: "coffeeCard")
+            .cognitive: (homeCarousel: "coffee", defaultClosed: "coffee", defaultOpen: "openCoffee", activityFlowCard: "coffeeCard"),
+            .physical: (homeCarousel: "eightBall", defaultClosed: "eightBall", defaultOpen: "openBall",  activityFlowCard: "eightCard"),
+            .sensorial: (homeCarousel: "cookie", defaultClosed: "cookie", defaultOpen: "openCookie", activityFlowCard: "cookieCard"),
+            .social: (homeCarousel: "telephone", defaultClosed: "telephone", defaultOpen: "openPhone", activityFlowCard: "telephoneCard"),
         ],
         
         feelingIcons: [
@@ -66,18 +67,24 @@ struct SoberStyle: ThemeStyleProtocol {
             .pleasant:       (base: "plesantBase",        humor: "plesantHumor",        card: "pleasantCard",       white: "plesantWhite"),
             .veryPleasant:   (base: "veryPleasantBase",   humor: "veryPleasantHumor",   card: "veryPleasantCard",   white: "veryPleasantWhite")
         ],
+        
         placeholderCheckIcon: "placeholderCheckIcon",
         photoPlaceholder: "photoPlaceholder",
         archivedChallengeIcon: "archiveIcon",
         archivedInvertedChallengeIcon: "archiveInvertedIcon",
         shareIcon: (base: "shareIcon", card: "shareIconCard"),
         retryIcon: (base: "retryIcon", card: "retryIconCard"),
-        profilePlaceholder: "profilePlaceholder",
-        camera: "camera",
+        profilePlaceholder: "popProfilePlaceholder",
+        takePicturePlaceholder: "camera",
         cameraIcon: "cameraIcon",
         nextIcon: "nextIcon",
         pauseIcon: "pauseIcon",
-        tabBar: TabBarIcons(challenge: (base: "challengeTabIcon", fill: "challengeTabFill"), home: (base: "homeTabIcon", fill: "homeTabFill"), feelings: (base: "feelingsTabIcon", fill: "feelingsTabFill"), profile: (base: "profileTabIcon", fill: "profileTabFill")), playIcon: "playIcon")
+        tabBar: TabBarIcons(
+            challenge: (base: "challengeTabIcon", fill: "challengeTabFill"),
+            home: (base: "house", fill: "house.fill"),
+            feelings: (base: "chart.bar", fill: "chart.bar.fill"),
+            profile: (base: "person", fill: "person.fill")),
+        playIcon: "play.fill")
     
     let humorWheel = HumorWheelStyle(
         pointerAsset: "wheelArrow",

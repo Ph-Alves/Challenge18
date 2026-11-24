@@ -26,7 +26,7 @@ struct ColorPalette {
     let emotionNeutro: Color
     let emotionDesagradavel: Color
     let emotionPessimo: Color
-    let emotionStroke: Color
+//    let emotionStroke: Color
     let overlaySoft: Color
     let overlayStrong: Color
     let emotionBGFill: Color

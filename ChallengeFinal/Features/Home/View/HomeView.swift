@@ -156,3 +156,11 @@ extension HomeStore {
     HomeView(interactor: HomeInteractorStub(), store: .preview)
         .environment(DesignSystem.shared)
 }
+
+#Preview("Pop") {
+    let designSystem = DesignSystem.shared
+    designSystem.currentTheme = .pop
+
+    return HomeView(interactor: HomeInteractorStub(), store: .preview)
+        .environment(designSystem)
+}

@@ -238,7 +238,7 @@ struct PresenterTests {
         let (presenter, store) = createActivityPresenterAndStore()
         let result = ActivityResult(time: 0, humor: .veryPleasant)
 
-        presenter.presentStory(result, title: "faça o seu cardio", subtitle: "menos distração", description: "sem redes sociais", challengeIcon: ActivityCategory.physical.closedIcon)
+        presenter.presentStory(result, title: "faça o seu cardio", subtitle: "menos distração", description: "sem redes sociais", challengeIcon: ActivityCategory.physical.defaultClosed)
         
         // O story sai no tamanho da especificação (pontos x scale).
         let image = try #require(store.storyImages[.white])
@@ -250,7 +250,7 @@ struct PresenterTests {
         let (presenter, store) = createActivityPresenterAndStore()
         let result = ActivityResult(time: 0, humor: .veryPleasant)
 
-        presenter.presentStory(result, title: "faça o seu cardio", subtitle: "menos distração", description: "sem redes sociais", challengeIcon: ActivityCategory.physical.closedIcon)
+        presenter.presentStory(result, title: "faça o seu cardio", subtitle: "menos distração", description: "sem redes sociais", challengeIcon: ActivityCategory.physical.defaultClosed)
         
         #expect(Set(store.storyImages.keys) == [.white, .black, .transparent])
     }
@@ -259,7 +259,7 @@ struct PresenterTests {
         let (presenter, store) = createActivityPresenterAndStore()
         let result = ActivityResult(photo: makePhotoData(), time: 0, humor: .veryPleasant)
 
-        presenter.presentStory(result, title: "faça o seu cardio", subtitle: "menos distração", description: "sem redes sociais", challengeIcon: ActivityCategory.physical.closedIcon)
+        presenter.presentStory(result, title: "faça o seu cardio", subtitle: "menos distração", description: "sem redes sociais", challengeIcon: ActivityCategory.physical.defaultClosed)
         
         #expect(Set(store.storyImages.keys) == Set(StoryCardStyle.allCases))
     }
