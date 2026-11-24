@@ -14,7 +14,8 @@ struct ChallengeCircle: View {
     let category: ActivityCategory
     let text: String?
     let isOpen: Bool
-    
+    var size: CGFloat? = nil
+
     private var textLayout: CGSize {
         switch category {
         case .cognitive:
@@ -46,15 +47,26 @@ struct ChallengeCircle: View {
         }
     }
 
+    // MARK: - Icon
+    // Só deixa a imagem redimensionável quando um tamanho é informado
+    @ViewBuilder
+    private func icon(_ name: String) -> some View {
+        if let size {
+            Image(name)
+                .resizable()
+                .scaledToFit()
+                .frame(width: size)
+        } else {
+            Image(name)
+        }
+    }
+
     // MARK: - View
     var body: some View {
         ZStack(alignment: .center) {
-            if isOpen {
-                Image(category.openIcon)
-            } else {
-                Image(category.closedIcon)
-            }
-            
+            icon(isOpen ? category.openIcon : category.closedIcon)
+
+
             if let text, isOpen {
                 Text(text)
                     .font(designSystem.style.typography.text1)
