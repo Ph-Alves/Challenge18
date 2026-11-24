@@ -68,20 +68,6 @@ struct ChallengeCircle: View {
         }
     }
 
-    // MARK: - Icon
-    // Só deixa a imagem redimensionável quando um tamanho é informado
-    @ViewBuilder
-    private func icon(_ name: String) -> some View {
-        if let size {
-            Image(name)
-                .resizable()
-                .scaledToFit()
-                .frame(width: size)
-        } else {
-            Image(name)
-        }
-    }
-
     // MARK: - View
     var body: some View {
         ZStack(alignment: .center) {
