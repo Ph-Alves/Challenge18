@@ -16,7 +16,13 @@ enum ChallengesBuilder {
         // A mesma câmera vai para o Interactor (que liga a sessão) e para o preview (que a mostra).
         // Se o Interactor criasse a própria, o preview mostraria uma sessão que nunca liga (tela preta).
         let camera = CameraWorker()
-        let interactor = ChallengesInteractor(repository: GenericRepository<Activity>(context: context), presenter: presenter, camera: camera)
+        let interactor = ChallengesInteractor(
+            repository: GenericRepository<Activity>(context: context),
+            presenter: presenter,
+            share: ShareWorker(),
+            camera: camera,
+            haptics: HapticsWorker()
+        )
         
         return ChallengesView(interactor: interactor, store: store, cameraPreview: CameraPreview(session: camera.session))
     }

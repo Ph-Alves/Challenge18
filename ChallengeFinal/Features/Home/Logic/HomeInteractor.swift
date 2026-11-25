@@ -31,7 +31,7 @@ final class HomeInteractor: HomeInteractorProtocol {
 
     
     // MARK: - Init
-    init(repository: GenericRepository<Activity>, presenter: HomePresenterProtocol, haptics: HapticsWorkerProtocol = HapticsWorker()) {
+    init(repository: GenericRepository<Activity>, presenter: HomePresenterProtocol, haptics: HapticsWorkerProtocol) {
         self.repository = repository
         self.presenter = presenter
         self.haptics = haptics
