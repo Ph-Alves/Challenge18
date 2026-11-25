@@ -26,7 +26,7 @@ struct RegisteredActivityCard: View {
                     .font(designSystem.style.typography.text3)
                     .padding(.leading, 2)
                     .padding(.bottom, 12)
-                    .padding(.trailing, 30)
+                    .padding(.trailing, humor == nil ? 0 : 30)
             }
             .padding(.horizontal, 12)
             .background(
