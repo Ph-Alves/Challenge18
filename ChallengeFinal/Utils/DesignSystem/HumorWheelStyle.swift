@@ -9,6 +9,6 @@ import Foundation
 import SwiftUI
 
 struct HumorWheelStyle {
-    let pointerAsset: String // foi
-    let backgroundAsset: String // foi
+    let pointerAsset: String
+    var backgroundAsset: String? = nil
 }

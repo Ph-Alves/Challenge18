@@ -137,7 +137,7 @@ struct ActivityView: View {
                     message: store.activityTitle ?? "",
                     challengeSubTitle: store.activitySubtitle ?? "",
                     challengeDescription: store.activityDescription ?? "",
-                    challengeIcon: currentCategory.cardIcon,
+                    challengeIcon: currentCategory.activityFlowCard,
                     isPaused: store.isPaused,
                     pauseAction: interactor.togglePause,
                     timeText: store.timeText,
@@ -197,7 +197,7 @@ struct ActivityView: View {
                 ChallengeAcceptedView(
                     challengeTitle: title,
                     challengeSubTitle: subtitle,
-                    challengeDescription: description, challengeIcon: currentCategory.cardIcon,
+                    challengeDescription: description, challengeIcon: currentCategory.activityFlowCard,
                     startAction: { interactor.startActivity() },
                     cancelAction: { interactor.reroll(for: currentCategory) }
                 )
@@ -218,8 +218,8 @@ struct ActivityView: View {
             photo: store.photo,
             humor: store.humor,
             onFinish: { interactor.finishActivityFlow() },
-            // A imagem do story já está pronta na Store: só repassamos.
-            onShare: { interactor.shareStory(store.storyImage) }
+            // As imagens do story (uma por estilo) já estão prontas na Store: só repassamos a escolhida.
+            onShare: { style in interactor.shareStory(store.storyImages[style]) }
         )
         .transition(.opacity)
         .onAppear {
@@ -227,7 +227,7 @@ struct ActivityView: View {
                 title: store.activityTitle,
                 subtitle: store.activitySubtitle,
                 description: store.activityDescription,
-                challengeIcon: currentCategory.closedIcon
+                challengeIcon: currentCategory.defaultClosed
             )
         }
     }

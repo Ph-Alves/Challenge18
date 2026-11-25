@@ -24,8 +24,8 @@ struct BuilderTests {
     private func makeHomeCoordinator() -> HomeCoordinator {
         return HomeCoordinator()
     }
-//
-//    // MARK: - Testes
+
+    // MARK: - Testes
     
     @Test func testingHomeBuilding() async {
         let coordinator = makeHomeCoordinator()
@@ -285,17 +285,61 @@ struct BuilderTests {
         #expect(step.exitMessage == nil)
     }
 
-//    @Test func testingProfileBuilding() async throws {
-//        let builder: ProfileBuilderProtocol = createProfileBuilder()
-//        let viewConfig = builder.buildConfig()
-//        
-//        #expect(viewConfig == ProfileConfig())
-//    }
-//    
-//    @Test func testingCheckProfileCachedView() async throws {
-//        let builder: ProfileBuilderProtocol = createProfileBuilder()
-//        _ = builder.build()
-//        
-//        #expect(builder.cachedView != nil)
-//    }
+    // MARK: - Profile
+
+    @Test func testingProfileCoordinatorStartsWithoutCachedView() {
+        let coordinator = ProfileCoordinator()
+
+        #expect(coordinator.cached == nil)
+    }
+
+    @Test func testingProfileBuilding() {
+        let coordinator = ProfileCoordinator()
+        _ = coordinator.startProfileView(context: modelContainer.mainContext)
+
+        #expect(coordinator.cached != nil)
+    }
+
+    @Test func testingProfileViewIsCachedAcrossCalls() {
+        let coordinator = ProfileCoordinator()
+        let first = coordinator.startProfileView(context: modelContainer.mainContext)
+        let second = coordinator.startProfileView(context: modelContainer.mainContext)
+
+        // Mesma instância de store = a view não foi reconstruída.
+        #expect(first.store === second.store)
+    }
+
+    @Test func testingProfileCoordinatorReusesInjectedView() {
+        let context = modelContainer.mainContext
+        let view = ProfileBuilder.build(context: context)
+        let coordinator = ProfileCoordinator()
+        coordinator.cached = view
+
+        let started = coordinator.startProfileView(context: context)
+
+        #expect(started.store === view.store)
+    }
+
+    // O Builder liga Interactor -> Presenter -> Store: carregar pelo interactor da view enche a store da mesma view.
+    @Test func testingProfileBuilderWiresInteractorToStore() throws {
+        let context = modelContainer.mainContext
+        try GenericRepository<Profile>(context: context).add(Profile(name: "Raquel"))
+        let view = ProfileBuilder.build(context: context)
+
+        view.interactor.fetchProfile()
+
+        #expect(view.store.name == "Raquel")
+        #expect(view.store.currentTheme == .sober)
+    }
+
+    // Abrir a engrenagem pelo interactor da view abre o sheet de configurações da mesma store.
+    @Test func testingProfileBuilderWiresSettingsSheet() {
+        let view = ProfileBuilder.build(context: modelContainer.mainContext)
+
+        view.interactor.openSettings()
+        #expect(view.store.isSettingsPresented)
+
+        view.interactor.closeSettings()
+        #expect(view.store.isSettingsPresented == false)
+    }
 }

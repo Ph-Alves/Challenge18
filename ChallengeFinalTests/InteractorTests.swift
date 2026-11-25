@@ -17,13 +17,13 @@ import UIKit
 final class HomePresenterSpy: HomePresenterProtocol {
     
     private(set) var presentedCategory: ActivityCategory?
-    private(set) var week: [Date]?
+    private(set) var week: [(date: Date, humor: Humor?)]?
     
     func presentCategory(_ category: ChallengeFinal.ActivityCategory) {
         presentedCategory = category
     }
     
-    func presentWeek(days: [Date]) {
+    func presentWeek(days: [(date: Date, humor: Humor?)]) {
         week = days
     }
     
@@ -364,12 +364,49 @@ final class ChallengesPresenterSpy: ChallengesPresenterProtocol {
     func presentError(_ message: String?) { errors.append(message) }
 }
 
-//final class ProfilePresenterSpy: ProfilePresenterProtocol {
-//    private(set) var presentedProfile: Profile?
-//    func presentProfile(_ profile: Profile) {
-//        presentedProfile = profile
-//    }
-//}
+/// Anota o que o Interactor de Perfil entregou ao Presenter, uma entrada por chamada.
+final class ProfilePresenterSpy: ProfilePresenterProtocol {
+    private(set) var presentedProfiles: [Profile] = []
+    private(set) var presentedThemes: [Theme] = []
+    private(set) var editingCalls: [(isEditing: Bool, currentName: String)] = []
+    private(set) var settingsSheetStates: [Bool] = []
+    private(set) var locationDeniedCount = 0
+    private(set) var notificationsDeniedCount = 0
+    private(set) var presentedErrors: [Error] = []
+    private(set) var alertsDismissedCount = 0
+
+    /// Atalho para o último perfil apresentado.
+    var lastProfile: Profile? { presentedProfiles.last }
+
+    func presentProfile(_ profile: Profile) { presentedProfiles.append(profile) }
+    func presentTheme(_ theme: Theme) { presentedThemes.append(theme) }
+    func presentEditing(isEditing: Bool, currentName: String) { editingCalls.append((isEditing, currentName)) }
+    func presentSettingsSheet(isPresented: Bool) { settingsSheetStates.append(isPresented) }
+    func presentLocationDenied() { locationDeniedCount += 1 }
+    func presentNotificationsDenied() { notificationsDeniedCount += 1 }
+    func presentError(_ error: Error) { presentedErrors.append(error) }
+    func presentAlertsDismissed() { alertsDismissedCount += 1 }
+}
+
+/// Permissão falsa (notificação ou localização): responde na hora com o que o teste mandar.
+final class PermissionWorkerMock: NotificationWorkerProtocol, LocalizationWorkerProtocol {
+    var granted = true
+    private(set) var requestCount = 0
+
+    func requestPermission(completion: @escaping (Bool) -> Void) {
+        requestCount += 1
+        completion(granted)
+    }
+}
+
+/// Faz o papel do `DesignSystem.shared` sem mexer no tema do app durante os testes.
+final class ThemeApplierMock: ThemeApplying {
+    var currentTheme: Theme
+
+    init(currentTheme: Theme = .sober) {
+        self.currentTheme = currentTheme
+    }
+}
 
 @Suite("Tests for all interactors in the project")
 @MainActor
@@ -517,17 +554,79 @@ struct InteractorTests {
         calendar.firstWeekday = 1
         
         // A semana começa no domingo (weekday == 1).
-        #expect(calendar.component(.weekday, from: week[0]) == 1)
+        #expect(calendar.component(.weekday, from: week[0].date) == 1)
         
         // Os dias são consecutivos.
         for index in 1..<week.count {
-            let expected = calendar.date(byAdding: .day, value: 1, to: week[index - 1])
-            #expect(week[index] == expected)
+            let expected = calendar.date(byAdding: .day, value: 1, to: week[index - 1].date)
+            #expect(week[index].date == expected)
         }
     }
 
-    // MARK: - ActivityInteractor (sorteio de desafios)
+    // Cria uma Activity (com ou sem resultado) numa data específica e salva no banco de teste.
+    private func addActivity(on date: Date, humor: Humor?, hasResult: Bool = true) throws {
+        let result = hasResult ? ActivityResult(time: 60, humor: humor) : nil
+        let activity = Activity(category: .physical, result: result, createdAt: date, name: "Teste", description: "", archived: false)
+        try makeActivityRepository().add(activity)
+    }
     
+    @Test func testingIfWeekHumorUsesFirstActivityWithResultOfTheDay() throws {
+        let repository = makeActivityRepository()
+        let presenterSpy = HomePresenterSpy()
+        let interactor = HomeInteractor(repository: repository, presenter: presenterSpy)
+        
+        // Pega o domingo da semana atual (primeiro dia apresentado) para não depender do dia de hoje.
+        interactor.getCurrentWeek()
+        let sunday = try #require(presenterSpy.week?.first?.date)
+        let calendar = Calendar.current
+        let monday = try #require(calendar.date(byAdding: .day, value: 1, to: sunday))
+        
+        // Domingo: a mais cedo está sem resultado (ignorada); a primeira com resultado é a das 10h.
+        try addActivity(on: sunday.addingTimeInterval(8 * 3600), humor: nil, hasResult: false)
+        try addActivity(on: sunday.addingTimeInterval(15 * 3600), humor: .unpleasant)
+        try addActivity(on: sunday.addingTimeInterval(10 * 3600), humor: .veryPleasant)
+        // Segunda: só uma atividade, com resultado.
+        try addActivity(on: monday.addingTimeInterval(9 * 3600), humor: .neutral)
+        
+        interactor.getCurrentWeek()
+        
+        let week = try #require(presenterSpy.week)
+        #expect(week[0].humor == .veryPleasant)
+        #expect(week[1].humor == .neutral)
+        // Terça em diante: sem atividades.
+        #expect(week[2...].allSatisfy { $0.humor == nil })
+    }
+    
+    @Test func testingIfWeekHumorIsNilWhenDayOnlyHasActivitiesWithoutResult() throws {
+        let presenterSpy = HomePresenterSpy()
+        let interactor = HomeInteractor(repository: makeActivityRepository(), presenter: presenterSpy)
+        
+        interactor.getCurrentWeek()
+        let sunday = try #require(presenterSpy.week?.first?.date)
+        try addActivity(on: sunday.addingTimeInterval(10 * 3600), humor: nil, hasResult: false)
+        
+        interactor.getCurrentWeek()
+        
+        #expect(try #require(presenterSpy.week)[0].humor == nil)
+    }
+
+    // O carrossel da Home usa `shifted(by:)` para saber a categoria de cada slot.
+    // Ordem dos cases: physical, cognitive, social, sensorial.
+    @Test(arguments: [
+        (ActivityCategory.physical, 1, ActivityCategory.cognitive),   // anda um
+        (ActivityCategory.physical, -1, ActivityCategory.sensorial),  // volta ao final
+        (ActivityCategory.sensorial, 1, ActivityCategory.physical),   // volta ao início
+        (ActivityCategory.cognitive, 2, ActivityCategory.sensorial),  // anda dois
+        (ActivityCategory.physical, -2, ActivityCategory.social),     // volta dois, dando a volta
+        (ActivityCategory.sensorial, 0, ActivityCategory.sensorial)   // não anda
+    ])
+    
+    func testingCategoryShiftedWrapsAround(start: ActivityCategory, offset: Int, expected: ActivityCategory) {
+        #expect(start.shifted(by: offset) == expected)
+    }
+
+    // MARK: - ActivityInteractor (sorteio de desafios)
+
     private struct ActivitySUT {
         let interactor: ActivityInteractor
         let presenter: ActivityPresenterSpy
@@ -2649,46 +2748,320 @@ struct InteractorTests {
         #expect(sut.presenter.shareFinished == completed)
     }
 
-//    // MARK: - ProfileInteractor (RF24/onboarding - perfil padrão)
-//
-//    @Test func testingFetchProfileCreatesDefaultWhenMissing() async throws {
-//        let repository = makeProfileRepository()
-//        let presenterSpy = ProfilePresenterSpy()
-//        let interactor = ProfileInteractor(repository: repository, presenter: presenterSpy)
-//
-//        interactor.fetchProfile()
-//
-//        #expect(presenterSpy.presentedProfile != nil)
-//        #expect(presenterSpy.presentedProfile?.streak == 0)
-//        #expect(repository.fetchAll().count == 1)
-//    }
-//
-//    // MARK: - ProfileInteractor (RF27 - definir tema)
-//
-//    @Test func testingUpdateThemePersistsAndPresentsNewTheme() async throws {
-//        let repository = makeProfileRepository()
-//        let presenterSpy = ProfilePresenterSpy()
-//        let interactor = ProfileInteractor(repository: repository, presenter: presenterSpy)
-//        interactor.fetchProfile()
-//
-//        interactor.updateTheme(.themeThree)
-//
-//        #expect(presenterSpy.presentedProfile?.theme == .themeThree)
-//        #expect(repository.fetchAll().first?.theme == .themeThree)
-//    }
-//
-//    // MARK: - ProfileInteractor (RF25/RF26 - localização e notificações)
-//
-//    @Test func testingUpdateLocalizableAndNotificationsTogglesFlags() async throws {
-//        let repository = makeProfileRepository()
-//        let presenterSpy = ProfilePresenterSpy()
-//        let interactor = ProfileInteractor(repository: repository, presenter: presenterSpy)
-//        interactor.fetchProfile()
-//
-//        interactor.updateLocalizable(true)
-//        interactor.updateNotifications(true)
-//
-//        #expect(presenterSpy.presentedProfile?.localizable == true)
-//        #expect(presenterSpy.presentedProfile?.notifications == true)
-//    }
+    // MARK: - ProfileInteractor
+
+    private struct ProfileSUT {
+        let interactor: ProfileInteractor
+        let presenter: ProfilePresenterSpy
+        let themeApplier: ThemeApplierMock
+        let notifications: PermissionWorkerMock
+        let localization: PermissionWorkerMock
+        let profileRepository: GenericRepository<Profile>
+        let activityRepository: GenericRepository<Activity>
+    }
+
+    /// `startingTheme` começa diferente do padrão para o teste ver que o Interactor aplicou o tema salvo.
+    private func makeProfileSUT(startingTheme: Theme = .techNature) -> ProfileSUT {
+        let presenter = ProfilePresenterSpy()
+        let themeApplier = ThemeApplierMock(currentTheme: startingTheme)
+        let notifications = PermissionWorkerMock()
+        let localization = PermissionWorkerMock()
+        let profileRepository = makeProfileRepository()
+        let activityRepository = makeActivityRepository()
+        let interactor = ProfileInteractor(presenter: presenter,
+                                           profileRepository: profileRepository,
+                                           activityRepository: activityRepository,
+                                           notifications: notifications,
+                                           localization: localization,
+                                           themeApplier: themeApplier)
+        return ProfileSUT(interactor: interactor, presenter: presenter, themeApplier: themeApplier,
+                          notifications: notifications, localization: localization,
+                          profileRepository: profileRepository, activityRepository: activityRepository)
+    }
+
+    // MARK: ProfileInteractor (carregamento)
+
+    // Primeira vez no app: não existe perfil, então cria o padrão e aplica o tema dele.
+    @Test func testingFetchProfileCreatesDefaultWhenMissing() throws {
+        let sut = makeProfileSUT()
+
+        sut.interactor.fetchProfile()
+
+        #expect(try sut.profileRepository.getAll().count == 1)
+        #expect(sut.presenter.lastProfile?.streak == 0)
+        #expect(sut.presenter.presentedThemes == [.sober])
+        #expect(sut.themeApplier.currentTheme == .sober)
+        #expect(sut.presenter.presentedErrors.isEmpty)
+    }
+
+    @Test func testingFetchProfileReusesSavedProfileAndAppliesItsTheme() throws {
+        let sut = makeProfileSUT(startingTheme: .sober)
+        let saved = Profile(name: "Raquel", theme: .pop)
+        try sut.profileRepository.add(saved)
+
+        sut.interactor.fetchProfile()
+
+        #expect(try sut.profileRepository.getAll().count == 1)
+        #expect(sut.presenter.lastProfile === saved)
+        #expect(sut.presenter.presentedThemes == [.pop])
+        #expect(sut.themeApplier.currentTheme == .pop)
+    }
+
+    // Chamar de novo (ex.: voltar para a aba) não cria outro perfil.
+    @Test func testingFetchProfileTwiceKeepsASingleProfile() throws {
+        let sut = makeProfileSUT()
+
+        sut.interactor.fetchProfile()
+        sut.interactor.fetchProfile()
+
+        #expect(try sut.profileRepository.getAll().count == 1)
+        #expect(sut.presenter.presentedProfiles.count == 2)
+        #expect(sut.presenter.presentedProfiles[0] === sut.presenter.presentedProfiles[1])
+    }
+
+    // O streak só conta atividades concluídas (com resultado) e é salvo no perfil.
+    @Test func testingFetchProfileCountsStreakOnlyFromCompletedActivities() throws {
+        let sut = makeProfileSUT()
+        let today = Date()
+        let yesterday = try #require(Calendar.current.date(byAdding: .day, value: -1, to: today))
+        let twoDaysAgo = try #require(Calendar.current.date(byAdding: .day, value: -2, to: today))
+        try sut.activityRepository.add(Activity(category: .physical, result: ActivityResult(time: 60, humor: .pleasant),
+                                                createdAt: today, name: "Hoje", description: "", archived: false))
+        try sut.activityRepository.add(Activity(category: .social, result: ActivityResult(time: 60, humor: .neutral),
+                                                createdAt: yesterday, name: "Ontem", description: "", archived: false))
+        // Sem resultado: não conta, então a sequência para em ontem.
+        try sut.activityRepository.add(Activity(category: .cognitive, result: nil,
+                                                createdAt: twoDaysAgo, name: "Arquivada", description: "", archived: true))
+
+        sut.interactor.fetchProfile()
+
+        #expect(sut.presenter.lastProfile?.streak == 2)
+        #expect(try sut.profileRepository.getAll().first?.streak == 2)
+    }
+
+    // MARK: ProfileInteractor (streak - regra de dias)
+
+    private let streakCalendar = Calendar(identifier: .gregorian)
+    private var streakToday: Date {
+        streakCalendar.date(from: DateComponents(year: 2026, month: 11, day: 20, hour: 15))!
+    }
+
+    /// Datas `offsets` dias antes de `streakToday` (0 = hoje, 1 = ontem...).
+    private func streakDates(_ offsets: [Int]) -> [Date] {
+        offsets.compactMap { streakCalendar.date(byAdding: .day, value: -$0, to: streakToday) }
+    }
+
+    @Test(arguments: [
+        ([Int](), 0),          // nunca concluiu nada
+        ([0], 1),              // só hoje
+        ([0, 1, 2], 3),        // três dias seguidos até hoje
+        ([1, 2], 2),           // hoje ainda não fez: a sequência de ontem continua valendo
+        ([2, 3], 0),           // pulou ontem: a sequência quebrou
+        ([0, 1, 3, 4], 2),     // buraco no meio: só conta até o buraco
+        ([0, 0, 0], 1)         // várias no mesmo dia contam como um dia
+    ])
+    
+    func testingStreakCountsConsecutiveDays(offsets: [Int], expected: Int) {
+        let sut = makeProfileSUT()
+
+        let streak = sut.interactor.streak(from: streakDates(offsets), today: streakToday, calendar: streakCalendar)
+
+        #expect(streak == expected)
+    }
+
+    @Test func testingStreakIgnoresTimeOfDay() throws {
+        let sut = makeProfileSUT()
+        let startOfToday = streakCalendar.startOfDay(for: streakToday)
+        let earlyToday = startOfToday.addingTimeInterval(5 * 60)
+        let lateYesterday = startOfToday.addingTimeInterval(-5 * 60)
+
+        let streak = sut.interactor.streak(from: [earlyToday, lateYesterday], today: streakToday, calendar: streakCalendar)
+
+        #expect(streak == 2)
+    }
+
+    // MARK: ProfileInteractor (edição do nome)
+
+    @Test func testingStartEditingPresentsCurrentName() throws {
+        let sut = makeProfileSUT()
+        try sut.profileRepository.add(Profile(name: "Raquel"))
+        sut.interactor.fetchProfile()
+
+        sut.interactor.startEditing()
+
+        #expect(sut.presenter.editingCalls.last?.isEditing == true)
+        #expect(sut.presenter.editingCalls.last?.currentName == "Raquel")
+    }
+
+    @Test func testingSaveEditingTrimsAndPersistsName() throws {
+        let sut = makeProfileSUT()
+        sut.interactor.fetchProfile()
+
+        sut.interactor.saveEditing(name: "  Raquel  \n")
+
+        #expect(try sut.profileRepository.getAll().first?.name == "Raquel")
+        #expect(sut.presenter.lastProfile?.name == "Raquel")
+        #expect(sut.presenter.editingCalls.last?.isEditing == false)
+        #expect(sut.presenter.editingCalls.last?.currentName == "Raquel")
+    }
+
+    @Test(arguments: ["", "   ", "\n\t"])
+    func testingSaveEditingWithBlankNameKeepsPreviousName(blank: String) throws {
+        let sut = makeProfileSUT()
+        try sut.profileRepository.add(Profile(name: "Raquel"))
+        sut.interactor.fetchProfile()
+
+        sut.interactor.saveEditing(name: blank)
+
+        #expect(try sut.profileRepository.getAll().first?.name == "Raquel")
+        #expect(sut.presenter.editingCalls.last?.isEditing == false)
+        #expect(sut.presenter.editingCalls.last?.currentName == "Raquel")
+    }
+
+    // MARK: ProfileInteractor (temas)
+
+    @Test func testingUpdateThemePersistsAppliesAndPresents() throws {
+        let sut = makeProfileSUT()
+        sut.interactor.fetchProfile()
+
+        sut.interactor.updateTheme(.pop)
+
+        #expect(try sut.profileRepository.getAll().first?.theme == .pop)
+        #expect(sut.themeApplier.currentTheme == .pop)
+        #expect(sut.presenter.presentedThemes.last == .pop)
+    }
+
+    // Tocar no tema que já está ativo não faz nada.
+    @Test func testingUpdateThemeWithCurrentThemeDoesNothing() {
+        let sut = makeProfileSUT()
+        sut.interactor.fetchProfile()
+        let themesBefore = sut.presenter.presentedThemes
+
+        sut.interactor.updateTheme(.sober)
+
+        #expect(sut.presenter.presentedThemes == themesBefore)
+    }
+
+    // MARK: ProfileInteractor (configurações)
+
+    @Test func testingOpenAndCloseSettingsPresentSheet() {
+        let sut = makeProfileSUT()
+
+        sut.interactor.openSettings()
+        sut.interactor.closeSettings()
+
+        #expect(sut.presenter.settingsSheetStates == [true, false])
+    }
+
+    @Test func testingUpdateLocalizableGrantedTurnsOn() throws {
+        let sut = makeProfileSUT()
+        sut.interactor.fetchProfile()
+
+        sut.interactor.updateLocalizable(true)
+
+        #expect(sut.localization.requestCount == 1)
+        #expect(try sut.profileRepository.getAll().first?.localizable == true)
+        #expect(sut.presenter.lastProfile?.localizable == true)
+        #expect(sut.presenter.locationDeniedCount == 0)
+    }
+
+    // Permissão negada: o toggle volta para desligado e aparece o alerta de "abrir ajustes".
+    @Test func testingUpdateLocalizableDeniedTurnsBackOffAndAlerts() throws {
+        let sut = makeProfileSUT()
+        sut.localization.granted = false
+        sut.interactor.fetchProfile()
+
+        sut.interactor.updateLocalizable(true)
+
+        #expect(try sut.profileRepository.getAll().first?.localizable == false)
+        #expect(sut.presenter.lastProfile?.localizable == false)
+        #expect(sut.presenter.locationDeniedCount == 1)
+    }
+
+    // Desligar não pede permissão.
+    @Test func testingUpdateLocalizableOffDoesNotRequestPermission() throws {
+        let sut = makeProfileSUT()
+        try sut.profileRepository.add(Profile(localizable: true))
+        sut.interactor.fetchProfile()
+
+        sut.interactor.updateLocalizable(false)
+
+        #expect(sut.localization.requestCount == 0)
+        #expect(try sut.profileRepository.getAll().first?.localizable == false)
+    }
+
+    @Test func testingUpdateNotificationsGrantedTurnsOn() throws {
+        let sut = makeProfileSUT()
+        sut.interactor.fetchProfile()
+
+        sut.interactor.updateNotifications(true)
+
+        #expect(sut.notifications.requestCount == 1)
+        #expect(try sut.profileRepository.getAll().first?.notifications == true)
+        #expect(sut.presenter.lastProfile?.notifications == true)
+        #expect(sut.presenter.notificationsDeniedCount == 0)
+    }
+
+    @Test func testingUpdateNotificationsDeniedTurnsBackOffAndAlerts() throws {
+        let sut = makeProfileSUT()
+        sut.notifications.granted = false
+        sut.interactor.fetchProfile()
+
+        sut.interactor.updateNotifications(true)
+
+        #expect(try sut.profileRepository.getAll().first?.notifications == false)
+        #expect(sut.presenter.lastProfile?.notifications == false)
+        #expect(sut.presenter.notificationsDeniedCount == 1)
+    }
+
+    @Test func testingUpdateNotificationsOffDoesNotRequestPermission() throws {
+        let sut = makeProfileSUT()
+        try sut.profileRepository.add(Profile(notifications: true))
+        sut.interactor.fetchProfile()
+
+        sut.interactor.updateNotifications(false)
+
+        #expect(sut.notifications.requestCount == 0)
+        #expect(try sut.profileRepository.getAll().first?.notifications == false)
+    }
+
+    // Segundo plano não tem permissão do sistema: só salva a preferência.
+    @Test(arguments: [true, false])
+    func testingUpdateBackgroundActivityPersists(isOn: Bool) throws {
+        let sut = makeProfileSUT()
+        try sut.profileRepository.add(Profile(backgroundActivity: !isOn))
+        sut.interactor.fetchProfile()
+
+        sut.interactor.updateBackgroundActivity(isOn)
+
+        #expect(try sut.profileRepository.getAll().first?.backgroundActivity == isOn)
+        #expect(sut.presenter.lastProfile?.backgroundActivity == isOn)
+        #expect(sut.notifications.requestCount == 0)
+        #expect(sut.localization.requestCount == 0)
+    }
+
+    // A localização e as notificações não interferem uma na outra.
+    @Test func testingSettingsTogglesAreIndependent() throws {
+        let sut = makeProfileSUT()
+        sut.notifications.granted = false
+        sut.interactor.fetchProfile()
+
+        sut.interactor.updateLocalizable(true)
+        sut.interactor.updateNotifications(true)
+
+        let profile = try #require(try sut.profileRepository.getAll().first)
+        #expect(profile.localizable == true)
+        #expect(profile.notifications == false)
+        #expect(profile.backgroundActivity == false)
+    }
+
+    // MARK: ProfileInteractor (alertas)
+
+    @Test func testingDismissAlertsForwardsToPresenter() {
+        let sut = makeProfileSUT()
+
+        sut.interactor.dismissAlerts()
+
+        #expect(sut.presenter.alertsDismissedCount == 1)
+    }
 }

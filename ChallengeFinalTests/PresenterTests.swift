@@ -10,39 +10,7 @@ import Testing
 import SwiftData
 import UIKit
 @testable import ChallengeFinal
-//
-//// MARK: - Spies (test doubles for the Interactor protocols the Presenters talk to)
-//
-//
-//final class ActivitiesInteractorSpy: ActivitiesInteractorProtocol {
-//    private(set) var fetchHistoryCallCount = 0
-//    private(set) var generatedActivityGroup: Group?
-//    func generateActivity(for group: Group) {
-//        generatedActivityGroup = group
-//    }
-//    func acceptActivity(_ activity: Activity) {}
-//    func refuseActivityTemporarily(_ activity: Activity) {}
-//    func refuseActivityPermanently(_ activity: Activity) {}
-//    func concludeActivity(_ activity: Activity, result: Results) {}
-//    func fetchHistory() {
-//        fetchHistoryCallCount += 1
-//    }
-//}
-//
-//final class ProfileInteractorSpy: ProfileInteractorProtocol {
-//    private(set) var fetchProfileCallCount = 0
-//    private(set) var updatedTheme: Theme?
-//    func fetchProfile() {
-//        fetchProfileCallCount += 1
-//    }
-//    func updateLocalizable(_ enabled: Bool) {}
-//    func updateNotifications(_ enabled: Bool) {}
-//    func updateTheme(_ theme: Theme) {
-//        updatedTheme = theme
-//    }
-//    func updateBackgroundActivity(_ enabled: Bool) {}
-//}
-//
+
 @Suite("Tests for all presenters in the project")
 @MainActor
 struct PresenterTests {
@@ -76,11 +44,60 @@ struct PresenterTests {
         // 18/10/2026 é domingo, então a semana vai de domingo a sábado.
         let calendar = Calendar.current
         let sunday = calendar.date(from: DateComponents(year: 2026, month: 10, day: 18))!
-        let days = (0..<7).compactMap { calendar.date(byAdding: .day, value: $0, to: sunday) }
+        let days = (0..<7).compactMap { calendar.date(byAdding: .day, value: $0, to: sunday) }.map { (date: $0, humor: Humor?.none) }
         
         presenter.presentWeek(days: days)
         
-        #expect(store.daysOfWeek == ["D", "S", "T", "Q", "Q", "S", "S"])
+        #expect(store.daysOfWeek.map(\.label) == ["D", "S", "T", "Q", "Q", "S", "S"])
+    }
+    
+    // A semana depende da data atual, então montamos os dias relativos a hoje (ontem, hoje, amanhã).
+    private func yesterdayTodayTomorrow() throws -> (yesterday: Date, today: Date, tomorrow: Date) {
+        let calendar = Calendar.current
+        let today = Date()
+        let yesterday = try #require(calendar.date(byAdding: .day, value: -1, to: today))
+        let tomorrow = try #require(calendar.date(byAdding: .day, value: 1, to: today))
+        return (yesterday, today, tomorrow)
+    }
+    
+    @Test func testingPresentWeekKeepsHumorOnPastAndTodayButDropsFuture() throws {
+        let (presenter, store) = createPresenterAndStore()
+        let (yesterday, today, tomorrow) = try yesterdayTodayTomorrow()
+        
+        presenter.presentWeek(days: [
+            (date: yesterday, humor: .veryPleasant),
+            (date: today, humor: .neutral),
+            (date: tomorrow, humor: .pleasant)
+        ])
+        
+        // Ontem e hoje mantêm o humor; amanhã é descartado.
+        #expect(store.daysOfWeek.map(\.humor) == [.veryPleasant, .neutral, nil])
+    }
+    
+    @Test func testingPresentWeekMarksOnlyDaysAfterTodayAsFuture() throws {
+        let (presenter, store) = createPresenterAndStore()
+        let (yesterday, today, tomorrow) = try yesterdayTodayTomorrow()
+        
+        presenter.presentWeek(days: [
+            (date: yesterday, humor: nil),
+            (date: today, humor: nil),
+            (date: tomorrow, humor: nil)
+        ])
+        
+        #expect(store.daysOfWeek.map(\.isFuture) == [false, false, true])
+    }
+    
+    @Test func testingPresentWeekMarksOnlyTodayAsToday() throws {
+        let (presenter, store) = createPresenterAndStore()
+        let (yesterday, today, tomorrow) = try yesterdayTodayTomorrow()
+        
+        presenter.presentWeek(days: [
+            (date: yesterday, humor: nil),
+            (date: today, humor: nil),
+            (date: tomorrow, humor: nil)
+        ])
+        
+        #expect(store.daysOfWeek.map(\.isToday) == [false, true, false])
     }
     
     // MARK: - ActivityPresenter (sorteio de desafios)
@@ -221,12 +238,30 @@ struct PresenterTests {
         let (presenter, store) = createActivityPresenterAndStore()
         let result = ActivityResult(time: 0, humor: .veryPleasant)
 
-        presenter.presentStory(result, title: "faça o seu cardio", subtitle: "menos distração", description: "sem redes sociais", challengeIcon: ActivityCategory.physical.closedIcon)
+        presenter.presentStory(result, title: "faça o seu cardio", subtitle: "menos distração", description: "sem redes sociais", challengeIcon: ActivityCategory.physical.defaultClosed)
         
-        // O story sai em 1080x1920 px (360x640 pt com scale 3).
-        let image = try #require(store.storyImage)
-        #expect(image.size.width * image.scale == 1080)
-        #expect(image.size.height * image.scale == 1920)
+        // O story sai no tamanho da especificação (pontos x scale).
+        let image = try #require(store.storyImages[.white])
+        #expect(image.size.width * image.scale == ShareImageSpecification.pointSize.width * ShareImageSpecification.scale)
+        #expect(image.size.height * image.scale == ShareImageSpecification.pointSize.height * ShareImageSpecification.scale)
+    }
+    
+    @Test func testingPresentStoryWithoutPhotoRendersEveryStyleExceptPhoto() {
+        let (presenter, store) = createActivityPresenterAndStore()
+        let result = ActivityResult(time: 0, humor: .veryPleasant)
+
+        presenter.presentStory(result, title: "faça o seu cardio", subtitle: "menos distração", description: "sem redes sociais", challengeIcon: ActivityCategory.physical.defaultClosed)
+        
+        #expect(Set(store.storyImages.keys) == [.white, .black, .transparent])
+    }
+    
+    @Test func testingPresentStoryWithPhotoRendersEveryStyle() {
+        let (presenter, store) = createActivityPresenterAndStore()
+        let result = ActivityResult(photo: makePhotoData(), time: 0, humor: .veryPleasant)
+
+        presenter.presentStory(result, title: "faça o seu cardio", subtitle: "menos distração", description: "sem redes sociais", challengeIcon: ActivityCategory.physical.defaultClosed)
+        
+        #expect(Set(store.storyImages.keys) == Set(StoryCardStyle.allCases))
     }
     
     @Test func testingPresentShareSheetOpensAndCloses() {
@@ -435,7 +470,7 @@ struct PresenterTests {
         #expect(store.presentDetail)
         #expect(store.selectedActivity === activity)
         #expect(store.selectedPhoto != nil)
-        #expect(store.storyImage != nil)
+        #expect(store.storyImages[.photo] != nil)
     }
     
     @Test func testingPresentSelectedActivityWithoutPhotoStillRendersStory() {
@@ -444,7 +479,8 @@ struct PresenterTests {
         presenter.presentSelectedActivity(activity: makeFeelingActivity(named: "Caminhada", humor: .pleasant))
         
         #expect(store.selectedPhoto == nil)
-        #expect(store.storyImage != nil)
+        #expect(store.storyImages[.white] != nil)
+        #expect(store.storyImages[.photo] == nil)
     }
     
     // MARK: - FeelingsPresenter (tirar outra foto)
@@ -586,7 +622,7 @@ struct PresenterTests {
         
         presenter.presentStory(for: makeFeelingActivity(named: "Caminhada", humor: .pleasant, photo: makePhotoData()))
         
-        #expect(store.storyImage != nil)
+        #expect(Set(store.storyImages.keys) == Set(StoryCardStyle.allCases))
     }
     
     @Test func testingPresentShareSheetOpensSheetWithFileAndClearsError() {
@@ -709,6 +745,12 @@ struct PresenterTests {
     
     @Test func testingPresentSummaryWithoutPhotoHasNoImage() {
         let (presenter, store) = createChallengesPresenterAndStore()
+        let activity = makeChallenge(named: "Caminhada")
+
+        presenter.presentSummary(activity)
+
+        #expect(store.selectedChallenge === activity)
+        #expect(store.selectedPhoto == nil)
     }
     
     // MARK: ChallengesPresenter (reflita)
@@ -726,28 +768,193 @@ struct PresenterTests {
 
         #expect(store.isMoodPresented == false)
     }
-        
-        //    // MARK: - ProfilePresenter
-        //
-        //    @Test func testingProfileFetchDataDelegatesToInteractor() async throws {
-        //        let interactorSpy = ProfileInteractorSpy()
-        //        let store = ProfileStore()
-        //        let presenter = ProfilePresenter(interactor: interactorSpy, store: store)
-        //
-        //        presenter.fetchData()
-        //
-        //        #expect(interactorSpy.fetchProfileCallCount == 1)
-        //    }
-        //
-        //    @Test func testingPresentProfileUpdatesStoreAndPresenter() async throws {
-        //        let interactorSpy = ProfileInteractorSpy()
-        //        let store = ProfileStore()
-        //        let presenter = ProfilePresenter(interactor: interactorSpy, store: store)
-        //        let profile = Profile(profileID: UUID(), profilePicture: Data(), name: "Paulo", localizable: true, notifications: true, theme: .themeTwo, backgroundActivity: false, streak: 5)
-        //
-        //        presenter.presentProfile(profile)
-        //
-        //        #expect(store.currentProfile.profileID == profile.profileID)
-        //        #expect(presenter.currentProfile.streak == 5)
-        //    }
+
+    // MARK: - ProfilePresenter
+
+    // Mesmo cuidado dos outros: o presenter guarda o store como weak, então o teste segura o store.
+    private func createProfilePresenterAndStore() -> (presenter: ProfilePresenter, store: ProfileStore) {
+        let store = ProfileStore()
+        let presenter = ProfilePresenter(store: store)
+        return (presenter, store)
+    }
+
+    @Test func testingPresentProfileFillsNamePhotoAndSettings() {
+        let (presenter, store) = createProfilePresenterAndStore()
+        let profile = Profile(profilePicture: makePhotoData(), name: "Raquel", notifications: true,
+                              localizable: false, backgroundActivity: true, streak: 0)
+
+        presenter.presentProfile(profile)
+
+        #expect(store.name == "Raquel")
+        #expect(store.userPhoto != nil)
+        #expect(store.localizable == false)
+        #expect(store.notifications == true)
+        #expect(store.backgroundActivity == true)
+    }
+
+    // Sem nome ainda: mostra o placeholder do protótipo.
+    @Test func testingPresentProfileWithoutNameShowsPlaceholder() {
+        let (presenter, store) = createProfilePresenterAndStore()
+
+        presenter.presentProfile(Profile(name: ""))
+
+        #expect(store.name == "nome")
+    }
+
+    @Test func testingPresentProfileWithoutOrInvalidPhotoHasNoImage() {
+        let (presenter, store) = createProfilePresenterAndStore()
+
+        presenter.presentProfile(Profile(profilePicture: nil))
+        #expect(store.userPhoto == nil)
+
+        presenter.presentProfile(Profile(profilePicture: Data([1, 2, 3])))
+        #expect(store.userPhoto == nil)
+    }
+
+    @Test func testingPresentProfileFillsStreakCard() {
+        let (presenter, store) = createProfilePresenterAndStore()
+
+        presenter.presentProfile(Profile(streak: 7))
+
+        #expect(store.streakText == "07 dias")
+        #expect(store.levelTitle == "lenda da consistência")
+        #expect(store.levelSubtitle == "07 dias priorizando seu bem estar!")
+    }
+
+    // Cada par é (dias seguidos, texto do card). Dois dígitos e singular no 1.
+    @Test(arguments: [
+        (0, "0 dias"),
+        (1, "01 dia"),
+        (3, "03 dias"),
+        (15, "15 dias"),
+        (120, "120 dias")
+    ])
+    
+    func testingStreakText(streak: Int, expected: String) {
+        let (presenter, _) = createProfilePresenterAndStore()
+
+        #expect(presenter.streakText(for: streak) == expected)
+    }
+    
+    // Vale o último marco já alcançado; depois do último, ele vale para sempre.
+    @Test(arguments: [
+        (0, "começando :)"),
+        (2, "começando :)"),
+        (3, "pegou o ritmo"),
+        (6, "pegou o ritmo"),
+        (7, "lenda da consistência"),
+        (15, "virou rotina"),
+        (19, "virou rotina"),
+        (20, "nova era?"),
+        (30, "ícone faz assim!"),
+        (365, "ícone faz assim!")
+    ])
+    
+    func testingMilestoneForStreak(streak: Int, expectedTitle: String) {
+        let (presenter, _) = createProfilePresenterAndStore()
+
+        #expect(presenter.milestone(for: streak).title == expectedTitle)
+    }
+
+    // A tabela precisa estar em ordem crescente, senão o `last { streak >= day }` escolhe o marco errado.
+    @Test func testingMilestonesAreSortedAndComplete() {
+        let (presenter, _) = createProfilePresenterAndStore()
+        let days = presenter.milestones.map(\.day)
+
+        #expect(days.first == 0)
+        #expect(days == days.sorted())
+        #expect(Set(days).count == days.count)
+        #expect(presenter.milestones.allSatisfy { !$0.title.isEmpty && !$0.message.isEmpty })
+    }
+
+    @Test(arguments: [Theme.sober, .bubblegum, .pop, .techNature])
+    func testingPresentThemeForwardsToStore(theme: Theme) {
+        let (presenter, store) = createProfilePresenterAndStore()
+
+        presenter.presentTheme(theme)
+
+        #expect(store.currentTheme == theme)
+    }
+
+    @Test func testingPresentEditingForwardsStateAndDraftName() {
+        let (presenter, store) = createProfilePresenterAndStore()
+
+        presenter.presentEditing(isEditing: true, currentName: "Raquel")
+
+        #expect(store.isEditing)
+        #expect(store.draftName == "Raquel")
+
+        presenter.presentEditing(isEditing: false, currentName: "Raquel")
+
+        #expect(store.isEditing == false)
+    }
+
+    @Test(arguments: [true, false])
+    func testingPresentSettingsSheetForwardsVisibility(isPresented: Bool) {
+        let (presenter, store) = createProfilePresenterAndStore()
+
+        presenter.presentSettingsSheet(isPresented: isPresented)
+
+        #expect(store.isSettingsPresented == isPresented)
+    }
+
+    // Permissão negada vai para o alerta com "abrir ajustes", não para o de erro.
+    @Test func testingPresentLocationDeniedShowsPermissionAlert() {
+        let (presenter, store) = createProfilePresenterAndStore()
+
+        presenter.presentLocationDenied()
+
+        #expect(store.permissionAlertMessage?.contains("localização") == true)
+        #expect(store.errorMessage == nil)
+    }
+
+    @Test func testingPresentNotificationsDeniedShowsPermissionAlert() {
+        let (presenter, store) = createProfilePresenterAndStore()
+
+        presenter.presentNotificationsDenied()
+
+        #expect(store.permissionAlertMessage?.contains("notificações") == true)
+        #expect(store.errorMessage == nil)
+    }
+
+    @Test func testingPresentPhotoLoadErrorShowsSpecificMessage() {
+        let (presenter, store) = createProfilePresenterAndStore()
+
+        presenter.presentError(PhotoLibraryError.loadFailed)
+
+        #expect(store.errorMessage == "Não foi possível carregar a foto. Tente outra.")
+        #expect(store.permissionAlertMessage == nil)
+    }
+
+    @Test func testingPresentUnknownErrorShowsGenericMessage() {
+        let (presenter, store) = createProfilePresenterAndStore()
+
+        presenter.presentError(CameraError.captureFailed)
+
+        #expect(store.errorMessage == "Algo deu errado. Tente novamente.")
+    }
+
+    @Test func testingPresentAlertsDismissedClearsBothAlerts() {
+        let (presenter, store) = createProfilePresenterAndStore()
+        presenter.presentLocationDenied()
+        presenter.presentError(PhotoLibraryError.loadFailed)
+
+        presenter.presentAlertsDismissed()
+
+        #expect(store.permissionAlertMessage == nil)
+        #expect(store.errorMessage == nil)
+    }
+
+    // O store é weak: se a tela já foi embora, apresentar não pode quebrar.
+    @Test func testingPresentProfileWithoutStoreDoesNotCrash() {
+        let presenter: ProfilePresenter
+        do {
+            let store = ProfileStore()
+            presenter = ProfilePresenter(store: store)
+        }
+
+        presenter.presentProfile(Profile(name: "Raquel", streak: 3))
+
+        #expect(presenter.store == nil)
+    }
 }

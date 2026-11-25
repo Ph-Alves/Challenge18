@@ -9,19 +9,49 @@
 enum ActivityCategory: String, Codable, CaseIterable {
     case physical
     case cognitive
-    case sensorial
     case social
+    case sensorial
     
-    var closedIcon: String {
-        DesignSystem.shared.style.icons.activityIcons[self]?.closed ?? ""
+    //usado no carrosel da home apenas
+    var homeCarousel: String {
+        DesignSystem.shared.style.icons.activityIcons[self]?.homeCarousel ?? ""
+    }
+    
+    //icone padrao fechado
+    var defaultClosed: String {
+        DesignSystem.shared.style.icons.activityIcons[self]?.defaultClosed ?? ""
+    }
+    
+    //icone padrao aberto
+    var defaultOpen: String {
+        DesignSystem.shared.style.icons.activityIcons[self]?.defaultOpen ?? ""
+    }
+    
+    //icone usado na tela 'durante desafio' do activityFlow, o step 'display'
+    var activityFlowCard: String {
+        DesignSystem.shared.style.icons.activityIcons[self]?.activityFlowCard ?? ""
     }
 
-    var openIcon: String {
-        DesignSystem.shared.style.icons.activityIcons[self]?.open ?? ""
+    /// Categoria `offset` posições à frente (ou atrás, se negativo), voltando ao início nas pontas.
+    /// Segue a ordem dos cases, a mesma do swipe da Home.
+    func shifted(by offset: Int) -> ActivityCategory {
+        let all = ActivityCategory.allCases
+        let index = all.firstIndex(of: self) ?? 0
+        return all[((index + offset) % all.count + all.count) % all.count]
     }
+    
+    var description: String {
+        switch self {
+        case .physical:
+            return "desafios que colocam seu corpo para se mexer"
+        case .cognitive:
+            return "desafios que fazem você pensar por conta própria"
+        case .sensorial:
+            return "desafios que diminuem os estímulos do seu dia"
+        case .social:
+            return "desafios que te aproximam das pessoas"
 
-    var cardIcon: String {
-        DesignSystem.shared.style.icons.activityIcons[self]?.card ?? ""
+        }
     }
 
     var text: String {
@@ -31,7 +61,7 @@ enum ActivityCategory: String, Codable, CaseIterable {
         case .physical:
             return "movimento"
         case .sensorial:
-            return "sentidos"
+            return "sensorial"
         case .social:
             return "conexão"
         }
