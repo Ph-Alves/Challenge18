@@ -30,7 +30,11 @@ struct RootView: View {
             Tab(value: AppTab.challenges) {
                 coordinator.challengesCoordinator.startChallengesFlow(context: context)
             } label: {
-                Label("Challenges", systemImage: coordinator.selectedTab == .challenges ? designSystem.style.icons.tabBar.challenge.fill: designSystem.style.icons.tabBar.challenge.base)
+                Label {
+                    Text("Challenges")
+                } icon: {
+                    tabIcon(coordinator.selectedTab == .challenges ? designSystem.style.icons.tabBar.challenge.fill : designSystem.style.icons.tabBar.challenge.base)
+                }
             }
             Tab(value: AppTab.feelings) {
                 coordinator.feelingsCoordinator.startFeelingsView(context: context)
@@ -48,6 +52,12 @@ struct RootView: View {
         .tint(.primary)
         // Aplica o tema salvo assim que o app abre, sem esperar a aba de Perfil carregar.
         .task { applySavedTheme() }
+    }
+    
+    /// O tema Sober usa imagens do catálogo de assets na aba Challenges e o Pop usa SF Symbols.
+    /// `Label(systemImage:)` só entende SF Symbol, então escolhemos o tipo de `Image` pelo nome.
+    private func tabIcon(_ name: String) -> Image {
+        UIImage(systemName: name) != nil ? Image(systemName: name) : Image(name)
     }
     
     private func applySavedTheme() {
