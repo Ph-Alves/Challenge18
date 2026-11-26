@@ -27,7 +27,12 @@ enum FeelingsBuilder {
         let camera = CameraWorker()
         
         // O repositório lê as Activities salvas no banco (SwiftData) pelo `context`.
-        let interactor = FeelingsInteractor(presenter: presenter, activityRepository: GenericRepository(context: context), camera: camera)
+        let interactor = FeelingsInteractor(
+            presenter: presenter,
+            activityRepository: GenericRepository(context: context),
+            camera: camera,
+            share: ShareWorker()
+        )
         
         // A View segura a Store com força: o Presenter guarda a Store como `weak`.
         // O preview mostra a sessão do mesmo worker que o Interactor usa.

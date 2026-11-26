@@ -75,7 +75,7 @@ final class FeelingsInteractor: FeelingsInteractorProtocol {
     
     // MARK: - Init
     
-    init(presenter: FeelingsPresenterProtocol, activityRepository: GenericRepository<Activity>, camera: CameraWorkerProtocol = CameraWorker(), share: ShareWorkerProtocol = ShareWorker()) {
+    init(presenter: FeelingsPresenterProtocol, activityRepository: GenericRepository<Activity>, camera: CameraWorkerProtocol, share: ShareWorkerProtocol) {
         self.presenter = presenter
         self.activityRepository = activityRepository
         self.camera = camera

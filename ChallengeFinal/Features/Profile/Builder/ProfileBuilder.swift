@@ -16,10 +16,14 @@ enum ProfileBuilder {
     static func build(context: ModelContext) -> ProfileView {
         let store = ProfileStore()
         let presenter = ProfilePresenter(store: store)
+        // Por enquanto o mesmo worker de mentira atende notificações e localização.
+        let permissions = PermissionWorkerPlaceholder()
         let interactor = ProfileInteractor(
             presenter: presenter,
             profileRepository: GenericRepository<Profile>(context: context),
             activityRepository: GenericRepository<Activity>(context: context),
+            notifications: permissions,
+            localization: permissions,
             ///Tem que ser o .shared, e não um DesignSystem() novo, por dois motivos.
             ///Primeiro, o init dele é private, então nem compila.
             ///Segundo, é essa instância única que está no .environment(DesignSystem.shared) do MyApp.

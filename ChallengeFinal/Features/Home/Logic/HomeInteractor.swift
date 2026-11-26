@@ -31,7 +31,7 @@ final class HomeInteractor: HomeInteractorProtocol {
 
     
     // MARK: - Init
-    init(repository: GenericRepository<Activity>, presenter: HomePresenterProtocol, haptics: HapticsWorkerProtocol = HapticsWorker()) {
+    init(repository: GenericRepository<Activity>, presenter: HomePresenterProtocol, haptics: HapticsWorkerProtocol) {
         self.repository = repository
         self.presenter = presenter
         self.haptics = haptics
@@ -89,10 +89,10 @@ final class HomeInteractor: HomeInteractorProtocol {
         case .physical:
             changeCategory(to: .cognitive)
         case .cognitive:
-            changeCategory(to: .sensorial)
-        case .sensorial:
             changeCategory(to: .social)
         case .social:
+            changeCategory(to: .sensorial)
+        case .sensorial:
             changeCategory(to: .physical)
         }
     }
@@ -101,13 +101,13 @@ final class HomeInteractor: HomeInteractorProtocol {
     func previousCategory(current: ActivityCategory) {
         switch current {
         case .physical:
-            changeCategory(to: .social)
+            changeCategory(to: .sensorial)
         case .cognitive:
             changeCategory(to: .physical)
-        case .sensorial:
-            changeCategory(to: .cognitive)
         case .social:
-            changeCategory(to: .sensorial)
+            changeCategory(to: .cognitive)
+        case .sensorial:
+            changeCategory(to: .social)
         }
     }
     

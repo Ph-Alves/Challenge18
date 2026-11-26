@@ -68,10 +68,10 @@ struct ChallengeDisplayView: View {
                 // O bloco fica ancorado embaixo, e o diálogo cobre a base da arte como no design.
                 .overlay(alignment: .bottom) {
                     VStack(spacing: 17) {
-                        ActionDialogComponent(title: "Gostaria de iniciar esse desafio?", firstOptionText: "Outra opção", secondOptionText: "aceitar", firstAction: refuseAction, secondAction: acceptAction)
+                        ActionDialogComponent(title: "gostaria de iniciar esse desafio?", firstOptionText: "Outra opção", secondOptionText: "aceitar", firstAction: refuseAction, secondAction: acceptAction)
                             .padding(.horizontal, 17)
 
-                        CustomButtonComponent(title: "Arquivar desafio da lista", icon: "archivebox.fill", type: .tertiary, action: {
+                        CustomButtonComponent(title: "arquivar desafio da lista", icon: "archivebox.fill",iconType: .sf, type: .tertiary, action: {
                             showArchiveConfirmation = true
                         })
                         .padding(.horizontal, 47)
