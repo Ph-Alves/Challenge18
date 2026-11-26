@@ -31,5 +31,4 @@ jobs:
             -scheme ChallengeFinal \
             -destination 'platform=iOS Simulator,name=iPhone 17' \
             -skip-testing:ChallengeFinalUITests \
-            CODE_SIGNING_ALLOWED=NO \
-            SDKROOT=iphonesimulator
+            CODE_SIGNING_ALLOWED=NO
