@@ -60,8 +60,8 @@ final class ProfileInteractor: ProfileInteractorProtocol {
     init(presenter: ProfilePresenterProtocol,
          profileRepository: GenericRepository<Profile>,
          activityRepository: GenericRepository<Activity>,
-         notifications: NotificationWorkerProtocol = PermissionWorkerPlaceholder(),
-         localization: LocalizationWorkerProtocol = PermissionWorkerPlaceholder(),
+         notifications: NotificationWorkerProtocol,
+         localization: LocalizationWorkerProtocol,
          themeApplier: ThemeApplying) {
         self.presenter = presenter
         self.profileRepository = profileRepository

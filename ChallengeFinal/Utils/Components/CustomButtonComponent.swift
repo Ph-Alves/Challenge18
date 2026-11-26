@@ -14,11 +14,17 @@ enum CustomButtonType {
     case tertiary
 }
 
+enum IconType {
+    case sf
+    case asset
+}
+
 struct CustomButtonComponent: View {
     @Environment(DesignSystem.self) private var designSystem
 
     let title: String?
     let icon: String?
+    var iconType: IconType = .asset
     var type: CustomButtonType = .primary
     var action: () -> Void
     
@@ -57,7 +63,12 @@ struct CustomButtonComponent: View {
         Button(action: action) {
             HStack(spacing: 6) {
                 if let icon {
-                    Image(icon)
+                    switch iconType {
+                    case .sf:
+                        Image(systemName: icon)
+                    case .asset:
+                        Image(icon)
+                    }
                 }
                 
                 if let title {

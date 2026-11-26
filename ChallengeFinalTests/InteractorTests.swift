@@ -433,13 +433,13 @@ struct InteractorTests {
     // Cada par é (categoria atual, categoria esperada). O último caso testa a volta ao início.
     @Test(arguments: [
         (ActivityCategory.physical, ActivityCategory.cognitive),
-        (.cognitive, .sensorial),
-        (.sensorial, .social),
-        (.social, .physical)
+        (.cognitive, .social),
+        (.social, .sensorial),
+        (.sensorial, .physical)
     ])
     func testingNextCategory(current: ActivityCategory, expected: ActivityCategory) {
         let presenterSpy = HomePresenterSpy()
-        let interactor = HomeInteractor(repository: makeActivityRepository(), presenter: presenterSpy)
+        let interactor = HomeInteractor(repository: makeActivityRepository(), presenter: presenterSpy, haptics: HapticsWorkerMock())
 
         interactor.nextCategory(current: current)
         
@@ -448,14 +448,14 @@ struct InteractorTests {
     
     // Mesmo esquema na direção contrária. O primeiro caso testa a volta ao final.
     @Test(arguments: [
-        (ActivityCategory.physical, ActivityCategory.social),
+        (ActivityCategory.physical, ActivityCategory.sensorial),
         (.cognitive, .physical),
-        (.sensorial, .cognitive),
-        (.social, .sensorial)
+        (.social, .cognitive),
+        (.sensorial, .social)
     ])
     func testingPreviousCategory(current: ActivityCategory, expected: ActivityCategory) {
         let presenterSpy = HomePresenterSpy()
-        let interactor = HomeInteractor(repository: makeActivityRepository(), presenter: presenterSpy)
+        let interactor = HomeInteractor(repository: makeActivityRepository(), presenter: presenterSpy, haptics: HapticsWorkerMock())
 
         interactor.previousCategory(current: current)
         
@@ -542,7 +542,7 @@ struct InteractorTests {
     
     @Test func testingIfInteractorCatchesWeekCorrectly() throws {
         let presenterSpy = HomePresenterSpy()
-        let interactor = HomeInteractor(repository: makeActivityRepository(), presenter: presenterSpy)
+        let interactor = HomeInteractor(repository: makeActivityRepository(), presenter: presenterSpy, haptics: HapticsWorkerMock())
         
         interactor.getCurrentWeek()
         
@@ -573,7 +573,7 @@ struct InteractorTests {
     @Test func testingIfWeekHumorUsesFirstActivityWithResultOfTheDay() throws {
         let repository = makeActivityRepository()
         let presenterSpy = HomePresenterSpy()
-        let interactor = HomeInteractor(repository: repository, presenter: presenterSpy)
+        let interactor = HomeInteractor(repository: repository, presenter: presenterSpy, haptics: HapticsWorkerMock())
         
         // Pega o domingo da semana atual (primeiro dia apresentado) para não depender do dia de hoje.
         interactor.getCurrentWeek()
@@ -599,7 +599,7 @@ struct InteractorTests {
     
     @Test func testingIfWeekHumorIsNilWhenDayOnlyHasActivitiesWithoutResult() throws {
         let presenterSpy = HomePresenterSpy()
-        let interactor = HomeInteractor(repository: makeActivityRepository(), presenter: presenterSpy)
+        let interactor = HomeInteractor(repository: makeActivityRepository(), presenter: presenterSpy, haptics: HapticsWorkerMock())
         
         interactor.getCurrentWeek()
         let sunday = try #require(presenterSpy.week?.first?.date)

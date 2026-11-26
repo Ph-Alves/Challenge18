@@ -37,6 +37,15 @@ struct ChallengeCircle: View {
     // (os assets do Pop são bem maiores que os do Sober e estouravam a tela)
     static let closedIconSize: CGFloat = 346
     
+    private var rotationEffect: Angle {
+        switch category {
+        case .cognitive:
+            return Angle(degrees: -8)
+        case .physical, .sensorial, .social:
+            return Angle()
+        }
+    }
+    
     private var textLayout: CGSize {
         switch category {
         case .cognitive:
@@ -73,6 +82,7 @@ struct ChallengeCircle: View {
         ZStack(alignment: .center) {
             if isOpen {
                 Image(category.defaultOpen)
+                    .rotationEffect(rotationEffect)
             } else {
                 Image(categoryIcon)
                     .resizable()
@@ -93,7 +103,14 @@ struct ChallengeCircle: View {
 }
 
 // MARK: - Preview
-#Preview {
-    ChallengeCircle(category: .sensorial, text: "faça o seu cárdio sem abrir redes sociais", isOpen: true)
+#Preview("aberto") {
+    // A arte do círculo aberto tem tamanho fixo (maior que a tela); no app ela é posicionada pela
+    // ChallengeDisplayView. Aqui reduzimos só para a arte inteira caber no preview.
+    ChallengeCircle(category: .cognitive, text: "faça o seu cárdio sem abrir redes sociais", isOpen: true)
+        .environment(DesignSystem.shared)
+}
+
+#Preview("fechado") {
+    ChallengeCircle(category: .sensorial, text: nil, isOpen: false, size: 240)
         .environment(DesignSystem.shared)
 }

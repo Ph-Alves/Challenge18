@@ -32,10 +32,9 @@ struct ChallengeAcceptedView: View {
 
             // Título, subtítulo e descrição do desafio aceito
             ChallengeDescription(challengeIcon: challengeIcon, challengeTitle: challengeTitle, challengeSubTitle: challengeSubTitle, challengeDescription: challengeDescription)
+                .padding(.bottom, 39)
             
             CustomButtonComponent(title: "iniciar", icon: nil, action: startAction)
-                .padding(.horizontal, 113)
-            CustomButtonComponent(title: "cancelar desafio", icon: nil, type: .secondary, action: cancelAction)
                 .padding(.horizontal, 113)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -43,5 +42,6 @@ struct ChallengeAcceptedView: View {
 }
 
 #Preview {
-    ChallengeAcceptedView(challengeTitle: "você consegue :)", challengeSubTitle: "menos distração, mais foco", challengeDescription: "sem redes sociais, seu cardio vira um momento para cuidar do corpo e desacelerar a mente.", challengeIcon: ActivityCategory.physical.rawValue, startAction: {}, cancelAction: {})
+    ChallengeAcceptedView(challengeTitle: "você consegue :)", challengeSubTitle: "menos distração, mais foco", challengeDescription: "sem redes sociais, seu cardio vira um momento para cuidar do corpo e desacelerar a mente.", challengeIcon: ActivityCategory.physical.activityFlowCard, startAction: {}, cancelAction: {})
+        .environment(DesignSystem.shared)
 }
