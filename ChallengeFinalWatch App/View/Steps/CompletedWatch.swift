@@ -20,6 +20,7 @@ struct CompletedWatch: View {
                 .multilineTextAlignment(.center)
                 .fontWeight(.bold)
                 .padding(.top, 24)
+                .padding(.horizontal, 19)
 
             WatchPillButton(title: "home", style: .primary, action: onHome)
                 .padding(.horizontal, 13)
