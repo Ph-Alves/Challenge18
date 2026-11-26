@@ -7,7 +7,8 @@
 
 import SwiftUI
 
-enum WatchCategory: CaseIterable {
+/// O `rawValue` é o mesmo do `ActivityCategory` do iOS: é ele que viaja no `WatchActivityPayload`.
+enum WatchCategory: String, CaseIterable {
     case physical, cognitive, sensorial, social
     var imageName: String {
         switch self {

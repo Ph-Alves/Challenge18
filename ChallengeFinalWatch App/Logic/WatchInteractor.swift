@@ -58,6 +58,9 @@ final class WatchInteractor: WatchInteractorProtocol {
     /// Detecta o relógio sendo chacoalhado. Pelo protocolo, para dar mock nos testes.
     let motion: WatchMotionWorkerProtocol
 
+    /// Manda a atividade concluída para o iPhone gravar. Pelo protocolo, para dar mock nos testes.
+    let connectivity: WatchConnectivityWorkerProtocol
+
     // MARK: - Dados do fluxo
 
     /// Categoria escolhida na home. O sorteio do `finishDraw()` parte dela.
@@ -65,6 +68,13 @@ final class WatchInteractor: WatchInteractorProtocol {
 
     /// A detecção de chacoalhar está ligada (só enquanto o step `.draw` está na tela).
     private var isDetectingShake = false
+
+    /// Desafio sorteado agora. É o que vai para o iPhone quando a atividade termina.
+    private var currentChallenge: WatchChallenge?
+
+    /// Identifica a atividade em andamento (nasce no `startTimer`). Some depois do envio ao iPhone,
+    /// para que chamar `finishActivity()` de novo (o X do \"arrasou\") não mande a mesma atividade duas vezes.
+    private var currentActivityID: UUID?
 
     /// Quando o cronômetro foi iniciado (ou retomado). `nil` = parado ou pausado.
     /// O tempo é sempre calculado a partir desta data, nunca contado de 1 em 1.
@@ -84,12 +94,15 @@ final class WatchInteractor: WatchInteractorProtocol {
         presenter: WatchPresenterProtocol,
         presetWorker: WatchPresetWorkerProtocol,
         timer: WatchTimerWorkerProtocol,
-        motion: WatchMotionWorkerProtocol
+        motion: WatchMotionWorkerProtocol,
+        connectivity: WatchConnectivityWorkerProtocol
     ) {
         self.presenter = presenter
         self.presetWorker = presetWorker
         self.timer = timer
         self.motion = motion
+        self.connectivity = connectivity
+        connectivity.activate()
     }
 
     // MARK: - Navigation
@@ -122,6 +135,7 @@ final class WatchInteractor: WatchInteractorProtocol {
         timerElapsed = 0
         isTimerPaused = false
         timerStartDate = Date()
+        currentActivityID = UUID()
 
         presenter.presentTime(0)
         presenter.presentPaused(false)
@@ -129,9 +143,10 @@ final class WatchInteractor: WatchInteractorProtocol {
         presenter.presentInProgress()
     }
 
-    /// Botão de parar o cronômetro: fixa o tempo final e vai para o "arrasou".
+    /// Botão de parar o cronômetro: fixa o tempo final, manda a atividade para o iPhone e vai para o "arrasou".
     func finishActivity() {
         stopTimer()
+        sendActivityToPhone()
         presenter.presentCompleted()
     }
 
@@ -198,6 +213,7 @@ final class WatchInteractor: WatchInteractorProtocol {
     /// Sorteia um desafio da categoria, sem repetir os já vistos nesta sessão.
     func drawChallenge(for category: WatchCategory) {
         guard let challenge = presetWorker.draw(for: category) else { return }
+        currentChallenge = challenge
         presenter.presentDrawnChallenge(challenge)
     }
 
@@ -211,6 +227,28 @@ final class WatchInteractor: WatchInteractorProtocol {
     func generateAchievement(elapsed: TimeInterval) {
         guard let achievement = presetWorker.achievement(elapsed: elapsed) else { return }
         presenter.presentAchievement(achievement)
+    }
+
+    // MARK: - iPhone
+
+    /// Entrega ao iPhone a atividade que acabou de terminar; é ele que grava no banco.
+    /// Só manda se há uma atividade em andamento, e só uma vez por atividade.
+    private func sendActivityToPhone() {
+        guard let id = currentActivityID, let challenge = currentChallenge else { return }
+        currentActivityID = nil
+
+        let achievement = presetWorker.achievement(elapsed: timerElapsed)
+        connectivity.send(
+            WatchActivityPayload(
+                id: id,
+                category: selectedCategory.rawValue,
+                title: challenge.title,
+                subTitle: challenge.subTitle,
+                time: timerElapsed,
+                achievementTitle: achievement?.title ?? "",
+                achievementDescription: achievement?.description ?? ""
+            )
+        )
     }
 
     // MARK: - Cronômetro
@@ -262,6 +300,7 @@ final class WatchInteractor: WatchInteractorProtocol {
 
     /// Descarta o tempo (nada foi concluído) e volta a tela para "00:00:00".
     private func cancelTimer() {
+        currentActivityID = nil
         timerTask?.cancel()
         timerTask = nil
         timerStartDate = nil

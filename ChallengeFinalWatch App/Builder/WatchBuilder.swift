@@ -25,7 +25,8 @@ enum WatchBuilder {
             presenter: presenter,
             presetWorker: WatchPresetWorker(),
             timer: WatchTimerWorker(),
-            motion: WatchMotionWorker()
+            motion: WatchMotionWorker(),
+            connectivity: WatchConnectivityWorker()
         )
 
         return HomeWatch(interactor: interactor, store: store)

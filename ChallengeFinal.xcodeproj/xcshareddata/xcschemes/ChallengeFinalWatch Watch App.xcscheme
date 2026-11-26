@@ -16,7 +16,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "EFFB3A6E30AF7EE00050E026"
-               BuildableName = "ChallengeFinalWatch Watch App.app"
+               BuildableName = "ChallengeFinalWatch App.app"
+               BlueprintName = "ChallengeFinalWatch App"
                ReferencedContainer = "container:ChallengeFinal.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -81,7 +82,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "EFFB3A6E30AF7EE00050E026"
-            BuildableName = "ChallengeFinalWatch Watch App.app"
+            BuildableName = "ChallengeFinalWatch App.app"
             ReferencedContainer = "container:ChallengeFinal.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -97,7 +98,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "EFFB3A6E30AF7EE00050E026"
-            BuildableName = "ChallengeFinalWatch Watch App.app"
+            BuildableName = "ChallengeFinalWatch App.app"
             ReferencedContainer = "container:ChallengeFinal.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
