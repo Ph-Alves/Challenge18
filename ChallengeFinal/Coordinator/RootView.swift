@@ -23,31 +23,38 @@ struct RootView: View {
                     flow.startActivityView(context: context).toolbarVisibility(.hidden, for: .tabBar)
                 }
             } label: {
-                Label("Home", systemImage: coordinator.selectedTab == .home ? designSystem.style.icons.tabBar.home.fill: designSystem.style.icons.tabBar.home.base)
-                    // O TabView aplica .fill automaticamente em SF Symbols; desligamos para respeitar base/fill.
-                    .environment(\.symbolVariants, .none)
+                tabLabel(.home)
             }
             Tab(value: AppTab.challenges) {
                 coordinator.challengesCoordinator.startChallengesFlow(context: context)
             } label: {
-                Label("Challenges", systemImage: coordinator.selectedTab == .challenges ? designSystem.style.icons.tabBar.challenge.fill: designSystem.style.icons.tabBar.challenge.base)
+                tabLabel(.challenges)
             }
             Tab(value: AppTab.feelings) {
                 coordinator.feelingsCoordinator.startFeelingsView(context: context)
             } label: {
-                Label("Feelings", systemImage: coordinator.selectedTab == .feelings ? designSystem.style.icons.tabBar.feelings.fill: designSystem.style.icons.tabBar.feelings.base)
-                    .environment(\.symbolVariants, .none)
+                tabLabel(.feelings)
             }
             Tab(value: AppTab.profile) {
                 coordinator.profileCoordinator.startProfileView(context: context)
             } label: {
-                Label("Profile", systemImage: coordinator.selectedTab == .profile ? designSystem.style.icons.tabBar.profile.fill: designSystem.style.icons.tabBar.profile.base)
-                    .environment(\.symbolVariants, .none)
+                tabLabel(.profile)
             }
         }
         .tint(.primary)
         // Aplica o tema salvo assim que o app abre, sem esperar a aba de Perfil carregar.
         .task { applySavedTheme() }
+    }
+
+    /// Label de uma aba: troca base/fill conforme a seleção, venha o ícone do SF Symbols ou do Assets (Challenges muda com o tema).
+    private func tabLabel(_ tab: AppTab) -> some View {
+        Label {
+            Text(tab.title)
+        } icon: {
+            tab.icon(for: designSystem.style).image(isSelected: coordinator.selectedTab == tab)
+        }
+        // O TabView aplica .fill automaticamente em SF Symbols; desligamos para respeitar base/fill.
+        .environment(\.symbolVariants, .none)
     }
     
     private func applySavedTheme() {

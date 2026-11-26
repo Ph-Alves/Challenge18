@@ -21,7 +21,7 @@ struct IconsSet {
     let cameraIcon: String // foi
     let nextIcon: String // foi
     let pauseIcon: String //foi
-    let tabBar: TabBarIcons
+    let challengeTab: TabBarIcon 
     let playIcon: String
 }
 
