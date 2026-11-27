@@ -1,0 +1,107 @@
+//
+//  TechNatureStyle.swift
+//  ChallengeFinal
+//
+//  Created by Raquel Souza on 26/11/26.
+//
+
+//
+//  SoberStyle.swift
+//  ChallengeFinal
+//
+//  Created by Rebeca Maria de Morais Guimães on 03/11/26.
+//
+
+import Foundation
+import SwiftUI
+
+struct TechNatureStyle: ThemeStyleProtocol {
+    let typography = Typography(
+        title1: .custom("Bodoni 72", size: 36, relativeTo: .largeTitle),
+        title2: .custom("Bodoni 72", size: 32, relativeTo: .title),
+        title3: .custom("Bodoni 72", size: 24, relativeTo: .title3),
+        title4: .custom("Bodoni 72", size: 18, relativeTo: .title3),
+        
+        subtitle1:.custom("SpecialGothic-Bold", size: 22, relativeTo: .title2),
+        subtitle2: .custom("SpecialGothic-SemiBold", size: 18, relativeTo: .title3),
+        subtitle3: .custom("SpecialGothic-Bold", size: 14, relativeTo: .subheadline),
+        
+        text1: .custom("SpecialGothic-Regular", size: 22, relativeTo: .title2),
+        text2: .custom("SpecialGothic-Regular", size: 16, relativeTo: .callout),
+        text3: .custom("SpecialGothic-Regular", size: 12, relativeTo: .caption),
+        text4: .custom("SpecialGothic-Bold", size: 36, relativeTo: .title))
+
+    
+    let colors = ColorPalette(
+        backgroundPrimary: .soberBackgroundPrimary,
+        backgroundInverse: .soberBackgroundInverse,
+        fillPrimary: .soberFillPrimary,
+        fillPlaceholder: .soberFillPlaceholder,
+        fillConstantDark: .soberConstantDark,
+        fillConstantLight: .soberConstantLight,
+        textPrimary: .soberTextPrimary,
+        textSecondary: .soberTextSecondary,
+        textInverse: .soberTextInverse,
+        strokeDefault: .soberStrokeDefault,
+        strokeSecondary: .soberStrokeSecondary,
+        strokeMuted: .soberStrokeMuted,
+        emotionOtimo: .soberEmotionOtimo,
+        emotionAgradavel: .soberEmotionAgradavel,
+        emotionNeutro: .soberEmotionNeutro,
+        emotionDesagradavel: .soberEmotionDesagradavel,
+        emotionPessimo: .soberEmotionPessimo,
+//        emotionStroke: .soberEmotionStroke,
+        overlaySoft: .soberOverlaySoft,
+        overlayStrong: .soberOverlayStrong,
+        emotionBGFill: .soberEmotionBGFill,
+        strokeConstantDark: .soberConstantDark,
+        strokeConstantLight: .soberConstantLight)
+        
+    
+    let icons = IconsSet(
+        //categorias
+        activityIcons: [
+            .cognitive: (homeCarousel: "coffee", defaultClosed: "coffee", defaultOpen: "openCoffee", activityFlowCard: "coffeeCard"),
+            .physical: (homeCarousel: "eightBall", defaultClosed: "eightBall", defaultOpen: "openBall",  activityFlowCard: "eightCard"),
+            .sensorial: (homeCarousel: "cookie", defaultClosed: "cookie", defaultOpen: "openCookie", activityFlowCard: "cookieCard"),
+            .social: (homeCarousel: "telephone", defaultClosed: "telephone", defaultOpen: "openPhone", activityFlowCard: "telephoneCard"),
+        ],
+        
+        feelingIcons: [
+            .veryUnpleasant: (base: "veryUnpleasantBase", humor: "veryUnpleasantHumor", card: "veryUnpleasantCard", white: "veryUnpleasantWhite"),
+            .unpleasant:     (base: "unpleasantBase",     humor: "unpleasantHumor",     card: "unpleasantCard",     white: "unpleasantWhite"),
+            .neutral:        (base: "neutralBase",        humor: "neutralHumor",        card: "neutralCard",        white: "neutralWhite"),
+            .pleasant:       (base: "plesantBase",        humor: "plesantHumor",        card: "pleasantCard",       white: "plesantWhite"),
+            .veryPleasant:   (base: "veryPleasantBase",   humor: "veryPleasantHumor",   card: "veryPleasantCard",   white: "veryPleasantWhite")
+        ],
+        
+        placeholderCheckIcon: "placeholderCheckIcon",
+        photoPlaceholder: "photoPlaceholder",
+        archivedChallengeIcon: "archiveIcon",
+        archivedInvertedChallengeIcon: "archiveInvertedIcon",
+        shareIcon: (base: "shareIcon", card: "shareIconCard"),
+        retryIcon: (base: "retryIcon", card: "retryIconCard"),
+        profilePlaceholder: "popProfilePlaceholder",
+        takePicturePlaceholder: "camera",
+        cameraIcon: "cameraIcon",
+        nextIcon: "nextIcon",
+        pauseIcon: "pauseIcon",
+        tabBar: TabBarIcons(
+            challenge: (base: "challengeTabIcon", fill: "challengeTabFill"),
+            home: (base: "house", fill: "house.fill"),
+            feelings: (base: "chart.bar", fill: "chart.bar.fill"),
+            profile: (base: "person", fill: "person.fill")),
+        playIcon: "play.fill", handIcon: "handIcon")
+    
+    let humorWheel = HumorWheelStyle(
+        pointerAsset: "wheelArrow",
+        backgroundAsset: "wheelBackground")
+    
+    let photoFilter: PhotoFilter? = PhotoFilter(
+        saturation: 0,
+        overlayColor: .black,
+        overlayOpacity: 0.6)
+    
+    let profile = ProfileStyle(
+        headerBackground: "soberHeaderBackground")
+}

@@ -24,3 +24,13 @@ struct HumorIconBadge: View {
             )
     }
 }
+#Preview {
+    HStack(spacing: 12) {
+        ForEach(Humor.allCases, id: \.self) { humor in
+            HumorIconBadge(humor: humor, size: 32)
+        }
+    }
+    .padding()
+    .environment(DesignSystem.shared)
+}
+

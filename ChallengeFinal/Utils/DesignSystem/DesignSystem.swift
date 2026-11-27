@@ -25,9 +25,9 @@ final class DesignSystem {
 extension Theme {
     var style: ThemeStyleProtocol {
         switch self {
-        case .sober: return SoberStyle()
+        case .sober: return TechNatureStyle()
         case .pop: return PopStyle()
-        case .bubblegum, .techNature: return SoberStyle()
+        case .bubblegum, .techNature: return TechNatureStyle()
         }
     }
 }
