@@ -13,7 +13,7 @@ import SwiftUI
 protocol ProfileStoreProtocol: AnyObject {
     func displayProfile(name: String, userPhoto: Image?)
     func displayStreak(streakText: String, levelTitle: String, levelSubtitle: String)
-    func displaySettings(localizable: Bool, notifications: Bool, backgroundActivity: Bool)
+    func displaySettings(notifications: Bool)
     func displaySettingsSheet(isPresented: Bool)
     func displayEditing(isEditing: Bool, draftName: String)
     func displayTheme(_ theme: Theme)
@@ -39,9 +39,7 @@ final class ProfileStore: ProfileStoreProtocol {
     private(set) var levelSubtitle = "o primeiro passo você já deu, agora falta se desafiar!"
     
     //MARK: Settings
-    private(set) var localizable = false
     private(set) var notifications = false
-    private(set) var backgroundActivity = false
     var isSettingsPresented = false
     
     //MARK: Edit Mode
@@ -70,10 +68,8 @@ final class ProfileStore: ProfileStoreProtocol {
         self.levelSubtitle = levelSubtitle
     }
     
-    func displaySettings(localizable: Bool, notifications: Bool, backgroundActivity: Bool) {
-        self.localizable = localizable
+    func displaySettings(notifications: Bool) {
         self.notifications = notifications
-        self.backgroundActivity = backgroundActivity
     }
 
     func displaySettingsSheet(isPresented: Bool) {
@@ -96,4 +92,6 @@ final class ProfileStore: ProfileStoreProtocol {
     func displayError(_ message: String?) {
         self.errorMessage = message
     }
+    
+   
 }
