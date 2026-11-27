@@ -1,0 +1,333 @@
+//
+//  WatchInteractor.swift
+//  ChallengeFinalWatch Watch App
+//
+//  Created by Paulo Henrique Costa Alves on 19/11/26.
+//
+
+import Foundation
+
+// MARK: - Protocol
+
+/// O que as Views enxergam do Interactor: só as AÇÕES que o usuário pode fazer.
+///
+/// Com o protocolo, a View não depende da classe concreta. Nos testes e nos
+/// `#Preview`, dá para passar um Interactor falso que só anota os toques.
+@MainActor
+protocol WatchInteractorProtocol: AnyObject {
+    // MARK: Navigation
+    func startActivity(category: WatchCategory)
+    func finishDraw()
+    func acceptChallenge()
+    func startTimer()
+    func finishActivity()
+    func returnToHome()
+    func didTapBack(on step: WatchStep)
+    func didTapClose()
+
+    // MARK: Desafio (presets)
+    func drawChallenge(for category: WatchCategory)
+    func rerollChallenge(for category: WatchCategory)
+    func generateAchievement(elapsed: TimeInterval)
+
+    // MARK: Cronômetro
+    func togglePause()
+}
+
+// MARK: - Class
+
+/// O "cérebro" do Watch.
+///
+/// Decide o que acontece em cada ação do usuário e avisa o Presenter.
+/// Tem a navegação entre os steps e o cronômetro. O sorteio dos desafios e a conquista
+/// (só presets, no Watch não há geração pelo modelo) ficam no `WatchPresetWorker`.
+@MainActor
+final class WatchInteractor: WatchInteractorProtocol {
+
+    // MARK: - Dependências
+
+    /// Para quem o Interactor manda os resultados. Pelo protocolo, para dar spy nos testes.
+    let presenter: WatchPresenterProtocol
+
+    /// Sorteia os desafios e monta a conquista. Pelo protocolo, para dar mock nos testes.
+    let presetWorker: WatchPresetWorkerProtocol
+
+    /// O cronômetro: só entrega os ticks de 1 segundo. Pelo protocolo, para dar mock nos testes.
+    let timer: WatchTimerWorkerProtocol
+
+    /// Detecta o relógio sendo chacoalhado. Pelo protocolo, para dar mock nos testes.
+    let motion: WatchMotionWorkerProtocol
+
+    /// Manda a atividade concluída para o iPhone gravar. Pelo protocolo, para dar mock nos testes.
+    let connectivity: WatchConnectivityWorkerProtocol
+
+    // MARK: - Dados do fluxo
+
+    /// Categoria escolhida na home. O sorteio do `finishDraw()` parte dela.
+    private var selectedCategory: WatchCategory = .physical
+
+    /// A detecção de chacoalhar está ligada (só enquanto o step `.draw` está na tela).
+    private var isDetectingShake = false
+
+    /// Desafio sorteado agora. É o que vai para o iPhone quando a atividade termina.
+    private var currentChallenge: WatchChallenge?
+
+    /// Identifica a atividade em andamento (nasce no `startTimer`). Some depois do envio ao iPhone,
+    /// para que chamar `finishActivity()` de novo (o X do \"arrasou\") não mande a mesma atividade duas vezes.
+    private var currentActivityID: UUID?
+
+    /// Quando o cronômetro foi iniciado (ou retomado). `nil` = parado ou pausado.
+    /// O tempo é sempre calculado a partir desta data, nunca contado de 1 em 1.
+    private var timerStartDate: Date?
+
+    /// Tempo já acumulado, em segundos. Fixado ao pausar ou parar; volta a 0 ao iniciar de novo.
+    private var timerElapsed: TimeInterval = 0
+
+    private var isTimerPaused = false
+
+    /// O Task que escuta os ticks do worker. Fica guardado para poder ser cancelado.
+    private var timerTask: Task<Void, Never>?
+
+    // MARK: - Init
+
+    init(
+        presenter: WatchPresenterProtocol,
+        presetWorker: WatchPresetWorkerProtocol,
+        timer: WatchTimerWorkerProtocol,
+        motion: WatchMotionWorkerProtocol,
+        connectivity: WatchConnectivityWorkerProtocol
+    ) {
+        self.presenter = presenter
+        self.presetWorker = presetWorker
+        self.timer = timer
+        self.motion = motion
+        self.connectivity = connectivity
+        connectivity.activate()
+    }
+
+    // MARK: - Navigation
+
+    /// Toque no círculo da categoria na home: guarda a categoria, vai para o sorteio e começa a
+    /// ouvir o chacoalhar.
+    func startActivity(category: WatchCategory) {
+        selectedCategory = category
+        presenter.presentCategory(category)
+        presenter.presentDraw()
+        startShakeDetection()
+    }
+
+    /// O sorteio aconteceu (o relógio foi sacudido ou a pessoa tocou na bola): para de ouvir o
+    /// movimento, sorteia o desafio da categoria e mostra o "topa?".
+    func finishDraw() {
+        stopShakeDetection()
+        drawChallenge(for: selectedCategory)
+        presenter.presentChallenge()
+    }
+
+    /// "aceitar": mostra o desafio aceito.
+    func acceptChallenge() {
+        presenter.presentAccepted()
+    }
+
+    /// "iniciar": vai para "em andamento" e já começa o cronômetro do zero.
+    func startTimer() {
+        timerTask?.cancel()
+        timerElapsed = 0
+        isTimerPaused = false
+        timerStartDate = Date()
+        currentActivityID = UUID()
+
+        presenter.presentTime(0)
+        presenter.presentPaused(false)
+        startTicking()
+        presenter.presentInProgress()
+    }
+
+    /// Botão de parar o cronômetro: fixa o tempo final, manda a atividade para o iPhone e vai para o "arrasou".
+    func finishActivity() {
+        stopTimer()
+        sendActivityToPhone()
+        presenter.presentCompleted()
+    }
+
+    /// "home" no "arrasou": volta para o seletor de categoria.
+    func returnToHome() {
+        presenter.presentHome()
+    }
+
+    /// Seta de voltar (steps `.draw` e `.challenge`).
+    /// Aqui eu to definindo quem "deve voltar" pra quem.
+    func didTapBack(on step: WatchStep) {
+        switch step {
+        case .draw:
+            stopShakeDetection()
+            presenter.presentHome()      // volta pro seletor
+        case .challenge:
+            presenter.presentDraw()      // volta pro sorteio
+            startShakeDetection()        // e volta a ouvir o chacoalhar
+        case .home, .accepted, .inProgress, .completed:
+            break  // esses steps não têm seta
+        }
+    }
+
+    /// X (steps `.accepted` e `.inProgress`): sai do fluxo, descarta o cronômetro e volta para a home.
+    func didTapClose() {
+        cancelTimer()
+        presenter.presentHome()
+    }
+
+    // MARK: - Chacoalhar
+    //
+    // Só fica ligado enquanto o step `.draw` está na tela. Chacoalhar e tocar na bola levam ao
+    // mesmo `finishDraw()`, então o sorteio é igual nos dois casos.
+
+    /// Começa a ouvir o acelerômetro. Chamar de novo com ele já ligado não faz nada.
+    private func startShakeDetection() {
+        guard !isDetectingShake else { return }
+
+        isDetectingShake = true
+        motion.onShake = { [weak self] in self?.didShake() }
+        motion.startMonitoring()
+    }
+
+    /// Para de ouvir. Sem isso o acelerômetro continuaria ligado em outros steps.
+    private func stopShakeDetection() {
+        isDetectingShake = false
+        motion.stopMonitoring()
+        motion.onShake = nil
+    }
+
+    /// Chegou uma sacudida. Se a detecção já foi desligada (a pessoa tocou antes, por exemplo),
+    /// ignora, para não sortear duas vezes.
+    private func didShake() {
+        guard isDetectingShake else { return }
+        finishDraw()
+    }
+
+    // MARK: - Desafio (presets)
+    //
+    // A escolha do preset e a montagem da conquista são do `WatchPresetWorker`;
+    // aqui só se pede o resultado e se entrega ao Presenter. A troca de step continua
+    // nas funções de navegação acima.
+
+    /// Sorteia um desafio da categoria, sem repetir os já vistos nesta sessão.
+    func drawChallenge(for category: WatchCategory) {
+        guard let challenge = presetWorker.draw(for: category) else { return }
+        currentChallenge = challenge
+        presenter.presentDrawnChallenge(challenge)
+    }
+
+    /// "outro desafio": sorteia de novo na mesma categoria.
+    func rerollChallenge(for category: WatchCategory) {
+        drawChallenge(for: category)
+    }
+
+    /// Conquista do desafio sorteado, citando o tempo do cronômetro.
+    /// Sem desafio sorteado não há conquista, então não faz nada.
+    func generateAchievement(elapsed: TimeInterval) {
+        guard let achievement = presetWorker.achievement(elapsed: elapsed) else { return }
+        presenter.presentAchievement(achievement)
+    }
+
+    // MARK: - iPhone
+
+    /// Entrega ao iPhone a atividade que acabou de terminar; é ele que grava no banco.
+    /// Só manda se há uma atividade em andamento, e só uma vez por atividade.
+    private func sendActivityToPhone() {
+        guard let id = currentActivityID, let challenge = currentChallenge else { return }
+        currentActivityID = nil
+
+        let achievement = presetWorker.achievement(elapsed: timerElapsed)
+        connectivity.send(
+            WatchActivityPayload(
+                id: id,
+                category: selectedCategory.rawValue,
+                title: challenge.title,
+                subTitle: challenge.subTitle,
+                time: timerElapsed,
+                achievementTitle: achievement?.title ?? "",
+                achievementDescription: achievement?.description ?? ""
+            )
+        )
+    }
+
+    // MARK: - Cronômetro
+    //
+    // O tempo NÃO é um contador (`segundos += 1`): guarda a data de início (`timerStartDate`) e calcula
+    // "agora - início" quando precisa. Assim o valor continua certo mesmo se o Watch apagar a tela.
+    // O worker só entrega os ticks que mandam a tela atualizar; ele não conta nada.
+
+    /// Botão da esquerda: alterna entre pausar e retomar.
+    func togglePause() {
+        if isTimerPaused { resumeTimer() } else { pauseTimer() }
+    }
+
+    /// Pausa: congela o tempo acumulado e para os ticks.
+    private func pauseTimer() {
+        guard timerStartDate != nil, !isTimerPaused else { return }
+
+        timerElapsed = currentElapsed()
+        isTimerPaused = true
+        timerStartDate = nil
+        timerTask?.cancel()
+
+        presenter.presentTime(timerElapsed)
+        presenter.presentPaused(true)
+    }
+
+    /// Retoma: desloca o início para que "agora - início" continue igual ao tempo acumulado.
+    private func resumeTimer() {
+        guard isTimerPaused else { return }
+
+        timerStartDate = Date().addingTimeInterval(-timerElapsed)
+        isTimerPaused = false
+
+        presenter.presentPaused(false)
+        startTicking()
+    }
+
+    /// Para os ticks e fixa o tempo final em `timerElapsed`. Pode ser chamado mais de uma vez
+    /// sem zerar o tempo, porque só recalcula se o cronômetro ainda estiver rodando.
+    private func stopTimer() {
+        timerElapsed = currentElapsed()
+        timerStartDate = nil
+        isTimerPaused = false
+        timerTask?.cancel()
+
+        presenter.presentTime(timerElapsed)
+        presenter.presentPaused(false)
+    }
+
+    /// Descarta o tempo (nada foi concluído) e volta a tela para "00:00:00".
+    private func cancelTimer() {
+        currentActivityID = nil
+        timerTask?.cancel()
+        timerTask = nil
+        timerStartDate = nil
+        timerElapsed = 0
+        isTimerPaused = false
+
+        presenter.presentTime(0)
+        presenter.presentPaused(false)
+    }
+
+    /// A cada tick do worker, manda o tempo atual para o Presenter.
+    /// O `[weak self]` evita que o Task segure o Interactor vivo para sempre.
+    private func startTicking() {
+        timerTask?.cancel()
+        timerTask = Task { [weak self] in
+            guard let ticks = self?.timer.ticks() else { return }
+
+            for await _ in ticks {
+                guard let self else { return }
+                presenter.presentTime(currentElapsed())
+            }
+        }
+    }
+
+    /// Quanto tempo já passou. Rodando, é "agora - início"; parado ou pausado, o valor fixado.
+    private func currentElapsed() -> TimeInterval {
+        guard let timerStartDate else { return timerElapsed }
+        return Date().timeIntervalSince(timerStartDate)
+    }
+}
