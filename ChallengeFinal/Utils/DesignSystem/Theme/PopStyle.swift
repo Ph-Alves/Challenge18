@@ -58,8 +58,8 @@ struct PopStyle: ThemeStyleProtocol {
 //        emotionStroke: .popConstantDark,
         
         //to review
-        overlaySoft: .soberOverlaySoft,           // TODO
-        overlayStrong: .soberOverlayStrong,       // TODO
+//        overlaySoft: .soberOverlaySoft,           // TODO
+//        overlayStrong: .soberOverlayStrong,       // TODO
         emotionBGFill: .soberEmotionBGFill,       // TODO
         strokeConstantDark: .popConstantDark,
         strokeConstantLight: .popConstantGray)

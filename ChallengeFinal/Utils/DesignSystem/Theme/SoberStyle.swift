@@ -44,8 +44,8 @@ struct SoberStyle: ThemeStyleProtocol {
         emotionDesagradavel: .soberEmotionDesagradavel,
         emotionPessimo: .soberEmotionPessimo,
 //        emotionStroke: .soberEmotionStroke,
-        overlaySoft: .soberOverlaySoft,
-        overlayStrong: .soberOverlayStrong,
+//        overlaySoft: .soberOverlaySoft,
+//        overlayStrong: .soberOverlayStrong,
         emotionBGFill: .soberEmotionBGFill,
         strokeConstantDark: .soberConstantDark,
         strokeConstantLight: .soberConstantLight)

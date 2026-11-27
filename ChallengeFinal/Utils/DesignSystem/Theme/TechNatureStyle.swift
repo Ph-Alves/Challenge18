@@ -5,13 +5,6 @@
 //  Created by Raquel Souza on 26/11/26.
 //
 
-//
-//  SoberStyle.swift
-//  ChallengeFinal
-//
-//  Created by Rebeca Maria de Morais Guimães on 03/11/26.
-//
-
 import Foundation
 import SwiftUI
 
@@ -33,61 +26,58 @@ struct TechNatureStyle: ThemeStyleProtocol {
 
     
     let colors = ColorPalette(
-        backgroundPrimary: .soberBackgroundPrimary,
-        backgroundInverse: .soberBackgroundInverse,
-        fillPrimary: .soberFillPrimary,
-        fillPlaceholder: .soberFillPlaceholder,
-        fillConstantDark: .soberConstantDark,
-        fillConstantLight: .soberConstantLight,
-        textPrimary: .soberTextPrimary,
-        textSecondary: .soberTextSecondary,
-        textInverse: .soberTextInverse,
-        strokeDefault: .soberStrokeDefault,
-        strokeSecondary: .soberStrokeSecondary,
-        strokeMuted: .soberStrokeMuted,
-        emotionOtimo: .soberEmotionOtimo,
-        emotionAgradavel: .soberEmotionAgradavel,
-        emotionNeutro: .soberEmotionNeutro,
-        emotionDesagradavel: .soberEmotionDesagradavel,
-        emotionPessimo: .soberEmotionPessimo,
-//        emotionStroke: .soberEmotionStroke,
-        overlaySoft: .soberOverlaySoft,
-        overlayStrong: .soberOverlayStrong,
+        backgroundPrimary: .techConstanceWhite,
+        backgroundInverse: .techConstanceWhite,
+        fillPrimary: .techConstanceGreen,
+        fillPlaceholder: .techConstanceGreen,
+        fillConstantDark: .techConstanceWhite,
+        fillConstantLight: .techConstanceWhite,
+        textPrimary: .techConstanceGreen,
+        textSecondary: .techConstanceGreen,
+        textInverse: .techConstanceWhite,
+        strokeDefault: .techConstanceGreen,
+        strokeSecondary: .techConstanceGreen,
+        strokeMuted: .techConstanceGreen,
+        emotionOtimo: .techVeryPleasant,
+        emotionAgradavel: .techPleasant,
+        emotionNeutro: .techNeutral,
+        emotionDesagradavel: .techUnpleasant,
+        emotionPessimo: .techVeryUnpleasant,
         emotionBGFill: .soberEmotionBGFill,
-        strokeConstantDark: .soberConstantDark,
-        strokeConstantLight: .soberConstantLight)
+        strokeConstantDark: .techConstanceGreen,
+        strokeConstantLight: .techConstanceGreen)
         
     
     let icons = IconsSet(
         //categorias
         activityIcons: [
-            .cognitive: (homeCarousel: "coffee", defaultClosed: "coffee", defaultOpen: "openCoffee", activityFlowCard: "coffeeCard"),
-            .physical: (homeCarousel: "eightBall", defaultClosed: "eightBall", defaultOpen: "openBall",  activityFlowCard: "eightCard"),
-            .sensorial: (homeCarousel: "cookie", defaultClosed: "cookie", defaultOpen: "openCookie", activityFlowCard: "cookieCard"),
-            .social: (homeCarousel: "telephone", defaultClosed: "telephone", defaultOpen: "openPhone", activityFlowCard: "telephoneCard"),
+            .cognitive: (homeCarousel: "techCognitiveCard", defaultClosed: "techCognitive", defaultOpen: "techCognitive", activityFlowCard: "techCognitiveWhite"),
+            .physical: (homeCarousel: "techPyhsicalCard", defaultClosed: "techPhysical", defaultOpen: "techPhysical",  activityFlowCard: "techPhysicalWhite"),
+            .sensorial: (homeCarousel: "techSensorialCard", defaultClosed: "techSensorial", defaultOpen: "techSensorial", activityFlowCard: "techSensorialWhite"),
+            .social: (homeCarousel: "techSocialCard", defaultClosed: "techSocial", defaultOpen: "techSocial", activityFlowCard: "techSocialWhite"),
         ],
         
         feelingIcons: [
-            .veryUnpleasant: (base: "veryUnpleasantBase", humor: "veryUnpleasantHumor", card: "veryUnpleasantCard", white: "veryUnpleasantWhite"),
-            .unpleasant:     (base: "unpleasantBase",     humor: "unpleasantHumor",     card: "unpleasantCard",     white: "unpleasantWhite"),
-            .neutral:        (base: "neutralBase",        humor: "neutralHumor",        card: "neutralCard",        white: "neutralWhite"),
-            .pleasant:       (base: "plesantBase",        humor: "plesantHumor",        card: "pleasantCard",       white: "plesantWhite"),
-            .veryPleasant:   (base: "veryPleasantBase",   humor: "veryPleasantHumor",   card: "veryPleasantCard",   white: "veryPleasantWhite")
+            .veryUnpleasant: (base: "techVeryUnpleasantHumor", humor: "techVeryUnpleasantHumor", card: "techVeryUnpleasantWhite", white: "techVeryUnpleasantWhite"),
+            .unpleasant:     (base: "techVeryPleasantHumor",     humor: "techVeryPleasantHumor",     card: "techUnpleasantWhite",     white: "techUnpleasantWhite"),
+            .neutral:        (base: "techNeutralHumor",        humor: "techNeutralHumor",        card: "techNeutralWhite",        white: "techNeutralWhite"),
+            .pleasant:       (base: "techPleasantHumor",        humor: "techPleasantHumor",        card: "techPleasantWhite",       white: "techPleasantWhite"),
+            .veryPleasant:   (base: "techVeryPleasantHumor",   humor: "techVeryPleasantHumor",   card: "techVeryPleasantWhite",   white: "techVeryPleasantWhite")
         ],
         
-        placeholderCheckIcon: "placeholderCheckIcon",
-        photoPlaceholder: "photoPlaceholder",
+        placeholderCheckIcon: "techCheckIconPlaceholder",
+        photoPlaceholder: "popPhotoPlaceholder",
         archivedChallengeIcon: "archiveIcon",
         archivedInvertedChallengeIcon: "archiveInvertedIcon",
         shareIcon: (base: "shareIcon", card: "shareIconCard"),
         retryIcon: (base: "retryIcon", card: "retryIconCard"),
-        profilePlaceholder: "popProfilePlaceholder",
-        takePicturePlaceholder: "camera",
+        profilePlaceholder: "techProfilePlaceholder",
+        takePicturePlaceholder: "techCameraPlaceholder",
         cameraIcon: "cameraIcon",
         nextIcon: "nextIcon",
         pauseIcon: "pauseIcon",
         tabBar: TabBarIcons(
-            challenge: (base: "challengeTabIcon", fill: "challengeTabFill"),
+            challenge: (base: "techTabBar", fill: "techTabBar.fill"),
             home: (base: "house", fill: "house.fill"),
             feelings: (base: "chart.bar", fill: "chart.bar.fill"),
             profile: (base: "person", fill: "person.fill")),
