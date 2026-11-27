@@ -17,8 +17,8 @@ protocol ProfilePresenterProtocol: AnyObject {
     func presentEditing(isEditing: Bool, currentName: String)
     // MARK: Sheet de configurações
     func presentSettingsSheet(isPresented: Bool)
+    func presentSettings(notifications: Bool)
     // MARK: Alertas
-    func presentLocationDenied()
     func presentNotificationsDenied()
     func presentError(_ error: Error)
     func presentAlertsDismissed()
@@ -41,25 +41,23 @@ final class ProfilePresenter: ProfilePresenterProtocol {
 
     // MARK: - Tela de perfil
 
-    /// Nome, foto, streak e configurações.
+    /// Nome, foto, streak
     func presentProfile(_ profile: Profile) {
         store?.displayProfile(
             name: profile.name.isEmpty ? "nome" : profile.name,
             userPhoto: image(from: profile.profilePicture)
         )
-
+        
         let milestone = milestone(for: profile.streak)
         store?.displayStreak(
             streakText: streakText(for: profile.streak),
             levelTitle: milestone.title,
             levelSubtitle: milestone.message
         )
-
-        store?.displaySettings(
-            localizable: profile.localizable,
-            notifications: profile.notifications,
-            backgroundActivity: profile.backgroundActivity
-        )
+    }
+    
+    func presentSettings(notifications: Bool) {
+        store?.displaySettings(notifications: notifications)
     }
 
     /// O tema não precisa de formatação, só é repassado.
@@ -78,13 +76,6 @@ final class ProfilePresenter: ProfilePresenterProtocol {
     }
 
     // MARK: - Alertas
-
-    /// Vai para o alerta de permissão, que tem o botão "abrir ajustes".
-    func presentLocationDenied() {
-        store?.displayPermissionAlert(
-            "Para receber desafios perto de você, libere a localização nos Ajustes."
-        )
-    }
 
     func presentNotificationsDenied() {
         store?.displayPermissionAlert(
@@ -143,5 +134,7 @@ final class ProfilePresenter: ProfilePresenterProtocol {
         guard let data, let uiImage = UIImage(data: data) else { return nil }
         return Image(uiImage: uiImage)
     }
+    
+    
 }
 
