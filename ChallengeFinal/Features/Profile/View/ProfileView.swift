@@ -74,13 +74,9 @@ struct ProfileView: View {
         // Engrenagem
         .sheet(isPresented: $store.isSettingsPresented, onDismiss: interactor.closeSettings) {
             SettingsView(
-                localizable: store.localizable,
                 notifications: store.notifications,
-                backgroundActivity: store.backgroundActivity,
                 closeAction: interactor.closeSettings,
-                localizableAction: interactor.updateLocalizable,
                 notificationsAction: interactor.updateNotifications,
-                backgroundAction: interactor.updateBackgroundActivity
             )
             // Permissão negada aparece por cima do sheet, que é onde o toggle foi tocado.
             .alert("Permissão necessária", isPresented: isPermissionAlertPresented) {
@@ -179,15 +175,11 @@ private final class ProfileInteractorPreview: ProfileInteractorProtocol {
     func updateTheme(_ theme: Theme) { store.displayTheme(theme) }
     func openSettings() { store.displaySettingsSheet(isPresented: true) }
     func closeSettings() { store.displaySettingsSheet(isPresented: false) }
-    func updateLocalizable(_ isOn: Bool) {
-        store.displaySettings(localizable: isOn, notifications: store.notifications, backgroundActivity: store.backgroundActivity)
-    }
+    
     func updateNotifications(_ isOn: Bool) {
-        store.displaySettings(localizable: store.localizable, notifications: isOn, backgroundActivity: store.backgroundActivity)
+        store.displaySettings(notifications: isOn)
     }
-    func updateBackgroundActivity(_ isOn: Bool) {
-        store.displaySettings(localizable: store.localizable, notifications: store.notifications, backgroundActivity: isOn)
-    }
+    
     func dismissAlerts() {
         store.displayPermissionAlert(nil)
         store.displayError(nil)
