@@ -22,6 +22,7 @@ struct ChallengeCircle: View {
     let category: ActivityCategory
     let text: String?
     let isOpen: Bool
+    var size: CGFloat? = nil
     var variant: Variant = .standard
     
     //aqui é a diferenciação, se a variant = homeCarousel, então minha var categoryIcon recebe category.homeCarousel
@@ -35,6 +36,15 @@ struct ChallengeCircle: View {
     // Tamanho fixo do ícone fechado, independente do tamanho do PNG de cada tema
     // (os assets do Pop são bem maiores que os do Sober e estouravam a tela)
     static let closedIconSize: CGFloat = 346
+    
+    private var rotationEffect: Angle {
+        switch category {
+        case .cognitive:
+            return Angle(degrees: -8)
+        case .physical, .sensorial, .social:
+            return Angle()
+        }
+    }
     
     private var textLayout: CGSize {
         switch category {
@@ -72,11 +82,12 @@ struct ChallengeCircle: View {
         ZStack(alignment: .center) {
             if isOpen {
                 Image(category.defaultOpen)
+                    .rotationEffect(rotationEffect)
             } else {
                 Image(categoryIcon)
                     .resizable()
                     .scaledToFit()
-                    .frame(width: Self.closedIconSize, height: Self.closedIconSize)
+                    .frame(width: size ?? Self.closedIconSize, height: size ?? Self.closedIconSize)
             }
             
             if let text, isOpen {
@@ -92,7 +103,14 @@ struct ChallengeCircle: View {
 }
 
 // MARK: - Preview
-#Preview {
-    ChallengeCircle(category: .sensorial, text: "faça o seu cárdio sem abrir redes sociais", isOpen: true)
+#Preview("aberto") {
+    // A arte do círculo aberto tem tamanho fixo (maior que a tela); no app ela é posicionada pela
+    // ChallengeDisplayView. Aqui reduzimos só para a arte inteira caber no preview.
+    ChallengeCircle(category: .cognitive, text: "faça o seu cárdio sem abrir redes sociais", isOpen: true)
+        .environment(DesignSystem.shared)
+}
+
+#Preview("fechado") {
+    ChallengeCircle(category: .sensorial, text: nil, isOpen: false, size: 240)
         .environment(DesignSystem.shared)
 }

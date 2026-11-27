@@ -101,8 +101,7 @@ struct PopStyle: ThemeStyleProtocol {
         //tabBar
         challengeTab: .system(base: "dice", selected: "dice.fill"),
         
-        playIcon: "play.fill"
-    )
+        playIcon: "play.fill", handIcon: "handIcon")
 
     // MARK: - Roda de humor
     let humorWheel = HumorWheelStyle(

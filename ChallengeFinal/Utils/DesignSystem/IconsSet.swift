@@ -23,5 +23,7 @@ struct IconsSet {
     let pauseIcon: String //foi
     let challengeTab: TabBarIcon 
     let playIcon: String
+    let handIcon: String
+
 }
 

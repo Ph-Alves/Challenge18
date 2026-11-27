@@ -17,7 +17,11 @@ enum HomeBuilder {
     static func build(routing: HomeRouting, context: ModelContext) -> HomeView {
         let store = HomeStore(coordinator: routing)
         let presenter = HomePresenter(store: store)
-        let interactor = HomeInteractor(repository: GenericRepository<Activity>(context: context), presenter: presenter)
+        let interactor = HomeInteractor(
+            repository: GenericRepository<Activity>(context: context),
+            presenter: presenter,
+            haptics: HapticsWorker()
+        )
         
         return HomeView(interactor: interactor, store: store)
     }

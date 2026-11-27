@@ -74,14 +74,14 @@ struct SoberStyle: ThemeStyleProtocol {
         archivedInvertedChallengeIcon: "archiveInvertedIcon",
         shareIcon: (base: "shareIcon", card: "shareIconCard"),
         retryIcon: (base: "retryIcon", card: "retryIconCard"),
-        profilePlaceholder: "popProfilePlaceholder",
+        profilePlaceholder: "profilePlaceholder",
         takePicturePlaceholder: "camera",
         cameraIcon: "cameraIcon",
         nextIcon: "nextIcon",
         pauseIcon: "pauseIcon",
         challengeTab: .asset(base: "challengeTabIcon", selected: "challengeTabFill"),
-        playIcon: "play.fill"
-    )
+        playIcon: "play.fill", handIcon: "handIcon")
+
     
     let humorWheel = HumorWheelStyle(
         pointerAsset: "wheelArrow",

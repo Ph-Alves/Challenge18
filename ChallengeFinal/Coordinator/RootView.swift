@@ -57,6 +57,12 @@ struct RootView: View {
         .environment(\.symbolVariants, .none)
     }
     
+    /// O tema Sober usa imagens do catálogo de assets na aba Challenges e o Pop usa SF Symbols.
+    /// `Label(systemImage:)` só entende SF Symbol, então escolhemos o tipo de `Image` pelo nome.
+    private func tabIcon(_ name: String) -> Image {
+        UIImage(systemName: name) != nil ? Image(systemName: name) : Image(name)
+    }
+    
     private func applySavedTheme() {
         guard let profile = try? context.fetch(FetchDescriptor<Profile>()).first,
               designSystem.currentTheme != profile.theme else { return }

@@ -37,6 +37,10 @@ final class HapticsWorker: HapticsWorkerProtocol {
     private static let shakeTickInterval: TimeInterval = 0.2
     /// Ao chegar neste passo, toca o zumbido final, para a vibração e sorteia.
     private static let shakeFinishTick = 10
+    /// Duração do evento contínuo. É só uma rede de segurança: quem encerra a vibração é o `stop`
+    /// (a sessão acaba em ~2s, no `shakeFinishTick`). Se o `stop` falhar, a vibração se apaga sozinha
+    /// neste tempo, em vez de continuar por minutos.
+    private static let shakeMaxDuration: TimeInterval = 5
     // Chamado quando a sessão termina: ao chegar no passo final, que é o sinal
     // para sortear. Não dispara se a pessoa parar antes nem em um stop manual.
     var onShakeSessionEnded: (() -> Void)?
@@ -82,13 +86,22 @@ final class HapticsWorker: HapticsWorkerProtocol {
 
         let intensity = CHHapticEventParameter(parameterID: .hapticIntensity, value: 0.8)
         let sharpness = CHHapticEventParameter(parameterID: .hapticSharpness, value: 0.3)
-        // Duração longa: o evento fica "aberto" até chamarmos stop() explicitamente.
-        let event = CHHapticEvent(eventType: .hapticContinuous, parameters: [intensity, sharpness], relativeTime: 0, duration: 100)
+        // O evento fica "aberto" até chamarmos stop(); a duração é só o limite de segurança.
+        let event = CHHapticEvent(eventType: .hapticContinuous, parameters: [intensity, sharpness], relativeTime: 0, duration: Self.shakeMaxDuration)
 
         do {
+            // A engine pode ter parado (background, interrupção de áudio): religa antes de criar o player.
+            if let engine, !isEngineRunning {
+                try engine.start()
+                isEngineRunning = true
+            }
             let pattern = try CHHapticPattern(events: [event], parameters: [])
-            continuousPlayer = try engine?.makeAdvancedPlayer(with: pattern)
-            try continuousPlayer?.start(atTime: CHHapticTimeImmediate)
+            // Só guarda o player depois que ele iniciou. Se falhar no meio, não fica um player
+            // "meio criado" bloqueando novas sessões e fora do alcance do stop.
+            if let player = try engine?.makeAdvancedPlayer(with: pattern) {
+                try player.start(atTime: CHHapticTimeImmediate)
+                continuousPlayer = player
+            }
             isShaking = true
             shakeTickCount = 0
             lastShakeTickDate = Date()
@@ -167,17 +180,30 @@ final class HapticsWorker: HapticsWorkerProtocol {
         onShakeSessionEnded?()
     }
 
-    private func endShakeSession() {
-        try? continuousPlayer?.stop(atTime: CHHapticTimeImmediate)
+    /// Para a vibração contínua. Se o `stop` do player falhar, o padrão continuaria tocando sem
+    /// ninguém com a referência para pará-lo; então paramos a engine inteira, que corta todos os players.
+    /// A engine religa sozinha no próximo haptic (`isEngineRunning = false`).
+    private func stopContinuousPlayer() {
+        guard let player = continuousPlayer else { return }
         continuousPlayer = nil
+        do {
+            try player.stop(atTime: CHHapticTimeImmediate)
+        } catch {
+            print("Failed to stop shake loop, stopping the engine: \(error.localizedDescription)")
+            engine?.stop(completionHandler: nil)
+            isEngineRunning = false
+        }
+    }
+
+    private func endShakeSession() {
+        stopContinuousPlayer()
         isShaking = false
         shakeTickCount = 0
         lastShakeTickDate = nil
     }
 
     private func resetShakeSession() {
-        try? continuousPlayer?.stop(atTime: CHHapticTimeImmediate)
-        continuousPlayer = nil
+        stopContinuousPlayer()
         isShaking = false
         isWaitingForRest = false
         shakeTickCount = 0
