@@ -27,8 +27,7 @@ protocol NotificationWorkerProtocol {
 /// - Uma notificação local é entregue pelo SISTEMA, no horário marcado, mesmo com o app
 ///   fechado. O app NÃO roda código quando ela toca, então não dá para "reagendar a de
 ///   amanhã" no momento em que ela chega.
-/// - Por isso agendamos uma JANELA de vários dias de uma vez (um lembrete por dia, cada um
-///   com o seu identificador). Quem renova a janela é o `ReminderSchedulerService`,
+/// - Por isso agendamos uma JANELA de vários dias de uma vez (um lembrete por dia, cada um com o seu identificador). Quem renova a janela é o `ReminderSchedulerService`,
 ///   chamando `scheduleReminder` quando o usuário liga o toggle, conclui uma atividade ou
 ///   abre o app.
 /// - Se o usuário ficar mais de `daysAhead` dias sem abrir o app, os lembretes acabam sozinhos.
