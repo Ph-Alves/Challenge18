@@ -99,13 +99,10 @@ struct PopStyle: ThemeStyleProtocol {
         pauseIcon: "pauseIcon",
         
         //tabBar
-        tabBar: TabBarIcons(
-            challenge: (base: "dice", fill: "dice.fill"),
-            home:      (base: "house",            fill: "house.fill"),
-            feelings:  (base: "chart.bar",     fill: "chart.bar.fill"),
-            profile:   (base: "person",           fill: "person.fill")),
+        challengeTab: .system(base: "dice", selected: "dice.fill"),
         
-        playIcon: "play.fill", handIcon: "handIcon")
+        playIcon: "play.fill",
+        handIcon: "handIcon")
 
     // MARK: - Roda de humor
     let humorWheel = HumorWheelStyle(

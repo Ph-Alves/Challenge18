@@ -76,7 +76,7 @@ struct TechNatureStyle: ThemeStyleProtocol {
         cameraIcon: "cameraIcon",
         nextIcon: "nextIcon",
         pauseIcon: "pauseIcon",
-        tabBar: TabBarIcons(
+        challengeTab: TabBarIcons(
             challenge: (base: "techTabBar", fill: "techTabBar.fill"),
             home: (base: "house", fill: "house.fill"),
             feelings: (base: "chart.bar", fill: "chart.bar.fill"),

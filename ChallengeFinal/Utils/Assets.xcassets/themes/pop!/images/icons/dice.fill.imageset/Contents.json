@@ -1,7 +1,7 @@
 {
   "images" : [
     {
-      "filename" : "FeelingsFillLight.svg",
+      "filename" : "dice.fill.png",
       "idiom" : "universal"
     },
     {
@@ -11,7 +11,7 @@
           "value" : "light"
         }
       ],
-      "filename" : "FeelingsFillLight 1.svg",
+      "filename" : "dice.fill 1.png",
       "idiom" : "universal"
     },
     {
@@ -21,7 +21,7 @@
           "value" : "dark"
         }
       ],
-      "filename" : "FeelingsFillDark.svg",
+      "filename" : "dice.fill 2.png",
       "idiom" : "universal"
     }
   ],
