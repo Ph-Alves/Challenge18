@@ -16,6 +16,11 @@ enum ProfileBuilder {
     static func build(context: ModelContext) -> ProfileView {
         let store = ProfileStore()
         let presenter = ProfilePresenter(store: store)
+        let reminderScheduler = ReminderSchedulerService(
+            preferences: PreferencesWorker(),
+            activityRepository: GenericRepository<Activity>(context: context),
+            notifications: NotificationWorker()
+        )
         let interactor = ProfileInteractor(
             presenter: presenter,
             profileRepository: GenericRepository<Profile>(context: context),
@@ -25,7 +30,8 @@ enum ProfileBuilder {
             ///Segundo, é essa instância única que está no .environment(DesignSystem.shared) do MyApp.
             ///Quando o Interactor muda o currentTheme, todas as Views que leem o designSystem do environment são atualizadas.
             ///Com qualquer outra instância, o tema seria salvo, mas a tela não mudaria.
-            themeApplier: DesignSystem.shared
+            themeApplier: DesignSystem.shared,
+            reminderScheduler: reminderScheduler
 
         )
 
