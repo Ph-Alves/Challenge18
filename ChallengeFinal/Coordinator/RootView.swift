@@ -12,6 +12,7 @@ struct RootView: View {
     @Environment(\.modelContext) private var context
     @Environment(DesignSystem.self) private var designSystem
     @Bindable var coordinator: AppCoordinator //bindlabe porque alem de ler o dado, ela também escreve.
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         TabView(selection: $coordinator.selectedTab) {
@@ -46,13 +47,34 @@ struct RootView: View {
             }
         }
         .tint(.primary)
-        // Aplica o tema salvo assim que o app abre, sem esperar a aba de Perfil carregar.
-        .task { applySavedTheme() }
+        // Ao abrir o app: aplica o tema salvo (sem esperar a aba de Perfil carregar) e
+        // renova a janela de lembretes.
+        .task {
+            applySavedTheme()
+            await refreshReminder()
+        }
+        // Renova a janela de lembretes sempre que o app volta a ficar ativo (voltou do segundo
+        // plano, ou o usuário tocou na notificação). É isso que mantém os lembretes sempre à
+        // frente: o iOS não roda código do app quando a notificação toca.
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active {
+                Task { await refreshReminder() }
+            }
+        }
+        
+      
     }
     
     private func applySavedTheme() {
         guard let profile = try? context.fetch(FetchDescriptor<Profile>()).first,
               designSystem.currentTheme != profile.theme else { return }
         designSystem.currentTheme = profile.theme
+    }
+    
+    /// Pede ao Service para deixar o lembrete diário no estado certo. É seguro chamar sempre
+    /// (idempotente): com o toggle desligado só cancela; com ele ligado refaz a janela,
+    /// pulando hoje se o usuário já concluiu um desafio.
+    private func refreshReminder() async {
+        await ReminderSchedulerService.make(context: context).refresh()
     }
 }
