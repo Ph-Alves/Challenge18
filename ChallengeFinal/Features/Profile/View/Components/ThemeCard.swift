@@ -87,7 +87,7 @@ struct ThemeCard: View {
 
 #Preview("Seleção interativa") {
     @Previewable @State var selected: Theme = .sober
-    let themes: [Theme] = [.sober, .bubblegum, .pop, .techNature]
+    let themes: [Theme] = [.sober, .pop, .techNature]
 
     HStack(spacing: 12) {
         ForEach(themes, id: \.self) { theme in

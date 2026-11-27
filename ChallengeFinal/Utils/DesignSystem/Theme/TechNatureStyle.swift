@@ -85,13 +85,8 @@ struct TechNatureStyle: ThemeStyleProtocol {
     
     let humorWheel = HumorWheelStyle(
         pointerAsset: "wheelArrow",
-        backgroundAsset: "wheelBackground")
-    
-    let photoFilter: PhotoFilter? = PhotoFilter(
-        saturation: 0,
-        overlayColor: .black,
-        overlayOpacity: 0.6)
+        backgroundAsset: nil)
     
     let profile = ProfileStyle(
-        headerBackground: "soberHeaderBackground")
+        headerBackground: "techHeaderBackground")
 }
