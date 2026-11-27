@@ -21,10 +21,12 @@ struct RegisteredActivityCard: View {
                     .padding(.top, 10)
 
                 Text(title)
+                    .truncationMode(.tail)
                     .lineLimit(1)
                     .font(designSystem.style.typography.text3)
                     .padding(.leading, 2)
                     .padding(.bottom, 12)
+                    .padding(.trailing, humor == nil ? 0 : 30)
             }
             .padding(.horizontal, 12)
             .background(
@@ -46,7 +48,7 @@ struct RegisteredActivityCard: View {
 //MARK: - Previews
 #Preview {
     HStack(spacing: 24) {
-        RegisteredActivityCard(title: "Com foto", humor: .veryPleasant, photo: Image(systemName: "person.crop.square.fill"))
+        RegisteredActivityCard(title: "Com foto e texto grande", humor: .veryPleasant, photo: Image(systemName: "person.crop.square.fill"))
         RegisteredActivityCard(title: "Sem foto e sem humor", humor: nil, photo: nil)
     }
     .padding(32)

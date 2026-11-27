@@ -139,13 +139,14 @@ struct PresenterTests {
     @Test func testingPresentChallengeFillsStoreAndMarksReady() {
         let (presenter, store) = createActivityPresenterAndStore()
         presenter.presentSearching()
-        let challenge = FrictionChallenge(title: "respire fundo", subTitle: "Pausa", rationale: "Respire por um minuto.")
+        // O texto chega com maiúsculas (presets e modelo); a Store entrega tudo em minúsculas, como o resto do app.
+        let challenge = FrictionChallenge(title: "Respire Fundo", subTitle: "Pausa", rationale: "Respire por um minuto.")
         
         presenter.presentActivity(challenge)
         
         #expect(store.activityTitle == "respire fundo")
-        #expect(store.activitySubtitle == "Pausa")
-        #expect(store.activityDescription == "Respire por um minuto.")
+        #expect(store.activitySubtitle == "pausa")
+        #expect(store.activityDescription == "respire por um minuto.")
         #expect(store.isChallengeReady == true)
         #expect(store.isSearching == false)
     }

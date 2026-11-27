@@ -25,6 +25,8 @@ enum ProfileBuilder {
             presenter: presenter,
             profileRepository: GenericRepository<Profile>(context: context),
             activityRepository: GenericRepository<Activity>(context: context),
+            notifications: permissions,
+            localization: permissions,
             ///Tem que ser o .shared, e não um DesignSystem() novo, por dois motivos.
             ///Primeiro, o init dele é private, então nem compila.
             ///Segundo, é essa instância única que está no .environment(DesignSystem.shared) do MyApp.

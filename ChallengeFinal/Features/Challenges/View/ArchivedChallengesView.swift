@@ -108,7 +108,10 @@ private func makeArchivedPreview(seeded: Bool) -> some View {
     let presenter = ChallengesPresenter(store: store)
     let interactor = ChallengesInteractor(
         repository: GenericRepository<Activity>(context: context),
-        presenter: presenter
+        presenter: presenter,
+        share: ShareWorker(),
+        camera: CameraWorker(),
+        haptics: HapticsWorker()
     )
 
     if seeded {

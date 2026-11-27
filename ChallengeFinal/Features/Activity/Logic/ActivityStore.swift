@@ -194,9 +194,9 @@ final class ActivityStore: ActivityStoreProtocol {
 
     /// Guarda o desafio sorteado e marca como pronto.
     func displayActivity(_ challenge: FrictionChallenge) {
-        self.activityTitle = challenge.title
-        self.activitySubtitle = challenge.subTitle
-        self.activityDescription = challenge.rationale
+        self.activityTitle = challenge.title.lowercased()
+        self.activitySubtitle = challenge.subTitle.lowercased()
+        self.activityDescription = challenge.rationale.lowercased()
         self.isSearching = false
         // A view anima a bola e só depois chama transitionToChallenge()
         self.isChallengeReady = true
