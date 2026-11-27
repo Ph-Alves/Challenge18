@@ -73,7 +73,7 @@ final class ChallengesInteractor: ChallengesInteractorProtocol {
     private(set) var reflectionHumor: Humor = .neutral
     
     // MARK: - Init
-    init(repository: GenericRepository<Activity>, presenter: ChallengesPresenterProtocol, share: ShareWorkerProtocol = ShareWorker(), camera: CameraWorkerProtocol = CameraWorker(), haptics: HapticsWorkerProtocol = HapticsWorker()) {
+    init(repository: GenericRepository<Activity>, presenter: ChallengesPresenterProtocol, share: ShareWorkerProtocol, camera: CameraWorkerProtocol, haptics: HapticsWorkerProtocol) {
         self.repository = repository
         self.presenter = presenter
         self.share = share
