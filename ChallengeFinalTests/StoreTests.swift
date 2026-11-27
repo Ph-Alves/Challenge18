@@ -515,9 +515,7 @@ struct StoreTests {
         #expect(store.streakText == "0 dias")
         #expect(store.levelTitle == "começando :)")
         #expect(store.levelSubtitle.isEmpty == false)
-        #expect(store.localizable == false)
         #expect(store.notifications == false)
-        #expect(store.backgroundActivity == false)
         #expect(store.isSettingsPresented == false)
         #expect(store.isEditing == false)
         #expect(store.draftName.isEmpty)
@@ -568,14 +566,13 @@ struct StoreTests {
         #expect(store.levelSubtitle == "07 dias priorizando seu bem estar!")
     }
 
-    @Test func testingDisplaySettingsUpdatesEachToggle() {
+    @Test(arguments: [true, false])
+    func testingDisplaySettingsUpdatesNotifications(isOn: Bool) {
         let store = ProfileStore()
 
-        store.displaySettings(localizable: true, notifications: false, backgroundActivity: true)
+        store.displaySettings(notifications: isOn)
 
-        #expect(store.localizable == true)
-        #expect(store.notifications == false)
-        #expect(store.backgroundActivity == true)
+        #expect(store.notifications == isOn)
     }
 
     @Test func testingDisplaySettingsSheetOpensAndCloses() {

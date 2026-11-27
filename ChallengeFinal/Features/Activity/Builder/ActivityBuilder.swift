@@ -30,7 +30,11 @@ enum ActivityBuilder {
         // Abre, para e cancela a Live Activity (Dynamic Island). O grupo da atividade
         // (`currentCategory`) vai para o Interactor, que o repassa à ilha.
         let liveActivity = WidgetWorker()
-        
+        let reminderScheduler = ReminderSchedulerService(
+            preferences: PreferencesWorker(),
+            activityRepository: GenericRepository<Activity>(context: context),
+            notifications: NotificationWorker()
+        )
         
         let interactor = ActivityInteractor(
             presenter: presenter,
@@ -42,7 +46,9 @@ enum ActivityBuilder {
             share: ShareWorker(),
             timer: timer,
             liveActivity: liveActivity,
-            currentCategory: currentCategory
+            currentCategory: currentCategory,
+            reminderScheduler: reminderScheduler
+            
         )
         
         interactor.restoreData()

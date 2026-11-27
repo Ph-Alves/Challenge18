@@ -213,6 +213,8 @@ final class ActivityInteractor: ActivityInteractorProtocol {
     var shakeIdleTimer: Timer?
     let motionFeedbackThreshold: Double = 0.3
     var isRaffling: Bool = false
+    
+    let reminderScheduler: ReminderSchedulerServiceProtocol
 
     // MARK: - Init
 
@@ -225,7 +227,8 @@ final class ActivityInteractor: ActivityInteractorProtocol {
          share: ShareWorkerProtocol,
          timer: TimerWorkerProtocol,
          liveActivity: WidgetWorkerProtocol,
-         currentCategory: ActivityCategory
+         currentCategory: ActivityCategory,
+         reminderScheduler: ReminderSchedulerServiceProtocol,
         ) {
         self.presenter = presenter
         self.activityRepository = activityRepository
@@ -237,6 +240,8 @@ final class ActivityInteractor: ActivityInteractorProtocol {
         self.timer = timer
         self.liveActivity = liveActivity
         self.category = currentCategory
+        self.reminderScheduler = reminderScheduler
+
     }
     
     // MARK: - Restauração
@@ -358,6 +363,15 @@ final class ActivityInteractor: ActivityInteractorProtocol {
         }
         // O `stopTimer()` acima ainda não tinha atividade para gerar a conquista: agora tem.
         generateAchievement()
+        // O usuário acabou de concluir o desafio de hoje: pede ao Service para refazer a janela
+        // de lembretes SEM o dia de hoje (o lembrete das 18h não deve tocar para quem já fez).
+        // Se o toggle estiver desligado, o Service só cancela e não agenda nada.
+        //
+        // A Task captura só o `reminderScheduler`, e NÃO o `self`, de propósito:
+        // - o lembrete é refeito mesmo que o usuário saia da tela logo em seguida;
+        // - não segura o Interactor vivo (com `self`, a `generateAchievement` acima chegava a
+        //   salvar no banco depois do Interactor/teste terminar e derrubava o app).
+        Task { [reminderScheduler] in await reminderScheduler.refresh() }
         presenter.presentMood()
     }
 
