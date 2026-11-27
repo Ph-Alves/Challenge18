@@ -12,13 +12,9 @@ import SwiftUI
 struct SettingsView: View {
     @Environment(DesignSystem.self) private var designSystem
 
-    let localizable: Bool
     let notifications: Bool
-    let backgroundActivity: Bool
     let closeAction: () -> Void
-    let localizableAction: (Bool) -> Void
     let notificationsAction: (Bool) -> Void
-    let backgroundAction: (Bool) -> Void
 
     private var typography: Typography { designSystem.style.typography }
 
@@ -33,25 +29,12 @@ struct SettingsView: View {
                 }
 
                 settingsSection(
-                    title: "sua localização",
-                    description: "compartilhe sua localização e descubra desafios feitos para onde você está!",
-                    toggleLabel: "compartilhar localização",
-                    isOn: binding(localizable, localizableAction)
-                )
-
-                settingsSection(
                     title: "notificações",
                     description: "ative as notificações, seja lembrado e receba desafios personalizados para onde estiver :)",
                     toggleLabel: "ativar notificações",
                     isOn: binding(notifications, notificationsAction)
                 )
 
-                settingsSection(
-                    title: "atividade em segundo plano",
-                    description: "o segundo plano permite que o timer dos desafios continuem rodando mesmo com o app fechado.",
-                    toggleLabel: "ativar segundo plano",
-                    isOn: binding(backgroundActivity, backgroundAction)
-                )
             }
             .listSectionSpacing(16)
             .scrollContentBackground(.hidden)    // tira o cinza padrão da tela
@@ -95,7 +78,6 @@ struct SettingsView: View {
 }
 
 #Preview {
-    SettingsView(localizable: true, notifications: true, backgroundActivity: true,
-                 closeAction: {}, localizableAction: { _ in }, notificationsAction: { _ in }, backgroundAction: { _ in })
+    SettingsView(notifications: true, closeAction: {}, notificationsAction: { _ in })
         .environment(DesignSystem.shared)
 }
