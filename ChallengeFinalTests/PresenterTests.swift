@@ -778,18 +778,34 @@ struct PresenterTests {
         return (presenter, store)
     }
 
-    @Test func testingPresentProfileFillsNamePhotoAndSettings() {
+    @Test func testingPresentProfileFillsNameAndPhoto() {
         let (presenter, store) = createProfilePresenterAndStore()
-        let profile = Profile(profilePicture: makePhotoData(), name: "Raquel", notifications: true,
-                              localizable: false, backgroundActivity: true, streak: 0)
+        let profile = Profile(profilePicture: makePhotoData(), name: "Raquel", streak: 0)
 
         presenter.presentProfile(profile)
 
         #expect(store.name == "Raquel")
         #expect(store.userPhoto != nil)
-        #expect(store.localizable == false)
+    }
+
+    @Test(arguments: [true, false])
+    func testingPresentSettingsFillsNotifications(isOn: Bool) {
+        let (presenter, store) = createProfilePresenterAndStore()
+
+        presenter.presentSettings(notifications: isOn)
+
+        #expect(store.notifications == isOn)
+    }
+
+    // O toggle vem do Service (via `presentSettings`), não do Profile:
+    // reapresentar o perfil (ex.: depois de editar o nome) não pode desligá-lo.
+    @Test func testingPresentProfileDoesNotOverrideNotificationsToggle() {
+        let (presenter, store) = createProfilePresenterAndStore()
+        presenter.presentSettings(notifications: true)
+
+        presenter.presentProfile(Profile(name: "Raquel"))
+
         #expect(store.notifications == true)
-        #expect(store.backgroundActivity == true)
     }
 
     // Sem nome ainda: mostra o placeholder do protótipo.
@@ -899,15 +915,6 @@ struct PresenterTests {
     }
 
     // Permissão negada vai para o alerta com "abrir ajustes", não para o de erro.
-    @Test func testingPresentLocationDeniedShowsPermissionAlert() {
-        let (presenter, store) = createProfilePresenterAndStore()
-
-        presenter.presentLocationDenied()
-
-        #expect(store.permissionAlertMessage?.contains("localização") == true)
-        #expect(store.errorMessage == nil)
-    }
-
     @Test func testingPresentNotificationsDeniedShowsPermissionAlert() {
         let (presenter, store) = createProfilePresenterAndStore()
 
@@ -936,7 +943,7 @@ struct PresenterTests {
 
     @Test func testingPresentAlertsDismissedClearsBothAlerts() {
         let (presenter, store) = createProfilePresenterAndStore()
-        presenter.presentLocationDenied()
+        presenter.presentNotificationsDenied()
         presenter.presentError(PhotoLibraryError.loadFailed)
 
         presenter.presentAlertsDismissed()

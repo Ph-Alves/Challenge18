@@ -370,7 +370,8 @@ final class ProfilePresenterSpy: ProfilePresenterProtocol {
     private(set) var presentedThemes: [Theme] = []
     private(set) var editingCalls: [(isEditing: Bool, currentName: String)] = []
     private(set) var settingsSheetStates: [Bool] = []
-    private(set) var locationDeniedCount = 0
+    /// Estado do toggle de notificações a cada `presentSettings`, na ordem das chamadas.
+    private(set) var notificationsStates: [Bool] = []
     private(set) var notificationsDeniedCount = 0
     private(set) var presentedErrors: [Error] = []
     private(set) var alertsDismissedCount = 0
@@ -382,20 +383,33 @@ final class ProfilePresenterSpy: ProfilePresenterProtocol {
     func presentTheme(_ theme: Theme) { presentedThemes.append(theme) }
     func presentEditing(isEditing: Bool, currentName: String) { editingCalls.append((isEditing, currentName)) }
     func presentSettingsSheet(isPresented: Bool) { settingsSheetStates.append(isPresented) }
-    func presentLocationDenied() { locationDeniedCount += 1 }
+    func presentSettings(notifications: Bool) { notificationsStates.append(notifications) }
     func presentNotificationsDenied() { notificationsDeniedCount += 1 }
     func presentError(_ error: Error) { presentedErrors.append(error) }
     func presentAlertsDismissed() { alertsDismissedCount += 1 }
 }
 
-/// Permissão falsa (notificação ou localização): responde na hora com o que o teste mandar.
-final class PermissionWorkerMock: NotificationWorkerProtocol, LocalizationWorkerProtocol {
-    var granted = true
-    private(set) var requestCount = 0
+/// Service de lembrete falso: responde na hora com o que o teste mandar e anota as chamadas.
+/// `@MainActor` porque o `ReminderSchedulerServiceProtocol` também é.
+@MainActor
+final class ReminderSchedulerMock: ReminderSchedulerServiceProtocol {
+    var isEnabled = false
+    /// O que `setEnabled(true)` devolve: `false` simula permissão negada.
+    var setEnabledResult = true
+    /// Se preenchido, `setEnabled` lança este erro.
+    var setEnabledError: Error?
+    private(set) var setEnabledCalls: [Bool] = []
+    private(set) var refreshCount = 0
 
-    func requestPermission(completion: @escaping (Bool) -> Void) {
-        requestCount += 1
-        completion(granted)
+    func refresh() async {
+        refreshCount += 1
+    }
+
+    func setEnabled(_ isOn: Bool) async throws -> Bool {
+        setEnabledCalls.append(isOn)
+        if let setEnabledError { throw setEnabledError }
+        isEnabled = isOn && setEnabledResult
+        return isEnabled
     }
 }
 
@@ -636,6 +650,7 @@ struct InteractorTests {
         let timer: TimerWorkerMock
         let liveActivity: WidgetWorkerMock
         let share: ShareWorkerMock
+        let reminder: ReminderSchedulerMock
         let repository: GenericRepository<Activity>
     }
     
@@ -647,6 +662,7 @@ struct InteractorTests {
         let timer = TimerWorkerMock()
         let liveActivity = WidgetWorkerMock()
         let share = ShareWorkerMock()
+        let reminder = ReminderSchedulerMock()
         let repository = makeActivityRepository()
         let interactor = ActivityInteractor(
             presenter: presenter,
@@ -658,11 +674,12 @@ struct InteractorTests {
             share: share,
             timer: timer,
             liveActivity: liveActivity,
-            currentCategory: .physical
+            currentCategory: .physical,
+            reminderScheduler: reminder
         )
         return ActivitySUT(interactor: interactor, presenter: presenter, foundation: foundation,
                            haptics: haptics, motion: motion, timer: timer, liveActivity: liveActivity,
-                           share: share, repository: repository)
+                           share: share, reminder: reminder, repository: repository)
         }
     
     /// O sorteio roda dentro de um `Task`; espera até a condição valer (ou 2s).
@@ -1240,6 +1257,28 @@ struct InteractorTests {
         #expect(sut.interactor.timerStartDate == nil)
         #expect(sut.interactor.timerElapsed >= 10)
         #expect(sut.presenter.moodCount == 1)
+    }
+
+    // Concluir o desafio avisa o Service: ele refaz a janela de lembretes sem o dia de hoje.
+    @Test func testingCompleteActivityRefreshesTheReminder() async {
+        let sut = makeActivitySUT()
+
+        sut.interactor.completeActivity(currentCategory: .physical, title: "t",
+                                        subTitle: "s", Description: "d")
+        await wait { sut.reminder.refreshCount == 1 }
+
+        #expect(sut.reminder.refreshCount == 1)
+    }
+
+    // Começar ou cancelar o desafio não mexe no lembrete: só concluir conta como "fez hoje".
+    @Test func testingStartingAndCancellingActivityDoesNotRefreshTheReminder() async {
+        let sut = makeActivitySUT()
+
+        sut.interactor.startActivity()
+        sut.interactor.cancelTimer()
+        try? await Task.sleep(for: .milliseconds(50))
+
+        #expect(sut.reminder.refreshCount == 0)
     }
 
     // MARK: ActivityInteractor (persistência ao longo do fluxo)
@@ -2754,8 +2793,7 @@ struct InteractorTests {
         let interactor: ProfileInteractor
         let presenter: ProfilePresenterSpy
         let themeApplier: ThemeApplierMock
-        let notifications: PermissionWorkerMock
-        let localization: PermissionWorkerMock
+        let reminder: ReminderSchedulerMock
         let profileRepository: GenericRepository<Profile>
         let activityRepository: GenericRepository<Activity>
     }
@@ -2764,18 +2802,16 @@ struct InteractorTests {
     private func makeProfileSUT(startingTheme: Theme = .techNature) -> ProfileSUT {
         let presenter = ProfilePresenterSpy()
         let themeApplier = ThemeApplierMock(currentTheme: startingTheme)
-        let notifications = PermissionWorkerMock()
-        let localization = PermissionWorkerMock()
+        let reminder = ReminderSchedulerMock()
         let profileRepository = makeProfileRepository()
         let activityRepository = makeActivityRepository()
         let interactor = ProfileInteractor(presenter: presenter,
                                            profileRepository: profileRepository,
                                            activityRepository: activityRepository,
-                                           notifications: notifications,
-                                           localization: localization,
-                                           themeApplier: themeApplier)
+                                           themeApplier: themeApplier,
+                                           reminderScheduler: reminder)
         return ProfileSUT(interactor: interactor, presenter: presenter, themeApplier: themeApplier,
-                          notifications: notifications, localization: localization,
+                          reminder: reminder,
                           profileRepository: profileRepository, activityRepository: activityRepository)
     }
 
@@ -2953,106 +2989,76 @@ struct InteractorTests {
         #expect(sut.presenter.settingsSheetStates == [true, false])
     }
 
-    @Test func testingUpdateLocalizableGrantedTurnsOn() throws {
+    // Ao abrir a tela, o toggle mostra o estado que o Service guarda.
+    @Test(arguments: [true, false])
+    func testingFetchProfilePresentsReminderState(isEnabled: Bool) {
         let sut = makeProfileSUT()
+        sut.reminder.isEnabled = isEnabled
+
         sut.interactor.fetchProfile()
 
-        sut.interactor.updateLocalizable(true)
+        #expect(sut.presenter.notificationsStates == [isEnabled])
+    }
 
-        #expect(sut.localization.requestCount == 1)
-        #expect(try sut.profileRepository.getAll().first?.localizable == true)
-        #expect(sut.presenter.lastProfile?.localizable == true)
-        #expect(sut.presenter.locationDeniedCount == 0)
+    // A tela responde na hora, antes de o Service (e a permissão do sistema) terminarem.
+    @Test(arguments: [true, false])
+    func testingUpdateNotificationsPresentsRequestedValueImmediately(isOn: Bool) {
+        let sut = makeProfileSUT()
+
+        sut.interactor.updateNotifications(isOn)
+
+        #expect(sut.presenter.notificationsStates.first == isOn)
+    }
+
+    @Test func testingUpdateNotificationsGrantedTurnsOn() async {
+        let sut = makeProfileSUT()
+
+        sut.interactor.updateNotifications(true)
+        await wait { sut.presenter.notificationsStates.count >= 2 }
+
+        #expect(sut.reminder.setEnabledCalls == [true])
+        #expect(sut.presenter.notificationsStates == [true, true])
+        #expect(sut.presenter.notificationsDeniedCount == 0)
+        #expect(sut.presenter.presentedErrors.isEmpty)
     }
 
     // Permissão negada: o toggle volta para desligado e aparece o alerta de "abrir ajustes".
-    @Test func testingUpdateLocalizableDeniedTurnsBackOffAndAlerts() throws {
+    @Test func testingUpdateNotificationsDeniedTurnsBackOffAndAlerts() async {
         let sut = makeProfileSUT()
-        sut.localization.granted = false
-        sut.interactor.fetchProfile()
-
-        sut.interactor.updateLocalizable(true)
-
-        #expect(try sut.profileRepository.getAll().first?.localizable == false)
-        #expect(sut.presenter.lastProfile?.localizable == false)
-        #expect(sut.presenter.locationDeniedCount == 1)
-    }
-
-    // Desligar não pede permissão.
-    @Test func testingUpdateLocalizableOffDoesNotRequestPermission() throws {
-        let sut = makeProfileSUT()
-        try sut.profileRepository.add(Profile(localizable: true))
-        sut.interactor.fetchProfile()
-
-        sut.interactor.updateLocalizable(false)
-
-        #expect(sut.localization.requestCount == 0)
-        #expect(try sut.profileRepository.getAll().first?.localizable == false)
-    }
-
-    @Test func testingUpdateNotificationsGrantedTurnsOn() throws {
-        let sut = makeProfileSUT()
-        sut.interactor.fetchProfile()
+        sut.reminder.setEnabledResult = false
 
         sut.interactor.updateNotifications(true)
+        await wait { sut.presenter.notificationsStates.count >= 2 }
 
-        #expect(sut.notifications.requestCount == 1)
-        #expect(try sut.profileRepository.getAll().first?.notifications == true)
-        #expect(sut.presenter.lastProfile?.notifications == true)
+        #expect(sut.presenter.notificationsStates == [true, false])
+        #expect(sut.presenter.notificationsDeniedCount == 1)
+        #expect(sut.presenter.presentedErrors.isEmpty)
+    }
+
+    // Desligar passa pelo Service (que cancela o lembrete) e não mostra alerta nenhum.
+    @Test func testingUpdateNotificationsOffTurnsOffWithoutAlert() async {
+        let sut = makeProfileSUT()
+        sut.reminder.isEnabled = true
+
+        sut.interactor.updateNotifications(false)
+        await wait { sut.presenter.notificationsStates.count >= 2 }
+
+        #expect(sut.reminder.setEnabledCalls == [false])
+        #expect(sut.presenter.notificationsStates == [false, false])
         #expect(sut.presenter.notificationsDeniedCount == 0)
     }
 
-    @Test func testingUpdateNotificationsDeniedTurnsBackOffAndAlerts() throws {
+    // Erro do Service: o toggle volta para desligado e o erro vai para o Presenter (não é "permissão negada").
+    @Test func testingUpdateNotificationsErrorTurnsBackOffAndPresentsError() async {
         let sut = makeProfileSUT()
-        sut.notifications.granted = false
-        sut.interactor.fetchProfile()
+        sut.reminder.setEnabledError = PhotoLibraryError.loadFailed
 
         sut.interactor.updateNotifications(true)
+        await wait { sut.presenter.notificationsStates.count >= 2 }
 
-        #expect(try sut.profileRepository.getAll().first?.notifications == false)
-        #expect(sut.presenter.lastProfile?.notifications == false)
-        #expect(sut.presenter.notificationsDeniedCount == 1)
-    }
-
-    @Test func testingUpdateNotificationsOffDoesNotRequestPermission() throws {
-        let sut = makeProfileSUT()
-        try sut.profileRepository.add(Profile(notifications: true))
-        sut.interactor.fetchProfile()
-
-        sut.interactor.updateNotifications(false)
-
-        #expect(sut.notifications.requestCount == 0)
-        #expect(try sut.profileRepository.getAll().first?.notifications == false)
-    }
-
-    // Segundo plano não tem permissão do sistema: só salva a preferência.
-    @Test(arguments: [true, false])
-    func testingUpdateBackgroundActivityPersists(isOn: Bool) throws {
-        let sut = makeProfileSUT()
-        try sut.profileRepository.add(Profile(backgroundActivity: !isOn))
-        sut.interactor.fetchProfile()
-
-        sut.interactor.updateBackgroundActivity(isOn)
-
-        #expect(try sut.profileRepository.getAll().first?.backgroundActivity == isOn)
-        #expect(sut.presenter.lastProfile?.backgroundActivity == isOn)
-        #expect(sut.notifications.requestCount == 0)
-        #expect(sut.localization.requestCount == 0)
-    }
-
-    // A localização e as notificações não interferem uma na outra.
-    @Test func testingSettingsTogglesAreIndependent() throws {
-        let sut = makeProfileSUT()
-        sut.notifications.granted = false
-        sut.interactor.fetchProfile()
-
-        sut.interactor.updateLocalizable(true)
-        sut.interactor.updateNotifications(true)
-
-        let profile = try #require(try sut.profileRepository.getAll().first)
-        #expect(profile.localizable == true)
-        #expect(profile.notifications == false)
-        #expect(profile.backgroundActivity == false)
+        #expect(sut.presenter.notificationsStates == [true, false])
+        #expect(sut.presenter.presentedErrors.count == 1)
+        #expect(sut.presenter.notificationsDeniedCount == 0)
     }
 
     // MARK: ProfileInteractor (alertas)
