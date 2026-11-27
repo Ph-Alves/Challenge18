@@ -46,13 +46,9 @@ final class WatchConnectivityWorker: NSObject, WatchConnectivityWorkerProtocol {
     }
 
     func send(_ payload: WatchActivityPayload) {
-        guard let session else {
-            print("[WC Watch] WCSession não é suportada: nada foi enviado")
-            return
-        }
+        guard let session else { return }
 
         guard session.activationState == .activated else {
-            print("[WC Watch] sessão ainda não ativa (estado \(session.activationState.rawValue)): atividade \(payload.id) ficou no pending")
             pending.append(payload)
             activate()
             return
@@ -64,8 +60,7 @@ final class WatchConnectivityWorker: NSObject, WatchConnectivityWorkerProtocol {
 
     private func transfer(_ payload: WatchActivityPayload, through session: WCSession) {
         do {
-            let userInfoTransfer = session.transferUserInfo(try payload.asUserInfo())
-            print("[WC Watch] transferUserInfo chamado para \(payload.id) | companionInstalled=\(session.isCompanionAppInstalled) reachable=\(session.isReachable) fila=\(session.outstandingUserInfoTransfers.count) transferindo=\(userInfoTransfer.isTransferring)")
+            session.transferUserInfo(try payload.asUserInfo())
         } catch {
             print("Erro ao montar a atividade para o iPhone: \(error.localizedDescription)")
         }
@@ -93,7 +88,6 @@ extension WatchConnectivityWorker: WCSessionDelegate {
             print("Erro ao ativar a sessão com o iPhone: \(error.localizedDescription)")
             return
         }
-        print("[WC Watch] ativação concluída: estado=\(activationState.rawValue) companionInstalled=\(session.isCompanionAppInstalled)")
         guard activationState == .activated else { return }
         Task { @MainActor in self.flushPending() }
     }
