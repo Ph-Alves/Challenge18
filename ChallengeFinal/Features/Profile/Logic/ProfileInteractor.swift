@@ -24,9 +24,7 @@ protocol ProfileInteractorProtocol: AnyObject {
     // MARK: Configurações (engrenagem)
     func openSettings()
     func closeSettings()
-    func updateLocalizable(_ isOn: Bool)
     func updateNotifications(_ isOn: Bool)
-    func updateBackgroundActivity(_ isOn: Bool)
     // MARK: Alertas
     func dismissAlerts()
 }
@@ -41,13 +39,11 @@ protocol ProfileInteractorProtocol: AnyObject {
 final class ProfileInteractor: ProfileInteractorProtocol {
 
     // MARK: - Dependências
-
     let presenter: ProfilePresenterProtocol
     let profileRepository: GenericRepository<Profile>
     let activityRepository: GenericRepository<Activity>
-    let notifications: NotificationWorkerProtocol
-    let localization: LocalizationWorkerProtocol
     let themeApplier: ThemeApplying
+    let reminderScheduler: ReminderSchedulerServiceProtocol
 
 
     // MARK: - Estado interno
@@ -60,15 +56,13 @@ final class ProfileInteractor: ProfileInteractorProtocol {
     init(presenter: ProfilePresenterProtocol,
          profileRepository: GenericRepository<Profile>,
          activityRepository: GenericRepository<Activity>,
-         notifications: NotificationWorkerProtocol = PermissionWorkerPlaceholder(),
-         localization: LocalizationWorkerProtocol = PermissionWorkerPlaceholder(),
-         themeApplier: ThemeApplying) {
+         themeApplier: ThemeApplying,
+         reminderScheduler: ReminderSchedulerServiceProtocol) {
         self.presenter = presenter
         self.profileRepository = profileRepository
         self.activityRepository = activityRepository
-        self.notifications = notifications
-        self.localization = localization
         self.themeApplier = themeApplier
+        self.reminderScheduler = reminderScheduler
     }
 
     // MARK: - Carregamento
@@ -89,6 +83,10 @@ final class ProfileInteractor: ProfileInteractorProtocol {
             themeApplier.currentTheme = profile.theme
             presenter.presentProfile(profile)
             presenter.presentTheme(profile.theme)
+
+            // O toggle de notificações NÃO vem do `Profile`: vem da preferência guardada pelo Service.
+            // Sem isso, a tela abriria sempre com o toggle desligado.
+            presenter.presentSettings(notifications: reminderScheduler.isEnabled)
         } catch {
             presenter.presentError(error)
         }
@@ -151,38 +149,36 @@ final class ProfileInteractor: ProfileInteractorProtocol {
         presenter.presentSettingsSheet(isPresented: false)
     }
 
-    /// Ligar pede a permissão do sistema; se negar, o toggle volta para desligado.
-    func updateLocalizable(_ isOn: Bool) {
-        guard isOn else {
-            setLocalizable(false)
-            return
-        }
-        setLocalizable(true)
-        localization.requestPermission { [weak self] granted in
-            guard let self, !granted else { return }
-            self.setLocalizable(false)
-            self.presenter.presentLocationDenied()
-        }
-    }
-
+    /// O usuário mexeu no toggle de notificações das Configurações.
+    ///
+    /// FLUXO
+    /// 1. A tela responde NA HORA: o toggle já mostra o valor pedido, antes de qualquer
+    ///    coisa terminar (atualização otimista).
+    /// 2. Em segundo plano, o Service pede a permissão (só ao ligar), grava a preferência e
+    ///    agenda (ou cancela) os lembretes. O Interactor não conhece nada disso.
+    /// 3. Quando o Service responde, o toggle é corrigido com o estado FINAL:
+    ///    - ligou e concedeu → continua ligado;
+    ///    - ligou e o usuário NEGOU a permissão → volta para desligado e abre o alerta
+    ///      "libere as notificações nos Ajustes";
+    ///    - desligou → fica desligado, sem alerta, e os lembretes pendentes são removidos.
+    /// 4. Se o Service lançar erro, o toggle volta para desligado e o erro vai para o Presenter.
+    ///
+    /// Se o usuário ligar e desligar rápido, vale a última preferência gravada: o `refresh()`
+    /// do Service sempre lê o valor atual antes de agendar.
     func updateNotifications(_ isOn: Bool) {
-        guard isOn else {
-            setNotifications(false)
-            return
-        }
-        setNotifications(true)
-        notifications.requestPermission { [weak self] granted in
-            guard let self, !granted else { return }
-            self.setNotifications(false)
-            self.presenter.presentNotificationsDenied()
-        }
-    }
+        presenter.presentSettings(notifications: isOn)
 
-    /// Não precisa de permissão: só guarda a preferência (o TimerWorker lê daqui).
-    func updateBackgroundActivity(_ isOn: Bool) {
-        profile?.backgroundActivity = isOn
-        save()
-        presentCurrentProfile()
+        Task { [weak self] in
+            guard let self else { return }
+            do {
+                let enabled = try await reminderScheduler.setEnabled(isOn)
+                presenter.presentSettings(notifications: enabled)
+                if isOn && !enabled { presenter.presentNotificationsDenied() }
+            } catch {
+                presenter.presentSettings(notifications: false)
+                presenter.presentError(error)
+            }
+        }
     }
 
     // MARK: - Alertas
@@ -229,18 +225,6 @@ final class ProfileInteractor: ProfileInteractorProtocol {
         return newProfile
     }
 
-    private func setLocalizable(_ isOn: Bool) {
-        profile?.localizable = isOn
-        save()
-        presentCurrentProfile()
-    }
-
-    private func setNotifications(_ isOn: Bool) {
-        profile?.notifications = isOn
-        save()
-        presentCurrentProfile()
-    }
-
     /// Erro ao salvar também vira alerta (antes só ia para o console).
     private func save() {
         do {
@@ -256,3 +240,4 @@ final class ProfileInteractor: ProfileInteractorProtocol {
         presenter.presentProfile(profile)
     }
 }
+
